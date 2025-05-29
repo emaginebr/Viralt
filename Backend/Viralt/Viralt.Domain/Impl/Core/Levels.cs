@@ -1,5 +1,5 @@
 ﻿using System;
-namespace MonexUp.Domain.Impl.Core
+namespace Viralt.Domain.Impl.Core
 {
     public enum Levels
     {

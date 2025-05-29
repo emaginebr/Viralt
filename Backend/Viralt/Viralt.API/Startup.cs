@@ -1,4 +1,4 @@
-using MonexUp.Application;
+using Viralt.Application;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MonexUp.API
+namespace Viralt.API
 {
     public class Startup
     {
@@ -35,7 +35,7 @@ namespace MonexUp.API
         {
             var config = new ConfigurationParam
             {
-                ConnectionString = Configuration.GetConnectionString("MonexUpContext")
+                ConnectionString = Configuration.GetConnectionString("ViraltContext")
             };
             Initializer.Configure(services, config);
             services.AddControllers();

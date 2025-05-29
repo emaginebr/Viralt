@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.User
+namespace Viralt.DTO.User
 {
     public class LoginParam
     {

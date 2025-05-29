@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
-using MonexUp.Domain.Interfaces.Services;
-using MonexUp.DTO.MailerSend;
+using Viralt.Domain.Interfaces.Services;
+using Viralt.DTO.MailerSend;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace MonexUp.Domain.Impl.Services
+namespace Viralt.Domain.Impl.Services
 {
     public class MailerSendService : IMailerSendService
     {

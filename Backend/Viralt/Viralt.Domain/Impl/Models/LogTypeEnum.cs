@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.Domain.Impl.Models
+namespace Viralt.Domain.Impl.Models
 {
     public enum LogTypeEnum
     {

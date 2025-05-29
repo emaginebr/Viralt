@@ -1,9 +1,9 @@
 ﻿using Amazon.S3.Transfer;
 using Amazon.S3;
-using MonexUp.Domain.Impl.Models;
-using MonexUp.Domain.Interfaces.Factory;
-using MonexUp.Domain.Interfaces.Models;
-using MonexUp.Domain.Interfaces.Services;
+using Viralt.Domain.Impl.Models;
+using Viralt.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Core.Domain;
 
-namespace MonexUp.Domain.Impl.Services
+namespace Viralt.Domain.Impl.Services
 {
     public class ImageService : IImageService
     {
@@ -26,17 +26,11 @@ namespace MonexUp.Domain.Impl.Services
         private const string ENDPOINT = "https://emagine.nyc3.digitaloceanspaces.com";
 
         private readonly IUserDomainFactory _userFactory;
-        private readonly INetworkDomainFactory _networkFactory;
-        private readonly IProductDomainFactory _productFactory;
 
         public ImageService(
-            IUserDomainFactory userFactory,
-            INetworkDomainFactory networkFactory,
-            IProductDomainFactory productFactory
+            IUserDomainFactory userFactory
         ) {
             _userFactory = userFactory;
-            _networkFactory = networkFactory;
-            _productFactory = productFactory;
         }
 
         public string GetImageUrl(string fileName)
@@ -95,6 +89,7 @@ namespace MonexUp.Domain.Impl.Services
             return name;
         }
 
+        /*
         public string InsertToNetwork(Stream stream, long networkId)
         {
             if (!(networkId > 0))
@@ -130,5 +125,6 @@ namespace MonexUp.Domain.Impl.Services
             product.Update(_productFactory);
             return name;
         }
+        */
     }
 }

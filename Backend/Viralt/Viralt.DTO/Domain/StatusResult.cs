@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.Domain
+namespace Viralt.DTO.Domain
 {
     public class StatusResult
     {

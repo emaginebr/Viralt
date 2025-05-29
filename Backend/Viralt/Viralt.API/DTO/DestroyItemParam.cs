@@ -1,5 +1,5 @@
 ﻿using System;
-namespace MonexUp.API.DTO
+namespace Viralt.API.DTO
 {
     public class DestroyItemParam
     {

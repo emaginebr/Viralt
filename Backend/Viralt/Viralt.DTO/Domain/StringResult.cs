@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.Domain
+namespace Viralt.DTO.Domain
 {
     public class StringResult: StatusResult
     {

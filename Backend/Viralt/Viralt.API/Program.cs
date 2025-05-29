@@ -14,7 +14,7 @@ using System.Resources;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace MonexUp.API
+namespace Viralt.API
 {
     public class Program
     {

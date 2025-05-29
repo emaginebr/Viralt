@@ -1,7 +1,7 @@
 ﻿using System;
 using Core.Domain;
-using MonexUp.Domain.Impl.Core;
-using MonexUp.Domain.Interfaces.Core;
+using Viralt.Domain.Impl.Core;
+using Viralt.Domain.Interfaces.Core;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DB.Infra

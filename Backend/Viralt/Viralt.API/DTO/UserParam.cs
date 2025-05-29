@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace MonexUp.API.DTO
+namespace Viralt.API.DTO
 {
     public class UserParam
     {

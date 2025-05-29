@@ -32,8 +32,4 @@
   <ItemGroup>
     <Compile Remove="Controllers\OriginalController.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Viralt.com.pfx" />
-  </ItemGroup>
 </Project>

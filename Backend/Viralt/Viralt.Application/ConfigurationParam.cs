@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.Application
+namespace Viralt.Application
 {
     public class ConfigurationParam
     {

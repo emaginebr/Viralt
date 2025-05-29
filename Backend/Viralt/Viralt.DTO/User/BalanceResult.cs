@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using MonexUp.DTO.Domain;
+using Viralt.DTO.Domain;
 
-namespace MonexUp.DTO.User
+namespace Viralt.DTO.User
 {
     public class BalanceResult : StatusResult
     {

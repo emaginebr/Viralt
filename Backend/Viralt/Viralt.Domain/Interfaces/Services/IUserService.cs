@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using MonexUp.Domain.Interfaces.Models;
-using MonexUp.DTO.User;
+using Viralt.Domain.Interfaces.Models;
+using Viralt.DTO.User;
 using Microsoft.AspNetCore.Http;
-using MonexUp.Domain.Impl.Models;
+using Viralt.Domain.Impl.Models;
 using System.Threading.Tasks;
 
-namespace MonexUp.Domain.Interfaces.Services
+namespace Viralt.Domain.Interfaces.Services
 {
     public interface IUserService
     {
@@ -22,11 +22,9 @@ namespace MonexUp.Domain.Interfaces.Services
         IUserModel GetBySlug(string slug);
         IUserModel GetUserByID(long userId);
         IUserModel GetUserByToken(string token);
-        IUserModel GetByStripeId(string stripeId);
         //IUserModel GetUserHash(ChainEnum chain, string address);
         UserInfo GetUserInSession(HttpContext httpContext);
         UserInfo GetUserInfoFromModel(IUserModel md);
         IList<IUserModel> ListUsers(int take);
-        UserListPagedResult Search(long networkId, string keyword, long? profileId, int pageNum);
     }
 }

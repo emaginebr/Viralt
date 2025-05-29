@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.MailerSend
+namespace Viralt.DTO.MailerSend
 {
     public class MailerRecipientInfo
     {

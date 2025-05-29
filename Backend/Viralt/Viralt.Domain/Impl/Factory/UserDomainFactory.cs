@@ -1,11 +1,11 @@
 ﻿using System;
-using MonexUp.Domain.Impl.Models;
-using MonexUp.Domain.Interfaces.Factory;
-using MonexUp.Domain.Interfaces.Models;
+using Viralt.Domain.Impl.Models;
+using Viralt.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Models;
 using Core.Domain;
 using Core.Domain.Repository;
 
-namespace MonexUp.Domain.Impl.Factory
+namespace Viralt.Domain.Impl.Factory
 {
     public class UserDomainFactory : IUserDomainFactory
     {

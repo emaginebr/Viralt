@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.User
+namespace Viralt.DTO.User
 {
     public class UserPhoneInfo
     {

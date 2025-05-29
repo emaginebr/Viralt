@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace MonexUp.DTO.User
+namespace Viralt.DTO.User
 {
     public class UserInfo
     {

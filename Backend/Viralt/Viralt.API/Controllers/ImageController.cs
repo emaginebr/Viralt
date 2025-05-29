@@ -3,32 +3,28 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
-using MonexUp.Domain.Impl.Services;
-using MonexUp.Domain.Interfaces.Services;
-using MonexUp.DTO.Domain;
-using MonexUp.DTO.Network;
+using Viralt.Domain.Impl.Services;
+using Viralt.Domain.Interfaces.Services;
+using Viralt.DTO.Domain;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MonexUp.API.Controllers
+namespace Viralt.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ImageController: ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly INetworkService _networkService;
         private readonly IImageService _imageService;
 
         public ImageController(
             IUserService userService,
-            INetworkService networkService,
             IImageService imageService
         ) { 
             _userService = userService;
-            _networkService = networkService;
             _imageService = imageService;
         }
 
@@ -90,6 +86,7 @@ namespace MonexUp.API.Controllers
             }
         }
 
+        /*
         [Authorize]
         [HttpPost("uploadImageNetwork")]
         public ActionResult<StringResult> UploadImageNetwork([FromForm] long networkId, IFormFile file)
@@ -145,5 +142,6 @@ namespace MonexUp.API.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        */
     }
 }

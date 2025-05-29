@@ -1,11 +1,11 @@
-﻿using MonexUp.DTO.MailerSend;
+﻿using Viralt.DTO.MailerSend;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonexUp.Domain.Interfaces.Services
+namespace Viralt.Domain.Interfaces.Services
 {
     public interface IMailerSendService
     {

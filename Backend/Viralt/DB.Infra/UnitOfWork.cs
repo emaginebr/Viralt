@@ -1,18 +1,18 @@
 ﻿using System;
 using Core.Domain;
 using DB.Infra.Context;
-using MonexUp.Domain.Impl.Core;
-using MonexUp.Domain.Interfaces.Core;
+using Viralt.Domain.Impl.Core;
+using Viralt.Domain.Interfaces.Core;
 
 namespace DB.Infra
 {
     public class UnitOfWork : IUnitOfWork
     {
 
-        private readonly MonexUpContext _ccsContext;
+        private readonly ViraltContext _ccsContext;
         private readonly ILogCore _log;
 
-        public UnitOfWork(ILogCore log, MonexUpContext ccsContext)
+        public UnitOfWork(ILogCore log, ViraltContext ccsContext)
         {
             this._ccsContext = ccsContext;
             _log = log;

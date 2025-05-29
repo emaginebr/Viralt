@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MonexUp.BackgroundService;
+using Viralt.BackgroundService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using NCrontab;

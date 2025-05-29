@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MonexUp.Domain.Interfaces.Factory;
-using MonexUp.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Models;
 using Core.Domain.Repository;
 using DB.Infra.Context;
 using System.Net;
@@ -12,9 +12,9 @@ namespace DB.Infra.Repository
     public class UserRepository : IUserRepository<IUserModel, IUserDomainFactory>
     {
 
-        private MonexUpContext _ccsContext;
+        private ViraltContext _ccsContext;
 
-        public UserRepository(MonexUpContext ccsContext)
+        public UserRepository(ViraltContext ccsContext)
         {
             _ccsContext = ccsContext;
         }
@@ -23,30 +23,36 @@ namespace DB.Infra.Repository
         {
             var md = factory.BuildUserModel();
             md.UserId = u.UserId;
-            md.Hash = u.Hash;
             md.Name = u.Name;
-            md.Slug = u.Slug;
+            md.Hash = u.Hash;
             md.Image = u.Image;
+            md.Slug = u.Slug;
             md.Email = u.Email;
-            md.IsAdmin = u.IsAdmin;
-            md.StripeId = u.StripeId;
             md.CreatedAt = u.CreatedAt;
             md.UpdatedAt = u.UpdatedAt;
+            md.Password = u.Password;
+            md.Plan = u.Plan;
+            md.Token = u.Token;
+            md.RecoveryHash = u.RecoveryHash;
+            md.Status = u.Status;
             return md;
         }
 
         private void ModelToDb(IUserModel md, User row)
         {
             row.UserId = md.UserId;
-            row.Hash = md.Hash;
             row.Name = md.Name;
-            row.Slug = md.Slug;
+            row.Hash = md.Hash;
             row.Image = md.Image;
+            row.Slug = md.Slug;
             row.Email = md.Email;
-            row.IsAdmin = md.IsAdmin;
-            row.StripeId = md.StripeId;
             row.CreatedAt = md.CreatedAt;
             row.UpdatedAt = md.UpdatedAt;
+            row.Password = md.Password;
+            row.Plan = md.Plan;
+            row.Token = md.Token;
+            row.RecoveryHash = md.RecoveryHash;
+            row.Status = md.Status;
         }
 
         public IUserModel GetById(long userId, IUserDomainFactory factory)
@@ -109,16 +115,6 @@ namespace DB.Infra.Repository
         public IUserModel GetByToken(string token, IUserDomainFactory factory)
         {
             var row = _ccsContext.Users.Where(x => x.Token == token).FirstOrDefault();
-            if (row != null)
-            {
-                return DbToModel(factory, row);
-            }
-            return null;
-        }
-
-        public IUserModel GetByStripeId(string stripeId, IUserDomainFactory factory)
-        {
-            var row = _ccsContext.Users.Where(x => x.StripeId == stripeId).FirstOrDefault();
             if (row != null)
             {
                 return DbToModel(factory, row);

@@ -1,8 +1,8 @@
 ﻿using System;
-using MonexUp.Domain.Interfaces.Core;
+using Viralt.Domain.Interfaces.Core;
 using Microsoft.Extensions.Logging;
 
-namespace MonexUp.Domain.Impl.Core
+namespace Viralt.Domain.Impl.Core
 {
     public class LogCore : ILogCore
     {

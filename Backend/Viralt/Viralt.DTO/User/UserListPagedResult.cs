@@ -1,5 +1,4 @@
-﻿using MonexUp.DTO.Domain;
-using MonexUp.DTO.Network;
+﻿using Viralt.DTO.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +6,12 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace MonexUp.DTO.User
+namespace Viralt.DTO.User
 {
     public class UserListPagedResult: StatusResult
     {
-        [JsonPropertyName("users")]
-        public IList<UserNetworkSearchInfo> Users { get; set; }
+        //[JsonPropertyName("users")]
+        //public IList<UserNetworkSearchInfo> Users { get; set; }
         [JsonPropertyName("pageNum")]
         public int PageNum { get; set; }
         [JsonPropertyName("pageCount")]

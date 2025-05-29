@@ -2,45 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using MonexUp.Domain.Interfaces.Factory;
-using MonexUp.Domain.Interfaces.Models;
-using MonexUp.Domain.Interfaces.Services;
-using MonexUp.DTO.User;
+using Viralt.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Services;
+using Viralt.DTO.User;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using MonexUp.Domain.Impl.Models;
-using MonexUp.DTO.MailerSend;
+using Viralt.Domain.Impl.Models;
+using Viralt.DTO.MailerSend;
 using System.Threading.Tasks;
 using Core.Domain;
 using System.Reflection;
 
-namespace MonexUp.Domain.Impl.Services
+namespace Viralt.Domain.Impl.Services
 {
     public class UserService : IUserService
     {
         private readonly IUserDomainFactory _userFactory;
-        private readonly IUserNetworkDomainFactory _userNetworkFactory;
-        private readonly IUserPhoneDomainFactory _phoneFactory;
-        private readonly IUserAddressDomainFactory _addrFactory;
-        private readonly IUserProfileDomainFactory _profileFactory;
         private readonly IMailerSendService _mailerSendService;
         private readonly IImageService _imageService;
 
         public UserService(
             IUserDomainFactory userFactory, 
-            IUserNetworkDomainFactory userNetworkFactory, 
-            IUserPhoneDomainFactory phoneFactory, 
-            IUserAddressDomainFactory addrFactory,
-            IUserProfileDomainFactory profileFactory,
             IMailerSendService mailerSendService,
             IImageService imageService
         )
         {
             _userFactory = userFactory;
-            _userNetworkFactory = userNetworkFactory;
-            _phoneFactory = phoneFactory;
-            _addrFactory = addrFactory;
-            _profileFactory = profileFactory;
             _mailerSendService = mailerSendService;
             _imageService = imageService;
         }
@@ -177,104 +165,6 @@ namespace MonexUp.Domain.Impl.Services
             return newSlug;
         }
 
-        private void InsertPhones(UserInfo user)
-        {
-            if (user.Phones != null && user.Phones.Count() > 0)
-            {
-                foreach (var phone in user.Phones)
-                {
-                    var modelPhone = _phoneFactory.BuildUserPhoneModel();
-                    modelPhone.UserId = user.UserId;
-                    modelPhone.Phone = phone.Phone;
-                    modelPhone.Insert(_phoneFactory);
-                }
-            }
-        }
-
-        private void InsertAddresses(UserInfo user)
-        {
-            if (user.Addresses != null && user.Addresses.Count() > 0)
-            {
-                foreach (var addr in user.Addresses)
-                {
-                    var modelAddr = _addrFactory.BuildUserAddressModel();
-                    modelAddr.UserId = user.UserId;
-                    modelAddr.ZipCode = addr.ZipCode;
-                    modelAddr.Address = addr.Address;
-                    modelAddr.Complement = addr.Complement;
-                    modelAddr.Neighborhood = addr.Neighborhood;
-                    modelAddr.City = addr.City;
-                    modelAddr.State = addr.State;
-                    modelAddr.Insert(_addrFactory);
-                }
-            }
-        }
-
-        private void ValidatePhones(UserInfo user)
-        {
-            if (user.Phones == null)
-            {
-                return;
-            }
-            foreach (var phone in user.Phones)
-            {
-                if (string.IsNullOrEmpty(phone.Phone))
-                {
-                    throw new Exception($"Phone is empty");
-                }
-                else
-                {
-                    phone.Phone = StringUtils.OnlyNumbers(phone.Phone.Trim());
-                    if (string.IsNullOrEmpty(phone.Phone))
-                    {
-                        throw new Exception($"{phone.Phone} is not a valid phone");
-                    }
-                }
-            }
-        }
-
-        private void ValidateAddresses(UserInfo user) {
-            if (user.Addresses == null)
-            {
-                return;
-            }
-            foreach (var addr in user.Addresses)
-            {
-                if (string.IsNullOrEmpty(addr.ZipCode))
-                {
-                    throw new Exception($"ZipCode is empty");
-                }
-                else
-                {
-                    addr.ZipCode = StringUtils.OnlyNumbers(addr.ZipCode);
-                    if (string.IsNullOrEmpty(addr.ZipCode))
-                    {
-                        throw new Exception($"{addr.ZipCode} is not a valid zip code");
-                    }
-                }
-                if (string.IsNullOrEmpty(addr.Address))
-                {
-                    throw new Exception("Address is empty");
-                }
-                if (string.IsNullOrEmpty(addr.Complement))
-                {
-                    throw new Exception("Address is empty");
-                }
-                if (string.IsNullOrEmpty(addr.Neighborhood))
-                {
-                    throw new Exception("Neighborhood is empty");
-                }
-                if (string.IsNullOrEmpty(addr.City))
-                {
-                    throw new Exception("City is empty");
-                }
-                if (string.IsNullOrEmpty(addr.State))
-                {
-                    throw new Exception("State is empty");
-                }
-            }
-        }
-
         public IUserModel Insert(UserInfo user)
         {
             var model = _userFactory.BuildUserModel();
@@ -310,15 +200,10 @@ namespace MonexUp.Domain.Impl.Services
                     throw new Exception($"{user.IdDocument} is not a valid CPF or CNPJ");
                 }
             }
-            ValidatePhones(user);
-            ValidateAddresses(user);
 
             model.Slug = user.Slug;
             model.Name = user.Name;
             model.Email = user.Email;
-            model.BirthDate = user.BirthDate;
-            model.IdDocument = user.IdDocument;
-            model.PixKey = user.PixKey;
             model.CreatedAt = DateTime.Now;
             model.UpdatedAt = DateTime.Now;
             model.Hash = GetUniqueToken();
@@ -327,8 +212,6 @@ namespace MonexUp.Domain.Impl.Services
             var md = model.Insert(_userFactory);
 
             user.UserId = md.UserId;
-            InsertPhones(user);
-            InsertAddresses(user);
 
             md.ChangePassword(user.UserId, user.Password, _userFactory);
 
@@ -375,27 +258,14 @@ namespace MonexUp.Domain.Impl.Services
                     throw new Exception($"{user.IdDocument} is not a valid CPF or CNPJ");
                 }
             }
-            ValidatePhones(user);
-            ValidateAddresses(user);
 
             model.Slug = user.Slug;
             model.Name = user.Name;
             model.Email = user.Email;
-            model.BirthDate = user.BirthDate;
-            model.IdDocument = user.IdDocument;
-            model.PixKey = user.PixKey;
             model.UpdatedAt = DateTime.Now;
             model.Slug = GenerateSlug(model);
 
             model.Update(_userFactory);
-
-            var modelPhone = _phoneFactory.BuildUserPhoneModel();
-            modelPhone.DeleteAllByUser(model.UserId);
-            InsertPhones(user);
-
-            var modelAddr = _addrFactory.BuildUserAddressModel();
-            modelAddr.DeleteAllByUser(model.UserId);
-            InsertAddresses(user);
 
             return model;
         }
@@ -452,69 +322,8 @@ namespace MonexUp.Domain.Impl.Services
                 ImageUrl = _imageService.GetImageUrl(md.Image),
                 Name = md.Name,
                 Email = md.Email,
-                IdDocument = md.IdDocument,
-                PixKey = md.PixKey,
-                BirthDate = md.BirthDate,
                 CreatedAt = md.CreatedAt,
                 UpdatedAt = md.UpdatedAt,
-                IsAdmin = md.IsAdmin,
-                Phones = _phoneFactory.BuildUserPhoneModel()
-                    .ListByUser(md.UserId, _phoneFactory)
-                    .Select(x => new UserPhoneInfo
-                    {
-                        Phone = x.Phone
-                    }).ToList(),
-                Addresses = _addrFactory.BuildUserAddressModel()
-                    .ListByUser(md.UserId, _addrFactory)
-                    .Select(x => new UserAddressInfo
-                    {
-                        ZipCode = x.ZipCode,
-                        Address = x.Address,
-                        Complement = x.Complement,
-                        Neighborhood = x.Neighborhood,
-                        City = x.City,
-                        State = x.State
-                    }).ToList()
-            };
-        }
-
-        public UserListPagedResult Search(long networkId, string keyword, long? profileId, int pageNum)
-        {
-            var userModel = _userFactory.BuildUserModel();
-            var profileModel = _profileFactory.BuildUserProfileModel();
-            var model = _userNetworkFactory.BuildUserNetworkModel();
-            int pageCount = 0;
-            var usersNetwork = model.Search(networkId, keyword, (profileId.GetValueOrDefault() == 0 ? null : profileId), pageNum, out pageCount, _userNetworkFactory);
-            var users = new List<UserNetworkSearchInfo>();
-            foreach (var user in usersNetwork)
-            {
-                var mdUser = userModel.GetById(user.UserId, _userFactory);
-                var info = new UserNetworkSearchInfo
-                {
-                    UserId = user.UserId,
-                    NetworkId = user.NetworkId,
-                    ProfileId = user.ProfileId,
-                    Name = mdUser.Name,
-                    Email = mdUser.Email,
-                    
-                    Role = user.Role,
-                    Status = user.Status
-                };
-                if (user.ProfileId.HasValue)
-                {
-                    var mdProfile = profileModel.GetById(user.ProfileId.Value, _profileFactory);
-                    info.Profile = mdProfile.Name;
-                    info.Commission = mdProfile.Commission;
-                    info.Level = mdProfile.Level;
-                }
-                users.Add(info);
-            }
-            return new UserListPagedResult
-            {
-                Sucesso = true,
-                Users = users,
-                PageNum = pageNum,
-                PageCount = pageCount
             };
         }
 
@@ -557,11 +366,6 @@ namespace MonexUp.Domain.Impl.Services
 
                 return new string(result);
             }
-        }
-
-        public IUserModel GetByStripeId(string stripeId)
-        {
-            return _userFactory.BuildUserModel().GetByStripeId(stripeId, _userFactory);
         }
 
         public IUserModel GetBySlug(string slug)

@@ -7,7 +7,7 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace MonexUp.Domain.Impl.Core
+namespace Viralt.Domain.Impl.Core
 {
     public static class Utils
     {

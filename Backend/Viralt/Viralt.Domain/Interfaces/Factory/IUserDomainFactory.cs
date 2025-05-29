@@ -1,7 +1,7 @@
 ﻿using System;
-using MonexUp.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Models;
 
-namespace MonexUp.Domain.Interfaces.Factory
+namespace Viralt.Domain.Interfaces.Factory
 {
     public interface IUserDomainFactory
     {

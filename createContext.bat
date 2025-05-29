@@ -1,4 +1,4 @@
 @echo off
-cd .\Backend\MonexUp\DB.Infra
-dotnet ef dbcontext scaffold "Host=167.172.240.71;Port=5432;Database=monexup;Username=postgres;Password=eaa69cpxy2" Npgsql.EntityFrameworkCore.PostgreSQL --context MonexUpContext --output-dir Context -f
+cd .\Backend\Viralt\DB.Infra
+dotnet ef dbcontext scaffold "Host=emagine-db-do-user-4436480-0.e.db.ondigitalocean.com;Port=25060;Database=viralt;Username=doadmin;Password=AVNS_akcvzXVnMkvNKaO10-O" Npgsql.EntityFrameworkCore.PostgreSQL --context ViraltContext --output-dir Context -f
 pause

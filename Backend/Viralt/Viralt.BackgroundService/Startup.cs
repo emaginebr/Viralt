@@ -1,4 +1,4 @@
-﻿using MonexUp.Application;
+﻿using Viralt.Application;
 using NoChainSwapBackgroundService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MonexUp.BackgroundService
+namespace Viralt.BackgroundService
 {
     public class Startup
     {
@@ -22,9 +22,7 @@ namespace MonexUp.BackgroundService
         {
             var config = new ConfigurationParam
             {
-                ConnectionString = Configuration.GetConnectionString("NoChainSwapContext"),
-                WalletStxApi = Configuration.GetSection("Stacks:WalletApi").Value,
-                StacksApi = Configuration.GetSection("Stacks:StacksApi").Value
+                ConnectionString = Configuration.GetConnectionString("NoChainSwapContext")
             };
             Initializer.Configure(services, config, false);
             services.AddHostedService<Service>();

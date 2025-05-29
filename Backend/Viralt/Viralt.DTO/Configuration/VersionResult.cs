@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using MonexUp.DTO.Domain;
+using Viralt.DTO.Domain;
 
-namespace MonexUp.DTO.Configuration
+namespace Viralt.DTO.Configuration
 {
     public class VersionResult : StatusResult
     {

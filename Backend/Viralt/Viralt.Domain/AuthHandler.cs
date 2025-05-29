@@ -5,17 +5,17 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using MonexUp.Domain.Interfaces.Models;
-using MonexUp.Domain.Interfaces.Services;
-using MonexUp.DTO.User;
+using Viralt.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Services;
+using Viralt.DTO.User;
 using Core.Domain;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using MonexUp.Domain.Impl.Models;
+using Viralt.Domain.Impl.Models;
 
-namespace MonexUp.Domain
+namespace Viralt.Domain
 {
     public class AuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
@@ -94,7 +94,6 @@ namespace MonexUp.Domain
             var claims = new[] {
                 new Claim("UserInfo",  JsonConvert.SerializeObject(new UserInfo() {
                      UserId = user.UserId,
-                     Hash = user.Hash,
                      Name = user.Name,
                      Email = user.Email,
                 }))

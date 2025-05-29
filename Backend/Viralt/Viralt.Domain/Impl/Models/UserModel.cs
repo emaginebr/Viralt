@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using MonexUp.Domain.Interfaces.Factory;
-using MonexUp.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Models;
 using Core.Domain;
 using Core.Domain.Repository;
 using System.Net;
 
-namespace MonexUp.Domain.Impl.Models
+namespace Viralt.Domain.Impl.Models
 {
     public class UserModel : IUserModel
     {
@@ -20,19 +20,18 @@ namespace MonexUp.Domain.Impl.Models
         }
 
         public long UserId { get; set; }
-        public string Hash { get; set; }
-        public string Token { get; set; }
-        public string Slug { get; set; }
-        public string Image {  get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string IdDocument { get; set; }
-        public string PixKey { get; set; }
-        public DateTime? BirthDate { get; set; }
-        public bool IsAdmin { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string StripeId { get; set; }
+        public string Hash { get; set; }
+        public string Slug { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Image { get; set; }
+        public int? Plan { get; set; }
+        public string Token { get; set; }
+        public string RecoveryHash { get; set; }
+        public int Status { get; set; }
 
         private string CreateMD5(string input)
         {
@@ -143,11 +142,6 @@ namespace MonexUp.Domain.Impl.Models
 
         public bool ExistSlug(long userId, string slug) { 
             return _repositoryUser.ExistSlug(userId, slug);
-        }
-
-        public IUserModel GetByStripeId(string stripeId, IUserDomainFactory factory)
-        {
-            return _repositoryUser.GetByStripeId(stripeId, factory);
         }
     }
 }

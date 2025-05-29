@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MonexUp.Domain.Interfaces.Services;
+using Viralt.Domain.Interfaces.Services;
 
-namespace MonexUp.BackgroundService
+namespace Viralt.BackgroundService
 {
     public class ScheduleTask
     {

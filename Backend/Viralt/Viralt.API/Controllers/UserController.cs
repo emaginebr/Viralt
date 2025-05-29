@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
-using MonexUp.API.DTO;
-using MonexUp.Domain.Interfaces.Services;
-using MonexUp.DTO.User;
+using Viralt.API.DTO;
+using Viralt.Domain.Interfaces.Services;
+using Viralt.DTO.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MonexUp.Domain.Impl.Models;
-using MonexUp.Domain.Interfaces.Models;
-using MonexUp.DTO.Domain;
-using MonexUp.Domain.Impl.Services;
+using Viralt.Domain.Impl.Models;
+using Viralt.Domain.Interfaces.Models;
+using Viralt.DTO.Domain;
+using Viralt.Domain.Impl.Services;
 using System.Runtime.CompilerServices;
 using DB.Infra.Context;
-using MonexUp.Domain.Interfaces.Factory;
+using Viralt.Domain.Interfaces.Factory;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace MonexUp.API.Controllers
+namespace Viralt.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -296,25 +296,6 @@ namespace MonexUp.API.Controllers
                     Sucesso = true,
                     Mensagem = "Password changed successfully"
                 };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [HttpPost("search")]
-        [Authorize]
-        public ActionResult<UserListPagedResult> Search([FromBody] UserSearchParam param)
-        {
-            try
-            {
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                return _userService.Search(param.NetworkId, param.Keyword, param.ProfileId, param.PageNum);
             }
             catch (Exception ex)
             {
