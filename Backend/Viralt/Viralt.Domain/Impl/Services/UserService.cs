@@ -192,14 +192,6 @@ namespace Viralt.Domain.Impl.Services
             {
                 throw new Exception("Password is empty");
             }
-            if (!string.IsNullOrEmpty(user.IdDocument))
-            {
-                user.IdDocument = StringUtils.OnlyNumbers(user.IdDocument);
-                if (!DocumentoUtils.ValidarCpfOuCnpj(user.IdDocument))
-                {
-                    throw new Exception($"{user.IdDocument} is not a valid CPF or CNPJ");
-                }
-            }
 
             model.Slug = user.Slug;
             model.Name = user.Name;
@@ -248,14 +240,6 @@ namespace Viralt.Domain.Impl.Services
                 if (userWithEmail != null && userWithEmail.UserId != model.UserId)
                 {
                     throw new Exception("User with email already registered");
-                }
-            }
-            if (!string.IsNullOrEmpty(user.IdDocument))
-            {
-                user.IdDocument = StringUtils.OnlyNumbers(user.IdDocument);
-                if (!DocumentoUtils.ValidarCpfOuCnpj(user.IdDocument))
-                {
-                    throw new Exception($"{user.IdDocument} is not a valid CPF or CNPJ");
                 }
             }
 

@@ -19,20 +19,8 @@ namespace Viralt.DTO.User
         public string Email { get; set; }
         [JsonPropertyName("hash")]
         public string Hash { get; set; }
-        [JsonPropertyName("isAdmin")]
-        public bool IsAdmin { get; set; }
-        [JsonPropertyName("birthDate")]
-        public DateTime? BirthDate { get; set; }
-        [JsonPropertyName("idDocument")]
-        public string IdDocument { get; set; }
-        [JsonPropertyName("pixKey")]
-        public string PixKey { get; set; }
         [JsonPropertyName("password")]
         public string Password { get; set; }
-        [JsonPropertyName("phones")]
-        public IList<UserPhoneInfo> Phones { get; set; }
-        [JsonPropertyName("addresses")]
-        public IList<UserAddressInfo> Addresses { get; set; }
         [JsonPropertyName("createAt")]
         public DateTime CreatedAt { get; set; }
         [JsonPropertyName("updateAt")]
