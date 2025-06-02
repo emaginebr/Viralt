@@ -14,12 +14,12 @@ import NetworkContext from "../../Contexts/Network/NetworkContext";
 
 export default function HomePage() {
 
-    const authContext = useContext(AuthContext);
     const userContext = useContext(UserContext);
     const networkContext = useContext(NetworkContext);
 
     let navigate = useNavigate();
 
+    /*
     useEffect(() => {
         userContext.list(3).then((ret) => {
             if (!ret.sucesso) {
@@ -32,6 +32,7 @@ export default function HomePage() {
             }
         });
     }, []);
+    */
 
     return (
         <>
