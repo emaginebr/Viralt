@@ -1,6 +1,4 @@
-import './App.css';
 import { Routes, Route, Outlet, Link } from "react-router-dom";
-import Menu from "./Components/Menu";
 import ContextBuilder from './Contexts/Utils/ContextBuilder';
 import AuthProvider from './Contexts/Auth/AuthProvider';
 import UserPage from './Pages/UserPage';
@@ -30,13 +28,16 @@ import InvoiceSearchPage from './Pages/InvoiceSearchPage';
 import ImageProvider from './Contexts/Image/ImageProvider';
 import TemplateProvider from './Contexts/Template/TemplateProvider';
 import CampaignSearchPage from './Pages/CampaignSearchPage';
+import ScriptLoader from './Components/ScriptLoader';
+import Header from './Components/Header';
 
 function Layout() {
   return (
-    <div>
-      <Menu />
+    <>
+      <Header />
+      <main className="main"></main>
       <Outlet />
-    </div>
+    </>
   );
 }
 
@@ -91,6 +92,7 @@ function App() {
         </Route>
         <Route path="*" element={<Error404Page />} />
       </Routes>
+      <ScriptLoader />
     </ContextContainer>
   );
 }

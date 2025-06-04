@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import AuthContext from "../../Contexts/Auth/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "./Header";
+import Hero from "./Hero";
 import Footer from "./Footer";
 import Features from "./Features";
 import Pricing from "./Pricing";
@@ -36,7 +36,7 @@ export default function HomePage() {
 
     return (
         <>
-            <Header />
+            <Hero />
             <Features />
             <NetworkPart 
                 loading={networkContext.loading} 

@@ -54,6 +54,7 @@ export default function Menu() {
     });
     */
   }, []);
+  
   return (
     <>
       <MessageToast
@@ -67,7 +68,7 @@ export default function Menu() {
         show={showImageModal}
         onClose={() => setShowImageModal(false)}
       />
-      <Navbar expand="lg" className="navbar-dark bg-dark mb-3 border-bottom">
+      <Navbar expand="lg" className="navmenu">
         <Container>
           <Link className='navbar-brand' to="/">{process.env.REACT_APP_PROJECT_NAME}</Link>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -122,13 +123,13 @@ export default function Menu() {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      {showAlert &&
+      {/*showAlert &&
         <Container>
           <Alert key="danger" variant="danger" onClose={() => setShowAlert(false)} dismissible>
             <FontAwesomeIcon icon={faWarning} /> {t('trial_version_warning')}
           </Alert>
         </Container>
-      }
+      */}
     </>
   );
 }
