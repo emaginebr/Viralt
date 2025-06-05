@@ -30,6 +30,7 @@ import TemplateProvider from './Contexts/Template/TemplateProvider';
 import CampaignSearchPage from './Pages/CampaignSearchPage';
 import ScriptLoader from './Components/ScriptLoader';
 import Header from './Components/Header';
+import 'aos/dist/aos.css';
 
 function Layout() {
   return (

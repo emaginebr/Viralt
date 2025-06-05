@@ -12,7 +12,7 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleUser, faClose, faHome, faImage, faLock, faMap, faPencil, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
+import { faCircleUser, faClose, faHome, faImage, faLock, faMap, faPencil, faPlus, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
 import { MenuLanguage } from "./Functions";
 
 export default function Header() {
@@ -74,8 +74,9 @@ export default function Header() {
                             <Navbar.Toggle aria-controls="basic-navbar-nav" />
                             <Navbar.Collapse id="basic-navbar-nav">
                                 <Nav className="me-auto">
-                                    <Link className='nav-link' to="/"><FontAwesomeIcon icon={faHome} fixedWidth /> Home</Link>
-                                    <Link className='nav-link' to="/campaigns"><FontAwesomeIcon icon={faMap} fixedWidth /> My Campaigns</Link>
+                                    <Link className='active' to="/">Home</Link>
+                                    <Link to="/campaigns">My Campaigns</Link>
+                                    <Link to="/campaigns"><FontAwesomeIcon icon={faPlus} fixedWidth /> New Campaign</Link>
                                 </Nav>
                             </Navbar.Collapse>
                             <Navbar.Collapse>

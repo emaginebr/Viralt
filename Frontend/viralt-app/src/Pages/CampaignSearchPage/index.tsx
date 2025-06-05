@@ -3,7 +3,7 @@ import Col from "react-bootstrap/esm/Col";
 import Container from "react-bootstrap/esm/Container";
 import Row from "react-bootstrap/esm/Row";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendar, faDollar, faEdit, faEnvelope, faPlus, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCalendar, faDollar, faEdit, faEnvelope, faPlus, faSearch, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
 import Table from "react-bootstrap/esm/Table";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Button from 'react-bootstrap/Button';
@@ -89,13 +89,13 @@ export default function CampaignSearchPage() {
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
             ></MessageToast>
+            <section style={{paddingTop: "160px", background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-color), transparent 95%) 50%, color-mix(in srgb, var(--accent-color), transparent 98%) 25%, transparent 50%)"}}>
             <Container>
                 <Row>
                     <Col md="6">
                         <h3>
                             <nav aria-label="breadcrumb">
                                 <ol className="breadcrumb">
-                                    <li className="breadcrumb-item"><Link to="/admin/dashboard">{t('breadcrumb_my_network')}</Link></li>
                                     <li className="breadcrumb-item active" aria-current="page">My Campaigns</li>
                                 </ol>
                             </nav>
@@ -136,7 +136,12 @@ export default function CampaignSearchPage() {
                                     This is a simple card with a title and some text.
                                 </Card.Text>
                                 <Button variant="primary" size="sm"><FontAwesomeIcon icon={faSearch} fixedWidth /> View</Button>
+                                &nbsp;
                                 <Button variant="success" size="sm"><FontAwesomeIcon icon={faEdit} fixedWidth /> Edit</Button>
+                                &nbsp;
+                                <Button variant="info" size="sm"><FontAwesomeIcon icon={faUsers} fixedWidth /> Manage Entries</Button>
+                                &nbsp;
+                                <Button variant="danger" size="sm"><FontAwesomeIcon icon={faTrash} fixedWidth /> Delete</Button>
                             </Card.Body>
                         </Card>
                     </Col>
@@ -189,6 +194,7 @@ export default function CampaignSearchPage() {
                     </Row>
                 }
             </Container>
+            </section>
         </>
     );
 }

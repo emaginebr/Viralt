@@ -17,8 +17,6 @@ const ScriptLoader = (): React.ReactNode => {
     const loadAllScripts = async () => {
       try {
         await loadScript(process.env.PUBLIC_URL + '/assets/vendor/bootstrap/js/bootstrap.bundle.min.js');
-        await loadScript(process.env.PUBLIC_URL + '/assets/vendor/php-email-form/validate.js');
-        await loadScript(process.env.PUBLIC_URL + '/assets/vendor/aos/aos.js');
         await loadScript(process.env.PUBLIC_URL + '/assets/vendor/glightbox/js/glightbox.min.js');
         await loadScript(process.env.PUBLIC_URL + '/assets/vendor/swiper/swiper-bundle.min.js');
         await loadScript(process.env.PUBLIC_URL + '/assets/vendor/purecounter/purecounter_vanilla.js');
