@@ -1,324 +1,252 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Net.Mail;
 using System.Threading.Tasks;
-using Viralt.API.DTO;
-using Viralt.Domain.Interfaces.Services;
-using Viralt.DTO.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Viralt.Domain.Impl.Models;
-using Viralt.Domain.Interfaces.Models;
+using Viralt.Domain.Interfaces.Services;
 using Viralt.DTO.Domain;
-using Viralt.Domain.Impl.Services;
-using System.Runtime.CompilerServices;
-using DB.Infra.Context;
-using Viralt.Domain.Interfaces.Factory;
+using Viralt.DTO.User;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace Viralt.API.Controllers;
 
-namespace Viralt.API.Controllers
+[Route("api/[controller]")]
+[ApiController]
+public class UserController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserController : ControllerBase
+    private readonly IUserService _userService;
+
+    public UserController(IUserService userService)
     {
+        _userService = userService;
+    }
 
-        private readonly IUserService _userService;
-        private readonly IUserDomainFactory _userFactory;
-
-        public UserController(IUserService userService, IUserDomainFactory userFactory)
+    [HttpPost("gettokenauthorized")]
+    public ActionResult<UserTokenResult> GetTokenAuthorized([FromBody] LoginParam login)
+    {
+        try
         {
-            _userService = userService;
-            _userFactory = userFactory;
-        }
+            var token = _userService.LoginAndGenerateToken(login.Email, login.Password);
+            if (token == null)
+                return new UserTokenResult { Sucesso = false, Mensagem = "Email or password is wrong" };
 
-        [HttpPost("gettokenauthorized")]
-        public ActionResult<UserTokenResult> GetTokenAuthorized([FromBody] LoginParam login)
+            return new UserTokenResult { Token = token };
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                var user = _userService.LoginWithEmail(login.Email, login.Password);
-                if (user == null)
-                {
-                    return new UserTokenResult() {Sucesso = false, Mensagem = "Email or password is wrong" };
-                }
-                return new UserTokenResult()
-                {
-                    Token = user.GenerateNewToken(_userFactory)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [HttpGet("getme")]
-        [Authorize]
-        public ActionResult<UserResult> GetMe()
+    [HttpGet("getme")]
+    [Authorize]
+    public ActionResult<UserResult> GetMe()
+    {
+        try
         {
-            try
-            {
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                var user = _userService.GetUserByID(userSession.UserId);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User Not Found" };
-                }
+            var userSession = _userService.GetUserInSession(HttpContext);
+            if (userSession == null)
+                return StatusCode(401, "Not Authorized");
 
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            var user = _userService.GetUserByID(userSession.UserId);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User Not Found" };
+
+            return new UserResult { User = user };
         }
-
-        [HttpGet("getbyemail/{email}")]
-        public ActionResult<UserResult> GetByEmail(string email)
+        catch (Exception ex)
         {
-            try
-            {
-                var user = _userService.GetUserByEmail(email);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User with email not found" };
-                }
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [HttpGet("getBySlug/{slug}")]
-        public ActionResult<UserResult> GetBySlug(string slug)
+    [HttpGet("getbyemail/{email}")]
+    public ActionResult<UserResult> GetByEmail(string email)
+    {
+        try
         {
-            try
-            {
-                var user = _userService.GetBySlug(slug);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User with email not found" };
-                }
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+            var user = _userService.GetUserByEmail(email);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User with email not found" };
 
-        [HttpPost("insert")]
-        public ActionResult<UserResult> Insert([FromBody] UserInfo user)
+            return new UserResult { User = user };
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                //if(String.IsNullOrEmpty(param.Address))
-                //    return StatusCode(400, "Address is empty");
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User is empty" };
-                }
-                var newUser = _userService.Insert(user);
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(newUser)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [Authorize]
-        [HttpPost("update")]
-        public ActionResult<UserResult> Update([FromBody] UserInfo user)
+    [HttpGet("getBySlug/{slug}")]
+    public ActionResult<UserResult> GetBySlug(string slug)
+    {
+        try
         {
-            try
-            {
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User is empty" };
-                }
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                if (userSession.UserId != user.UserId)
-                {
-                    throw new Exception("Only can update your user");
-                }
+            var user = _userService.GetBySlug(slug);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User with slug not found" };
 
-                var updatedUser = _userService.Update(user);
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(updatedUser)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return new UserResult { User = user };
         }
-
-        [HttpPost("loginwithemail")]
-        public ActionResult<UserResult> LoginWithEmail([FromBody]LoginParam param)
+        catch (Exception ex)
         {
-            try
-            {
-                var user = _userService.LoginWithEmail(param.Email, param.Password);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
-                }
-                return new UserResult()
-                {
-                    User = _userService.GetUserInfoFromModel(user)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [Authorize]
-        [HttpGet("haspassword")]
-        public ActionResult<StatusResult> HasPassword()
+    [HttpPost("insert")]
+    public ActionResult<UserResult> Insert([FromBody] UserInfo user)
+    {
+        try
         {
-            try
-            {
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                var user = _userService.GetUserByID(userSession.UserId);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "User Not Found" };
-                }
-                return new StatusResult
-                {
-                    Sucesso = _userService.HasPassword(user.UserId),
-                    Mensagem = "Password verify successfully"
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User is empty" };
 
-        [Authorize]
-        [HttpPost("changepassword")]
-        public ActionResult<StatusResult> ChangePassword([FromBody]ChangePasswordParam param)
+            var newUser = _userService.Insert(user);
+            return new UserResult { User = newUser };
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-                var user = _userService.GetUserByID(userSession.UserId);
-                if (user == null)
-                {
-                    return new UserResult() { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
-                }
-                _userService.ChangePassword(user.UserId, param.OldPassword, param.NewPassword);
-                return new StatusResult
-                {
-                    Sucesso = true,
-                    Mensagem = "Password changed successfully"
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [HttpGet("sendrecoverymail/{email}")]
-        public async Task<ActionResult<StatusResult>> SendRecoveryMail(string email)
+    [Authorize]
+    [HttpPost("update")]
+    public ActionResult<UserResult> Update([FromBody] UserInfo user)
+    {
+        try
         {
-            try
-            {
-                var user = _userService.GetUserByEmail(email);
-                if (user == null)
-                {
-                    return new StatusResult
-                    {
-                        Sucesso = false,
-                        Mensagem = "Email not exist"
-                    };
-                }
-                await _userService.SendRecoveryEmail(email);
-                return new StatusResult
-                {
-                    Sucesso = true,
-                    Mensagem = "Recovery email sent successfully"
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User is empty" };
 
-        [HttpPost("changepasswordusinghash")]
-        public ActionResult<StatusResult> ChangePasswordUsingHash([FromBody] ChangePasswordUsingHashParam param)
+            var userSession = _userService.GetUserInSession(HttpContext);
+            if (userSession == null)
+                return StatusCode(401, "Not Authorized");
+
+            if (userSession.UserId != user.UserId)
+                throw new Exception("Only can update your user");
+
+            var updatedUser = _userService.Update(user);
+            return new UserResult { User = updatedUser };
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                _userService.ChangePasswordUsingHash(param.RecoveryHash, param.NewPassword);
-                return new StatusResult
-                {
-                    Sucesso = true,
-                    Mensagem = "Password changed successfully"
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
+    }
 
-        [HttpGet("list/{take}")]
-        public ActionResult<UserListResult> list(int take)
+    [HttpPost("loginwithemail")]
+    public ActionResult<UserResult> LoginWithEmail([FromBody] LoginParam param)
+    {
+        try
         {
-            try
-            {
-                return new UserListResult
-                {
-                    Sucesso = true,
-                    Users = _userService.ListUsers(take).Select(x => _userService.GetUserInfoFromModel(x)).ToList()
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+            var user = _userService.LoginWithEmail(param.Email, param.Password);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
 
+            return new UserResult { User = user };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("haspassword")]
+    public ActionResult<StatusResult> HasPassword()
+    {
+        try
+        {
+            var userSession = _userService.GetUserInSession(HttpContext);
+            if (userSession == null)
+                return StatusCode(401, "Not Authorized");
+
+            var user = _userService.GetUserByID(userSession.UserId);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "User Not Found" };
+
+            return new StatusResult
+            {
+                Sucesso = _userService.HasPassword(user.UserId),
+                Mensagem = "Password verify successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpPost("changepassword")]
+    public ActionResult<StatusResult> ChangePassword([FromBody] ChangePasswordParam param)
+    {
+        try
+        {
+            var userSession = _userService.GetUserInSession(HttpContext);
+            if (userSession == null)
+                return StatusCode(401, "Not Authorized");
+
+            var user = _userService.GetUserByID(userSession.UserId);
+            if (user == null)
+                return new UserResult { User = null, Sucesso = false, Mensagem = "Email or password is wrong" };
+
+            _userService.ChangePassword(user.UserId, param.OldPassword, param.NewPassword);
+            return new StatusResult { Sucesso = true, Mensagem = "Password changed successfully" };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("sendrecoverymail/{email}")]
+    public async Task<ActionResult<StatusResult>> SendRecoveryMail(string email)
+    {
+        try
+        {
+            var user = _userService.GetUserByEmail(email);
+            if (user == null)
+                return new StatusResult { Sucesso = false, Mensagem = "Email not exist" };
+
+            await _userService.SendRecoveryEmail(email);
+            return new StatusResult { Sucesso = true, Mensagem = "Recovery email sent successfully" };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPost("changepasswordusinghash")]
+    public ActionResult<StatusResult> ChangePasswordUsingHash([FromBody] ChangePasswordUsingHashParam param)
+    {
+        try
+        {
+            _userService.ChangePasswordUsingHash(param.RecoveryHash, param.NewPassword);
+            return new StatusResult { Sucesso = true, Mensagem = "Password changed successfully" };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpGet("list/{take}")]
+    public ActionResult<UserListResult> List(int take)
+    {
+        try
+        {
+            return new UserListResult
+            {
+                Sucesso = true,
+                Users = _userService.ListUsers(take).ToList()
+            };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
 }

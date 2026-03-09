@@ -1,147 +1,50 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
+using System;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Net.Http.Headers;
-using Viralt.Domain.Impl.Services;
 using Viralt.Domain.Interfaces.Services;
 using Viralt.DTO.Domain;
-using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
+using Viralt.Infra.Interfaces.AppServices;
 
-namespace Viralt.API.Controllers
+namespace Viralt.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ImageController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ImageController: ControllerBase
+    private readonly IUserService _userService;
+    private readonly IImageAppService _imageAppService;
+
+    public ImageController(
+        IUserService userService,
+        IImageAppService imageAppService)
     {
-        private readonly IUserService _userService;
-        private readonly IImageService _imageService;
+        _userService = userService;
+        _imageAppService = imageAppService;
+    }
 
-        public ImageController(
-            IUserService userService,
-            IImageService imageService
-        ) { 
-            _userService = userService;
-            _imageService = imageService;
-        }
-
-        /*
-        [Authorize]
-        [HttpPost("uploadImage")]
-        public ActionResult<StringResult> UploadImage(IFormFile file)
+    [Authorize]
+    [HttpPost("uploadImageUser")]
+    public ActionResult<StringResult> UploadImageUser(IFormFile file)
+    {
+        try
         {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("No file uploaded");
-                }
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
 
-                var fileName = _imageService.InsertFromStream(file.OpenReadStream(), file.FileName);
-                return new StringResult()
-                {
-                    Value = fileName
-                };
-            }
-            catch (Exception ex)
+            var userSession = _userService.GetUserInSession(HttpContext);
+            if (userSession == null)
+                return StatusCode(401, "Not Authorized");
+
+            var fileName = _userService.UpdateUserImage(file.OpenReadStream(), userSession.UserId);
+            return new StringResult
             {
-                return StatusCode(500, ex.Message);
-            }
+                Value = _imageAppService.GetImageUrl(fileName)
+            };
         }
-        */
-
-        [Authorize]
-        [HttpPost("uploadImageUser")]
-        public ActionResult<StringResult> UploadImageUser(IFormFile file)
+        catch (Exception ex)
         {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("No file uploaded");
-                }
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-
-                var fileName = _imageService.InsertToUser(file.OpenReadStream(), userSession.UserId);
-                return new StringResult()
-                {
-                    Value = _imageService.GetImageUrl(fileName)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return StatusCode(500, ex.Message);
         }
-
-        /*
-        [Authorize]
-        [HttpPost("uploadImageNetwork")]
-        public ActionResult<StringResult> UploadImageNetwork([FromForm] long networkId, IFormFile file)
-        {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("No file uploaded");
-                }
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-
-                var fileName = _imageService.InsertToNetwork(file.OpenReadStream(), networkId);
-                return new StringResult()
-                {
-                    Value = _imageService.GetImageUrl(fileName)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        [Authorize]
-        [HttpPost("uploadImageProduct")]
-        public ActionResult<StringResult> UploadImageProduct([FromForm] long productId, IFormFile file)
-        {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("No file uploaded");
-                }
-                var userSession = _userService.GetUserInSession(HttpContext);
-                if (userSession == null)
-                {
-                    return StatusCode(401, "Not Authorized");
-                }
-
-                var fileName = _imageService.InsertToProduct(file.OpenReadStream(), productId);
-                return new StringResult()
-                {
-                    Value = _imageService.GetImageUrl(fileName)
-                };
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-        */
     }
 }

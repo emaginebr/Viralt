@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,19 +7,18 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Viralt.Domain\Viralt.Domain.csproj" />
-    <ProjectReference Include="..\Core.Domain\Core.Domain.csproj" />
-    <ProjectReference Include="..\DB.Infra\DB.Infra.csproj" />
+    <ProjectReference Include="..\Viralt.Infra\Viralt.Infra.csproj" />
+    <ProjectReference Include="..\Viralt.Infra.Interfaces\Viralt.Infra.Interfaces.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Microsoft.AspNetCore.Authentication" />
-    <None Remove="Microsoft.EntityFrameworkCore.SqlServer" />
-    <None Remove="Microsoft.EntityFrameworkCore.Design" />
-    <None Remove="Microsoft.EntityFrameworkCore" />
-    <None Remove="Microsoft.EntityFrameworkCore.Proxies" />
+    <Compile Remove="Initializer.cs" />
+    <Compile Remove="ConfigurationParam.cs" />
   </ItemGroup>
+
 </Project>

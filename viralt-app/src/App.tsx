@@ -27,6 +27,9 @@ import InvoiceProvider from './Contexts/Invoice/InvoiceProvider';
 import InvoiceSearchPage from './Pages/InvoiceSearchPage';
 import ImageProvider from './Contexts/Image/ImageProvider';
 import TemplateProvider from './Contexts/Template/TemplateProvider';
+import { AuthProvider as NewAuthProvider } from './contexts/AuthContext';
+import { CampaignProvider } from './contexts/CampaignContext';
+import { ClientProvider } from './contexts/ClientContext';
 import CampaignSearchPage from './Pages/CampaignSearchPage';
 import ScriptLoader from './Components/ScriptLoader';
 import Header from './Components/Header';
@@ -44,8 +47,9 @@ function Layout() {
 
 function App() {
   const ContextContainer = ContextBuilder([
-    AuthProvider, UserProvider, NetworkProvider, ProfileProvider, ProductProvider, 
-    OrderProvider, InvoiceProvider, ImageProvider, TemplateProvider
+    AuthProvider, UserProvider, NetworkProvider, ProfileProvider, ProductProvider,
+    OrderProvider, InvoiceProvider, ImageProvider, TemplateProvider,
+    NewAuthProvider, CampaignProvider, ClientProvider
   ]);
 
   return (

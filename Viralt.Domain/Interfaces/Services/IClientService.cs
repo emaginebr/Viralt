@@ -1,14 +1,12 @@
-using System.Collections.Generic;
-using Viralt.Domain.Interfaces.Models;
+using Viralt.DTO.Client;
 
-namespace Viralt.Domain.Interfaces.Services
+namespace Viralt.Domain.Interfaces.Services;
+
+public interface IClientService
 {
-    public interface IClientService
-    {
-        IClientModel Insert(IClientModel model);
-        IClientModel Update(IClientModel model);
-        IClientModel GetById(long clientId);
-        IEnumerable<IClientModel> ListByCampaign(long campaignId);
-        void Delete(long clientId);
-    }
+    ClientInfo Insert(ClientInfo client);
+    ClientInfo Update(ClientInfo client);
+    ClientInfo GetById(long clientId);
+    List<ClientInfo> ListByCampaign(long campaignId);
+    void Delete(long clientId);
 }

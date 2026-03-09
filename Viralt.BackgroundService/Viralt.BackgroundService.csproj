@@ -10,11 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="ncrontab" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Viralt.Application\Viralt.Application.csproj" />
     <ProjectReference Include="..\Viralt.Domain\Viralt.Domain.csproj" />
     <ProjectReference Include="..\Viralt.DTO\Viralt.DTO.csproj" />
   </ItemGroup>
+
 </Project>

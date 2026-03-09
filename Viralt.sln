@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32228.430
@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Viralt.Domain", "Viralt.Dom
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Viralt.DTO", "Viralt.DTO\Viralt.DTO.csproj", "{2E16DDBE-A432-411E-BF7E-F4ED76FFB184}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.Domain", "Core.Domain\Core.Domain.csproj", "{E149BFCB-5FFB-44D5-8FA0-BE1480D2D8CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Viralt.Infra.Interfaces", "Viralt.Infra.Interfaces\Viralt.Infra.Interfaces.csproj", "{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DB.Infra", "DB.Infra\DB.Infra.csproj", "{84C58D7E-C390-4AAF-98B3-F5CBB09C91BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Viralt.Infra", "Viralt.Infra\Viralt.Infra.csproj", "{C2B3D4E5-F6A7-8901-BCDE-F12345678901}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{4CA0FD41-3A9C-40D1-99D3-240B1C82D7D9}"
 	ProjectSection(SolutionItems) = preProject
@@ -45,14 +45,14 @@ Global
 		{2E16DDBE-A432-411E-BF7E-F4ED76FFB184}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E16DDBE-A432-411E-BF7E-F4ED76FFB184}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E16DDBE-A432-411E-BF7E-F4ED76FFB184}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E149BFCB-5FFB-44D5-8FA0-BE1480D2D8CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E149BFCB-5FFB-44D5-8FA0-BE1480D2D8CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E149BFCB-5FFB-44D5-8FA0-BE1480D2D8CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E149BFCB-5FFB-44D5-8FA0-BE1480D2D8CA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{84C58D7E-C390-4AAF-98B3-F5CBB09C91BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{84C58D7E-C390-4AAF-98B3-F5CBB09C91BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{84C58D7E-C390-4AAF-98B3-F5CBB09C91BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{84C58D7E-C390-4AAF-98B3-F5CBB09C91BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2B3D4E5-F6A7-8901-BCDE-F12345678901}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2B3D4E5-F6A7-8901-BCDE-F12345678901}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2B3D4E5-F6A7-8901-BCDE-F12345678901}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2B3D4E5-F6A7-8901-BCDE-F12345678901}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3B88C798-479A-4EB0-8F68-23B3EF1AFAE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B88C798-479A-4EB0-8F68-23B3EF1AFAE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B88C798-479A-4EB0-8F68-23B3EF1AFAE8}.Release|Any CPU.ActiveCfg = Release|Any CPU

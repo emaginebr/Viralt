@@ -1,8 +1,7 @@
-﻿using Viralt.Application;
+using Viralt.Application;
 using NoChainSwapBackgroundService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,24 +16,16 @@ namespace Viralt.BackgroundService
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var config = new ConfigurationParam
-            {
-                ConnectionString = Configuration.GetConnectionString("NoChainSwapContext")
-            };
-            Initializer.Configure(services, config, false);
+            var connectionString = Configuration.GetConnectionString("ViraltContext");
+            services.ConfigureServices(connectionString, scoped: false);
             services.AddHostedService<Service>();
-            //services.AddHostedService<ServiceDaily>();
             services.AddTransient(typeof(ScheduleTask), typeof(ScheduleTask));
-            
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            
         }
     }
 }

@@ -1,11 +1,8 @@
-﻿using System;
-using Viralt.Domain.Impl.Core;
-using Microsoft.Extensions.Logging;
+using Viralt.Domain.Enums;
 
-namespace Viralt.Domain.Interfaces.Core
+namespace Viralt.Domain.Interfaces.Core;
+
+public interface ILogCore
 {
-    public interface ILogCore
-    {
-        void Log(string message, Levels level);
-    }
+    void Log(string message, Levels level);
 }
