@@ -1,6 +1,6 @@
-import { createContext, useState, useCallback, ReactNode } from 'react';
-import { userService } from '../services/userService';
-import { saveSession, loadSession, clearSession } from '../services/apiHelpers';
+import { createContext, useState, useCallback, PropsWithChildren } from 'react';
+import { userService } from '../Services/userService';
+import { saveSession, loadSession, clearSession } from '../Services/apiHelpers';
 import type { AuthSession, UserInfo, LoginParam, StatusResult } from '../types/user';
 
 interface AuthContextType {
@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSession] = useState<AuthSession | null>(loadSession<AuthSession>());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

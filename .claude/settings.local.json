@@ -4,7 +4,15 @@
       "Bash(npx tsc:*)",
       "Bash(./node_modules/.bin/tsc:*)",
       "Bash(ls:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(docker compose:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(docker.exe compose:*)",
+      "Bash(cat:*)",
+      "WebFetch(domain:www.nuget.org)",
+      "Bash(dotnet package:*)",
+      "Bash(dotnet:*)"
     ]
   }
 }

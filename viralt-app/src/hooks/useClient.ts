@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import ClientContext from '../contexts/ClientContext';
+import ClientContext from '../Contexts/ClientContext';
 
 /** Custom hook to access the Client context. Throws if used outside ClientProvider. */
 export const useClient = () => {

@@ -25,7 +25,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         var connectionString = Configuration.GetConnectionString("ViraltContext");
-        services.ConfigureServices(connectionString);
+        services.ConfigureServices(connectionString, Configuration);
 
         services.AddControllers();
         services.AddHealthChecks();

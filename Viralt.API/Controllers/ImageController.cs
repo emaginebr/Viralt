@@ -1,8 +1,9 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Viralt.Domain.Interfaces.Services;
+using NAuth.ACL.Interfaces;
 using Viralt.DTO.Domain;
 using Viralt.Infra.Interfaces.AppServices;
 
@@ -12,34 +13,35 @@ namespace Viralt.API.Controllers;
 [ApiController]
 public class ImageController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IUserClient _userClient;
     private readonly IImageAppService _imageAppService;
 
     public ImageController(
-        IUserService userService,
+        IUserClient userClient,
         IImageAppService imageAppService)
     {
-        _userService = userService;
+        _userClient = userClient;
         _imageAppService = imageAppService;
     }
 
     [Authorize]
     [HttpPost("uploadImageUser")]
-    public ActionResult<StringResult> UploadImageUser(IFormFile file)
+    public async Task<ActionResult<StringResult>> UploadImageUser(IFormFile file)
     {
         try
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
 
-            var userSession = _userService.GetUserInSession(HttpContext);
+            var userSession = _userClient.GetUserInSession(HttpContext);
             if (userSession == null)
-                return StatusCode(401, "Not Authorized");
+                return Unauthorized("Not Authorized");
 
-            var fileName = _userService.UpdateUserImage(file.OpenReadStream(), userSession.UserId);
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "").Replace("Basic ", "");
+            var fileName = await _userClient.UploadImageUserAsync(file.OpenReadStream(), file.FileName, token);
             return new StringResult
             {
-                Value = _imageAppService.GetImageUrl(fileName)
+                Value = fileName
             };
         }
         catch (Exception ex)

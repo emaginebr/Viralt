@@ -21,7 +21,6 @@ public partial class ViraltContext : DbContext
     public virtual DbSet<CampaignFieldOption> CampaignFieldOptions { get; set; }
     public virtual DbSet<Client> Clients { get; set; }
     public virtual DbSet<ClientEntry> ClientEntries { get; set; }
-    public virtual DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,11 +45,6 @@ public partial class ViraltContext : DbContext
             entity.Property(e => e.TopImage).HasMaxLength(80).HasColumnName("top_image");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.YoutubeUrl).HasMaxLength(300).HasColumnName("youtube_url");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Campaigns)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_user_campaign");
         });
 
         modelBuilder.Entity<CampaignEntry>(entity =>
@@ -164,26 +158,6 @@ public partial class ViraltContext : DbContext
                 .HasForeignKey<ClientEntry>(d => d.EntryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_client_entry_entry");
-        });
-
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.UserId).HasName("users_pkey");
-            entity.ToTable("users");
-
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.CreatedAt).HasColumnType("timestamp without time zone").HasColumnName("created_at");
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(180).HasColumnName("email");
-            entity.Property(e => e.Hash).IsRequired().HasMaxLength(128).HasColumnName("hash");
-            entity.Property(e => e.Image).HasMaxLength(120).HasColumnName("image");
-            entity.Property(e => e.Name).HasMaxLength(80).HasColumnName("name");
-            entity.Property(e => e.Password).HasMaxLength(120).HasColumnName("password");
-            entity.Property(e => e.Plan).HasColumnName("plan");
-            entity.Property(e => e.RecoveryHash).HasMaxLength(180).HasColumnName("recovery_hash");
-            entity.Property(e => e.Slug).HasMaxLength(85).HasColumnName("slug");
-            entity.Property(e => e.Status).HasDefaultValue(1).HasColumnName("status");
-            entity.Property(e => e.Token).HasMaxLength(180).HasColumnName("token");
-            entity.Property(e => e.UpdatedAt).HasColumnType("timestamp without time zone").HasColumnName("updated_at");
         });
 
         OnModelCreatingPartial(modelBuilder);

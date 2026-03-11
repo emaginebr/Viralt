@@ -19,7 +19,7 @@ namespace Viralt.BackgroundService
         public void ConfigureServices(IServiceCollection services)
         {
             var connectionString = Configuration.GetConnectionString("ViraltContext");
-            services.ConfigureServices(connectionString, scoped: false);
+            services.ConfigureServices(connectionString, Configuration, scoped: false);
             services.AddHostedService<Service>();
             services.AddTransient(typeof(ScheduleTask), typeof(ScheduleTask));
         }

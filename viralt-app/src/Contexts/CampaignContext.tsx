@@ -1,5 +1,5 @@
-import { createContext, useState, useCallback, ReactNode } from 'react';
-import { campaignService } from '../services/campaignService';
+import { createContext, useState, useCallback, PropsWithChildren } from 'react';
+import { campaignService } from '../Services/campaignService';
 import type {
   CampaignInfo, CampaignListResult, CampaignGetResult,
   CampaignInsertInfo, CampaignUpdateInfo, StatusResult,
@@ -27,7 +27,7 @@ interface CampaignContextType {
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
 
-export const CampaignProvider = ({ children }: { children: ReactNode }) => {
+export const CampaignProvider = ({ children }: PropsWithChildren) => {
   const [campaigns, setCampaigns] = useState<CampaignInfo[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<CampaignInfo | null>(null);
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,5 @@
-import { createContext, useState, useCallback, ReactNode } from 'react';
-import { clientService } from '../services/clientService';
+import { createContext, useState, useCallback, PropsWithChildren } from 'react';
+import { clientService } from '../Services/clientService';
 import type {
   ClientInfo, ClientListResult, ClientGetResult,
   ClientInsertInfo, ClientUpdateInfo, StatusResult,
@@ -25,7 +25,7 @@ interface ClientContextType {
 
 const ClientContext = createContext<ClientContextType | undefined>(undefined);
 
-export const ClientProvider = ({ children }: { children: ReactNode }) => {
+export const ClientProvider = ({ children }: PropsWithChildren) => {
   const [clients, setClients] = useState<ClientInfo[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null);
   const [loading, setLoading] = useState(false);

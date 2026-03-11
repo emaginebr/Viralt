@@ -22,5 +22,4 @@ public class Campaign
     public virtual ICollection<CampaignEntry> CampaignEntries { get; set; } = new List<CampaignEntry>();
     public virtual ICollection<CampaignField> CampaignFields { get; set; } = new List<CampaignField>();
     public virtual ICollection<Client> Clients { get; set; } = new List<Client>();
-    public virtual User User { get; set; }
 }

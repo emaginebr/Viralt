@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import CampaignContext from '../contexts/CampaignContext';
+import CampaignContext from '../Contexts/CampaignContext';
 
 /** Custom hook to access the Campaign context. Throws if used outside CampaignProvider. */
 export const useCampaign = () => {

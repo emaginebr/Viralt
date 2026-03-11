@@ -1,65 +1,48 @@
-version: "3.9"
 services:
-  nginx-proxy:
-    image: nginx-proxy
-    ports:
-      - "8081:80"
-    expose:
-      - "8081"
-    build:
-      context: .
-      dockerfile: Dockerfile-nginx
-  goblin-api:
-    image: goblin-api
+  viralt-db:
+    image: postgres:16-alpine
     environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:80
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "4041:80"
-    expose:
-      - "4041"
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - viralt-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  viralt-api:
     build:
       context: .
-      dockerfile: Goblin.API/Dockerfile
+      dockerfile: Viralt.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ViraltContext: Host=viralt-db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      NAuth__ApiUrl: ${NAUTH_API_URL:-http://nauth-api:80}
+      NAuth__BucketName: ${NAUTH_BUCKET_NAME:-viralt}
+      NAuth__JwtSecret: ${NAUTH_JWT_SECRET}
+      zTools__ApiURL: ${ZTOOLS_API_URL:-http://ztools-api:80}
+    ports:
+      - "${API_PORT:-5000}:8080"
     depends_on:
-      - "nginx-proxy"
-  auth-api:
-    image: auth-api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:80
-    ports:
-      - "4042:80"
-    expose:
-      - "4042"
+      viralt-db:
+        condition: service_healthy
+
+  viralt-app:
     build:
-      context: .
-      dockerfile: Auth.API/Dockerfile
+      context: ./viralt-app
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000}
+    ports:
+      - "${APP_PORT:-3000}:80"
     depends_on:
-      - "nginx-proxy"
-  gw-background:
-    image: gw-background
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:80
-    ports:
-      - "5001:80"
-    expose:
-      - "5001"
-    build:
-      context: .
-      dockerfile: GoblinWars.BackgroundService/Dockerfile
-  equipments-api:
-    image: equipments-api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_URLS=http://+:80
-    ports:
-      - "4043:80"
-    expose:
-      - "4043"
-    build:
-      context: .
-      dockerfile: Equipment.API/Dockerfile
-    depends_on:
-      - "nginx-proxy"
+      - viralt-api
+
+volumes:
+  viralt-pgdata:
