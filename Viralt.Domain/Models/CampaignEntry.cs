@@ -11,6 +11,13 @@ public class CampaignEntry
     public bool Mandatory { get; set; }
     public string EntryLabel { get; set; }
     public string EntryValue { get; set; }
+    public int SortOrder { get; set; }
+    public string Icon { get; set; }
+    public string Instructions { get; set; }
+    public bool RequireVerification { get; set; }
+    public string TargetUrl { get; set; }
+    public string ExternalProvider { get; set; }
+    public string ExternalEntryId { get; set; }
 
     public virtual Campaign Campaign { get; set; }
     public virtual ICollection<CampaignEntryOption> CampaignEntryOptions { get; set; } = new List<CampaignEntryOption>();

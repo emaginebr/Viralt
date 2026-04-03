@@ -18,15 +18,18 @@ services:
   viralt-api:
     build:
       context: .
-      dockerfile: Viralt.API/Dockerfile
+      dockerfile: Dockerfile
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__ViraltContext: Host=viralt-db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-      NAuth__ApiUrl: ${NAUTH_API_URL:-http://nauth-api:80}
+      NAuth__ApiURL: ${NAUTH_API_URL:-http://nauth-api:80}
       NAuth__BucketName: ${NAUTH_BUCKET_NAME:-viralt}
       NAuth__JwtSecret: ${NAUTH_JWT_SECRET}
       zTools__ApiURL: ${ZTOOLS_API_URL:-http://ztools-api:80}
+      BazzucaMedia__ApiKey: ${BazzucaMedia__ApiKey:-}
+      Recaptcha__SiteKey: ${Recaptcha__SiteKey:-}
+      Recaptcha__SecretKey: ${Recaptcha__SecretKey:-}
     ports:
       - "${API_PORT:-5000}:8080"
     depends_on:

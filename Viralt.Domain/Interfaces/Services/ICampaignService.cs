@@ -7,6 +7,7 @@ public interface ICampaignService
     CampaignInfo Insert(CampaignInfo campaign);
     CampaignInfo Update(CampaignInfo campaign);
     CampaignInfo GetById(long campaignId);
+    CampaignInfo GetBySlug(string slug);
     List<CampaignInfo> ListCampaigns(int take);
     void Delete(long campaignId);
     List<CampaignInfo> ListByUser(long userId);

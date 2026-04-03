@@ -11,6 +11,15 @@ export interface ClientInfo {
   phone: string;
   birthday: string | null;
   status: number | null;
+  referralToken: string | null;
+  referredByClientId: number | null;
+  ipAddress: string | null;
+  countryCode: string | null;
+  userAgent: string | null;
+  totalEntries: number;
+  emailVerified: boolean;
+  isWinner: boolean;
+  isDisqualified: boolean;
 }
 
 /** Data required to create a new client (no ID) */
@@ -20,11 +29,18 @@ export interface ClientInsertInfo {
   email: string;
   phone: string;
   birthday: string | null;
+  referredByClientId: number | null;
+  ipAddress: string | null;
+  countryCode: string | null;
+  userAgent: string | null;
 }
 
 /** Data required to update an existing client (includes ID) */
 export interface ClientUpdateInfo extends ClientInsertInfo {
   clientId: number;
+  emailVerified: boolean;
+  isWinner: boolean;
+  isDisqualified: boolean;
 }
 
 /** Client list API result */

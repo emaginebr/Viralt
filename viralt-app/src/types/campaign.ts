@@ -18,6 +18,35 @@ export interface CampaignInfo {
   youtubeUrl: string;
   customCss: string;
   minEntry: number | null;
+  slug: string | null;
+  timezone: string | null;
+  maxEntriesPerUser: number | null;
+  winnerCount: number | null;
+  isPublished: boolean;
+  password: string | null;
+  themePrimaryColor: string | null;
+  themeSecondaryColor: string | null;
+  themeBgColor: string | null;
+  themeFont: string | null;
+  logoImage: string | null;
+  termsUrl: string | null;
+  redirectUrl: string | null;
+  welcomeEmailEnabled: boolean;
+  welcomeEmailSubject: string | null;
+  welcomeEmailBody: string | null;
+  geoCountries: string | null;
+  blockVpn: boolean;
+  requireEmailVerification: boolean;
+  entryType: number | null;
+  totalEntries: number;
+  totalParticipants: number;
+  viewCount: number;
+  gaTrackingId: string | null;
+  fbPixelId: string | null;
+  tiktokPixelId: string | null;
+  gtmId: string | null;
+  brandId: number | null;
+  language: string | null;
 }
 
 /** Data required to create a new campaign (no ID) */
@@ -37,6 +66,32 @@ export interface CampaignInsertInfo {
   youtubeUrl: string;
   customCss: string;
   minEntry: number | null;
+  slug: string | null;
+  timezone: string | null;
+  maxEntriesPerUser: number | null;
+  winnerCount: number | null;
+  isPublished: boolean;
+  password: string | null;
+  themePrimaryColor: string | null;
+  themeSecondaryColor: string | null;
+  themeBgColor: string | null;
+  themeFont: string | null;
+  logoImage: string | null;
+  termsUrl: string | null;
+  redirectUrl: string | null;
+  welcomeEmailEnabled: boolean;
+  welcomeEmailSubject: string | null;
+  welcomeEmailBody: string | null;
+  geoCountries: string | null;
+  blockVpn: boolean;
+  requireEmailVerification: boolean;
+  entryType: number | null;
+  gaTrackingId: string | null;
+  fbPixelId: string | null;
+  tiktokPixelId: string | null;
+  gtmId: string | null;
+  brandId: number | null;
+  language: string | null;
 }
 
 /** Data required to update an existing campaign (includes ID) */

@@ -18,6 +18,16 @@ public class ClientRepository : IClientRepository<Client>
         return _context.Clients.Find(clientId);
     }
 
+    public Client GetByToken(string token)
+    {
+        return _context.Clients.FirstOrDefault(x => x.Token == token);
+    }
+
+    public Client GetByEmail(long campaignId, string email)
+    {
+        return _context.Clients.FirstOrDefault(x => x.CampaignId == campaignId && x.Email == email);
+    }
+
     public IEnumerable<Client> ListClients(long campaignId)
     {
         return _context.Clients.Where(x => x.CampaignId == campaignId).ToList();

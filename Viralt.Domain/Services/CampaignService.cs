@@ -1,5 +1,6 @@
 using Viralt.Domain.Interfaces.Services;
 using Viralt.Domain.Models;
+using Viralt.Domain.Utils;
 using Viralt.DTO.Campaign;
 using Viralt.Infra.Interfaces.Repository;
 
@@ -17,6 +18,12 @@ public class CampaignService : ICampaignService
     public CampaignInfo Insert(CampaignInfo dto)
     {
         var model = MapToModel(dto);
+
+        if (!string.IsNullOrWhiteSpace(dto.Title) && string.IsNullOrWhiteSpace(dto.Slug))
+        {
+            model.Slug = SlugHelper.GerarSlug(dto.Title);
+        }
+
         var saved = _repository.Insert(model);
         return MapToDto(saved);
     }
@@ -31,6 +38,12 @@ public class CampaignService : ICampaignService
     public CampaignInfo GetById(long campaignId)
     {
         var model = _repository.GetById(campaignId);
+        return MapToDto(model);
+    }
+
+    public CampaignInfo GetBySlug(string slug)
+    {
+        var model = _repository.GetBySlug(slug);
         return MapToDto(model);
     }
 
@@ -69,7 +82,36 @@ public class CampaignService : ICampaignService
             TopImage = model.TopImage,
             YoutubeUrl = model.YoutubeUrl,
             CustomCss = model.CustomCss,
-            MinEntry = model.MinEntry
+            MinEntry = model.MinEntry,
+            Slug = model.Slug,
+            Timezone = model.Timezone,
+            MaxEntriesPerUser = model.MaxEntriesPerUser,
+            WinnerCount = model.WinnerCount,
+            IsPublished = model.IsPublished,
+            Password = model.Password,
+            ThemePrimaryColor = model.ThemePrimaryColor,
+            ThemeSecondaryColor = model.ThemeSecondaryColor,
+            ThemeBgColor = model.ThemeBgColor,
+            ThemeFont = model.ThemeFont,
+            LogoImage = model.LogoImage,
+            TermsUrl = model.TermsUrl,
+            RedirectUrl = model.RedirectUrl,
+            WelcomeEmailEnabled = model.WelcomeEmailEnabled,
+            WelcomeEmailSubject = model.WelcomeEmailSubject,
+            WelcomeEmailBody = model.WelcomeEmailBody,
+            GeoCountries = model.GeoCountries,
+            BlockVpn = model.BlockVpn,
+            RequireEmailVerification = model.RequireEmailVerification,
+            EntryType = model.EntryType.ToString(),
+            TotalEntries = model.TotalEntries,
+            TotalParticipants = model.TotalParticipants,
+            ViewCount = model.ViewCount,
+            GaTrackingId = model.GaTrackingId,
+            FbPixelId = model.FbPixelId,
+            TiktokPixelId = model.TiktokPixelId,
+            GtmId = model.GtmId,
+            BrandId = model.BrandId,
+            Language = model.Language
         };
     }
 
@@ -90,6 +132,35 @@ public class CampaignService : ICampaignService
         TopImage = dto.TopImage,
         YoutubeUrl = dto.YoutubeUrl,
         CustomCss = dto.CustomCss,
-        MinEntry = dto.MinEntry
+        MinEntry = dto.MinEntry,
+        Slug = dto.Slug,
+        Timezone = dto.Timezone,
+        MaxEntriesPerUser = dto.MaxEntriesPerUser,
+        WinnerCount = dto.WinnerCount ?? 0,
+        IsPublished = dto.IsPublished,
+        Password = dto.Password,
+        ThemePrimaryColor = dto.ThemePrimaryColor,
+        ThemeSecondaryColor = dto.ThemeSecondaryColor,
+        ThemeBgColor = dto.ThemeBgColor,
+        ThemeFont = dto.ThemeFont,
+        LogoImage = dto.LogoImage,
+        TermsUrl = dto.TermsUrl,
+        RedirectUrl = dto.RedirectUrl,
+        WelcomeEmailEnabled = dto.WelcomeEmailEnabled,
+        WelcomeEmailSubject = dto.WelcomeEmailSubject,
+        WelcomeEmailBody = dto.WelcomeEmailBody,
+        GeoCountries = dto.GeoCountries,
+        BlockVpn = dto.BlockVpn,
+        RequireEmailVerification = dto.RequireEmailVerification,
+        EntryType = int.TryParse(dto.EntryType, out var et) ? et : 0,
+        TotalEntries = dto.TotalEntries,
+        TotalParticipants = dto.TotalParticipants,
+        ViewCount = dto.ViewCount,
+        GaTrackingId = dto.GaTrackingId,
+        FbPixelId = dto.FbPixelId,
+        TiktokPixelId = dto.TiktokPixelId,
+        GtmId = dto.GtmId,
+        BrandId = dto.BrandId,
+        Language = dto.Language
     };
 }

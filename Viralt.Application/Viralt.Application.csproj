@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Viralt.Domain\Viralt.Domain.csproj" />
     <ProjectReference Include="..\Viralt.Infra\Viralt.Infra.csproj" />
     <ProjectReference Include="..\Viralt.Infra.Interfaces\Viralt.Infra.Interfaces.csproj" />
+    <ProjectReference Include="..\Viralt.GraphQL\Viralt.GraphQL.csproj" />
   </ItemGroup>
 
   <ItemGroup>

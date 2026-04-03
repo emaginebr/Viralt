@@ -94,6 +94,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapGraphQL("/graphql");
         });
     }
 }

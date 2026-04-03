@@ -18,6 +18,11 @@ public class CampaignRepository : ICampaignRepository<Campaign>
         return _context.Campaigns.Find(campaignId);
     }
 
+    public Campaign GetBySlug(string slug)
+    {
+        return _context.Campaigns.FirstOrDefault(x => x.Slug == slug);
+    }
+
     public IEnumerable<Campaign> ListCampaigns(int take)
     {
         return _context.Campaigns.OrderBy(x => x.Title).Take(take).ToList();

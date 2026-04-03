@@ -19,5 +19,17 @@ namespace Viralt.DTO.Client
 
         [JsonPropertyName("entryValue")]
         public string EntryValue { get; set; }
+
+        [JsonPropertyName("completedAt")]
+        public DateTime? CompletedAt { get; set; }
+
+        [JsonPropertyName("verified")]
+        public bool Verified { get; set; }
+
+        [JsonPropertyName("verificationData")]
+        public string VerificationData { get; set; }
+
+        [JsonPropertyName("entriesEarned")]
+        public int EntriesEarned { get; set; }
     }
 }
