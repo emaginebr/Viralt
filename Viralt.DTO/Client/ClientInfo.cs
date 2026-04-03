@@ -31,5 +31,32 @@ namespace Viralt.DTO.Client
 
         [JsonPropertyName("status")]
         public int? Status { get; set; }
+
+        [JsonPropertyName("referralToken")]
+        public string ReferralToken { get; set; }
+
+        [JsonPropertyName("referredByClientId")]
+        public long? ReferredByClientId { get; set; }
+
+        [JsonPropertyName("ipAddress")]
+        public string IpAddress { get; set; }
+
+        [JsonPropertyName("countryCode")]
+        public string CountryCode { get; set; }
+
+        [JsonPropertyName("userAgent")]
+        public string UserAgent { get; set; }
+
+        [JsonPropertyName("totalEntries")]
+        public int TotalEntries { get; set; }
+
+        [JsonPropertyName("emailVerified")]
+        public bool EmailVerified { get; set; }
+
+        [JsonPropertyName("isWinner")]
+        public bool IsWinner { get; set; }
+
+        [JsonPropertyName("isDisqualified")]
+        public bool IsDisqualified { get; set; }
     }
 }

@@ -30,7 +30,17 @@ import TemplateProvider from './Contexts/Template/TemplateProvider';
 import { AuthProvider as NewAuthProvider } from './Contexts/AuthContext';
 import { CampaignProvider } from './Contexts/CampaignContext';
 import { ClientProvider } from './Contexts/ClientContext';
+import { PrizeProvider } from './Contexts/PrizeContext';
+import { WinnerProvider } from './Contexts/WinnerContext';
+import { PublicCampaignProvider } from './Contexts/PublicCampaignContext';
 import CampaignSearchPage from './Pages/CampaignSearchPage';
+import CampaignBuilderPage from './Pages/CampaignBuilderPage';
+import CampaignDetailPage from './Pages/CampaignDetailPage';
+import ParticipantListPage from './Pages/ParticipantListPage';
+import SubmissionModerationPage from './Pages/SubmissionModerationPage';
+import WinnerSelectionPage from './Pages/WinnerSelectionPage';
+import WidgetPage from './Pages/WidgetPage';
+import PublicCampaignPage from './Pages/PublicCampaignPage';
 import ScriptLoader from './Components/ScriptLoader';
 import Header from './Components/Header';
 import 'aos/dist/aos.css';
@@ -49,7 +59,7 @@ function App() {
   const ContextContainer = ContextBuilder([
     AuthProvider, UserProvider, NetworkProvider, ProfileProvider, ProductProvider,
     OrderProvider, InvoiceProvider, ImageProvider, TemplateProvider,
-    NewAuthProvider, CampaignProvider, ClientProvider
+    NewAuthProvider, CampaignProvider, ClientProvider, PrizeProvider, WinnerProvider, PublicCampaignProvider
   ]);
 
   return (
@@ -59,6 +69,11 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="campaigns">
             <Route index element={<CampaignSearchPage />} />
+            <Route path="new" element={<CampaignBuilderPage />} />
+            <Route path=":campaignId" element={<CampaignDetailPage />} />
+            <Route path=":campaignId/participants" element={<ParticipantListPage />} />
+            <Route path=":campaignId/submissions" element={<SubmissionModerationPage />} />
+            <Route path=":campaignId/winners" element={<WinnerSelectionPage />} />
           </Route>
           <Route path="network">
             <Route index element={<NetworkInsertPage />} />
@@ -95,6 +110,8 @@ function App() {
             </Route>
           </Route>
         </Route>
+        <Route path="c/:slug" element={<PublicCampaignPage />} />
+        <Route path="widget/:slug" element={<WidgetPage />} />
         <Route path="*" element={<Error404Page />} />
       </Routes>
       <ScriptLoader />

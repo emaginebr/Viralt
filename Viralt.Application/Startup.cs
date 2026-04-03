@@ -16,6 +16,7 @@ using Viralt.Infra.Interfaces;
 using Viralt.Infra.Interfaces.AppServices;
 using Viralt.Infra.Interfaces.Repository;
 using Viralt.Infra.Repository;
+using Viralt.GraphQL;
 using zTools.ACL;
 using zTools.ACL.Interfaces;
 using zTools.DTO.Settings;
@@ -68,6 +69,16 @@ public static class Startup
         services.AddScoped<ICampaignEntryOptionRepository<CampaignEntryOption>, CampaignEntryOptionRepository>();
         services.AddScoped<IClientRepository<Client>, ClientRepository>();
         services.AddScoped<IClientEntryRepository<ClientEntry>, ClientEntryRepository>();
+        services.AddScoped<IPrizeRepository<Prize>, PrizeRepository>();
+        services.AddScoped<IWinnerRepository<Winner>, WinnerRepository>();
+        services.AddScoped<ICampaignViewRepository<CampaignView>, CampaignViewRepository>();
+        services.AddScoped<IBrandRepository<Brand>, BrandRepository>();
+        services.AddScoped<IReferralRepository<Referral>, ReferralRepository>();
+        services.AddScoped<ISubmissionRepository<Submission>, SubmissionRepository>();
+        services.AddScoped<IVoteRepository<Vote>, VoteRepository>();
+        services.AddScoped<IWebhookRepository<Webhook>, WebhookRepository>();
+        services.AddScoped<IUnlockRewardRepository<UnlockReward>, UnlockRewardRepository>();
+        services.AddScoped<IClientRewardRepository<ClientReward>, ClientRewardRepository>();
         #endregion
 
         #region AppServices
@@ -78,6 +89,16 @@ public static class Startup
         #region Domain Services
         services.AddScoped<ICampaignService, CampaignService>();
         services.AddScoped<IClientService, ClientService>();
+        services.AddScoped<IPrizeService, PrizeService>();
+        services.AddScoped<IWinnerService, WinnerService>();
+        services.AddScoped<IReferralService, ReferralService>();
+        services.AddScoped<ISubmissionService, SubmissionService>();
+        services.AddScoped<IWebhookService, WebhookService>();
+        services.AddScoped<IBrandService, BrandService>();
+        #endregion
+
+        #region GraphQL
+        services.AddViraltGraphQL();
         #endregion
 
         return services;

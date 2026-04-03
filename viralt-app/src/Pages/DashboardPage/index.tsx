@@ -5,8 +5,11 @@ import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Card from "react-bootstrap/esm/Card";
 import Alert from 'react-bootstrap/Alert';
+import Spinner from 'react-bootstrap/Spinner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWarning, faPlus, faBurn, faFire, faSearch, faDollar, faClock, faBoltLightning, faLock, faFileUpload, faCalendar, faCalendarAlt, faFileWord, faBoxOpen, faSign, faLockOpen, faUserDoctor, faChartLine, faChartPie, faCoins, faArrowRight, faUserGroup, faBox, faCog, faCogs, faUserCog, faList, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faWarning, faPlus, faBurn, faFire, faSearch, faDollar, faClock, faBoltLightning, faLock, faFileUpload, faCalendar, faCalendarAlt, faFileWord, faBoxOpen, faSign, faLockOpen, faUserDoctor, faChartLine, faChartPie, faCoins, faArrowRight, faUserGroup, faBox, faCog, faCogs, faUserCog, faList, faUser, faBullhorn, faUsers, faTicket } from '@fortawesome/free-solid-svg-icons';
+import { analyticsService } from "../../Services/analyticsService";
+import type { DashboardAnalytics } from "../../types/analytics";
 import Button from "react-bootstrap/esm/Button";
 import { useNavigate } from "react-router-dom";
 import { faBitcoin, faOpencart } from "@fortawesome/free-brands-svg-icons";
@@ -43,6 +46,10 @@ export default function DashboardPage() {
     const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
     const [showMessage, setShowMessage] = useState<boolean>(false);
     const [messageText, setMessageText] = useState<string>("");
+
+    // Dashboard analytics state
+    const [dashboardAnalytics, setDashboardAnalytics] = useState<DashboardAnalytics | null>(null);
+    const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
     const throwError = (message: string) => {
         setDialog(MessageToastEnum.Error);
@@ -82,6 +89,12 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
+        // Load dashboard analytics
+        analyticsService.getDashboardAnalytics()
+            .then((data) => setDashboardAnalytics(data))
+            .catch(() => { /* non-critical */ })
+            .finally(() => setAnalyticsLoading(false));
+
         searchStatements(1);
         switch (networkContext.currentRole) {
             case UserRoleEnum.NetworkManager:
@@ -114,6 +127,58 @@ export default function DashboardPage() {
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
             ></MessageToast>
+            {/* Campaign Analytics Overview */}
+            <Container className="mb-4">
+                <Row>
+                    <Col>
+                        <h5 className="mb-3"><FontAwesomeIcon icon={faChartLine} fixedWidth /> Campaign Analytics</h5>
+                    </Col>
+                </Row>
+                {analyticsLoading ? (
+                    <Row className="py-3">
+                        <Col className="text-center">
+                            <Spinner animation="border" size="sm" />
+                        </Col>
+                    </Row>
+                ) : dashboardAnalytics ? (
+                    <Row>
+                        <Col md={4}>
+                            <Card className="text-center mb-3">
+                                <Card.Body>
+                                    <FontAwesomeIcon icon={faBullhorn} size="2x" className="text-primary mb-2" />
+                                    <h3>{dashboardAnalytics.activeCampaigns}</h3>
+                                    <Card.Text className="text-muted">Active Campaigns</Card.Text>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4}>
+                            <Card className="text-center mb-3">
+                                <Card.Body>
+                                    <FontAwesomeIcon icon={faUsers} size="2x" className="text-success mb-2" />
+                                    <h3>{dashboardAnalytics.totalParticipantsAll}</h3>
+                                    <Card.Text className="text-muted">Total Participants</Card.Text>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                        <Col md={4}>
+                            <Card className="text-center mb-3">
+                                <Card.Body>
+                                    <FontAwesomeIcon icon={faTicket} size="2x" className="text-warning mb-2" />
+                                    <h3>{dashboardAnalytics.totalEntriesAll}</h3>
+                                    <Card.Text className="text-muted">Total Entries</Card.Text>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    </Row>
+                ) : (
+                    <Row>
+                        <Col>
+                            <Alert variant="info">No analytics data available yet.</Alert>
+                        </Col>
+                    </Row>
+                )}
+            </Container>
+
             <Container>
                 {networkContext.currentRole != UserRoleEnum.User &&
                     <Row>

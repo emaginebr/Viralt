@@ -11,7 +11,17 @@ public class Client
     public string Phone { get; set; }
     public DateTime? Birthday { get; set; }
     public int? Status { get; set; }
+    public string ReferralToken { get; set; }
+    public long? ReferredByClientId { get; set; }
+    public string IpAddress { get; set; }
+    public string CountryCode { get; set; }
+    public string UserAgent { get; set; }
+    public int TotalEntries { get; set; }
+    public bool EmailVerified { get; set; }
+    public bool IsWinner { get; set; }
+    public bool IsDisqualified { get; set; }
 
     public virtual Campaign Campaign { get; set; }
     public virtual ICollection<ClientEntry> ClientEntries { get; set; } = new List<ClientEntry>();
+    public virtual ICollection<ClientReward> ClientRewards { get; set; } = new List<ClientReward>();
 }

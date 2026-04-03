@@ -8,6 +8,8 @@ namespace Viralt.Domain.Services;
 public class ClientService : IClientService
 {
     private readonly IClientRepository<Client> _repository;
+    private static readonly Random _random = new();
+    private const string AlphanumericChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public ClientService(IClientRepository<Client> repository)
     {
@@ -18,6 +20,8 @@ public class ClientService : IClientService
     {
         var model = MapToModel(dto);
         model.CreatedAt = DateTime.Now;
+        model.TotalEntries = 0;
+        model.ReferralToken = GenerateReferralToken();
         var saved = _repository.Insert(model);
         return MapToDto(saved);
     }
@@ -35,6 +39,18 @@ public class ClientService : IClientService
         return MapToDto(model);
     }
 
+    public ClientInfo GetByToken(string token)
+    {
+        var model = _repository.GetByToken(token);
+        return MapToDto(model);
+    }
+
+    public ClientInfo GetByEmail(long campaignId, string email)
+    {
+        var model = _repository.GetByEmail(campaignId, email);
+        return MapToDto(model);
+    }
+
     public List<ClientInfo> ListByCampaign(long campaignId)
     {
         return _repository.ListClients(campaignId).Select(MapToDto).ToList();
@@ -43,6 +59,17 @@ public class ClientService : IClientService
     public void Delete(long clientId)
     {
         _repository.Delete(clientId);
+    }
+
+    private static string GenerateReferralToken()
+    {
+        var chars = new char[8];
+        lock (_random)
+        {
+            for (int i = 0; i < 8; i++)
+                chars[i] = AlphanumericChars[_random.Next(AlphanumericChars.Length)];
+        }
+        return new string(chars);
     }
 
     private static ClientInfo MapToDto(Client model)
@@ -58,7 +85,16 @@ public class ClientService : IClientService
             Email = model.Email,
             Phone = model.Phone,
             Birthday = model.Birthday,
-            Status = model.Status
+            Status = model.Status,
+            ReferralToken = model.ReferralToken,
+            ReferredByClientId = model.ReferredByClientId,
+            IpAddress = model.IpAddress,
+            CountryCode = model.CountryCode,
+            UserAgent = model.UserAgent,
+            TotalEntries = model.TotalEntries,
+            EmailVerified = model.EmailVerified,
+            IsWinner = model.IsWinner,
+            IsDisqualified = model.IsDisqualified
         };
     }
 
@@ -72,6 +108,15 @@ public class ClientService : IClientService
         Email = dto.Email,
         Phone = dto.Phone,
         Birthday = dto.Birthday,
-        Status = dto.Status
+        Status = dto.Status,
+        ReferralToken = dto.ReferralToken,
+        ReferredByClientId = dto.ReferredByClientId,
+        IpAddress = dto.IpAddress,
+        CountryCode = dto.CountryCode,
+        UserAgent = dto.UserAgent,
+        TotalEntries = dto.TotalEntries,
+        EmailVerified = dto.EmailVerified,
+        IsWinner = dto.IsWinner,
+        IsDisqualified = dto.IsDisqualified
     };
 }
