@@ -36,8 +36,8 @@ Uma plataforma de sorteios, concursos e campanhas virais que permite a marcas, i
 - **Participantes**: Cadastro de participantes com nome, e-mail, telefone, data de nascimento e token de acesso
 - **Entradas dos participantes**: Registro das ações completadas por cada participante
 - **Autenticação**: Login, registro, recuperação de senha (via NAuth)
-- **Upload de imagens**: Armazenamento em S3 (via zTools)
-- **Envio de e-mails**: Via MailerSend (via zTools)
+- **Upload de imagens**: Armazenamento direto em S3 (bucket `emagine`, pasta `viralt/`)
+- **Envio de e-mails**: Direto pela API do MailerSend
 - **Interface**: Dashboard, login, recuperação de senha, perfil, homepage com features e pricing
 - **Internacionalização**: 4 idiomas (pt, en, es, fr)
 
