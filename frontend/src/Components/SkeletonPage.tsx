@@ -1,38 +1,40 @@
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Skeleton from "react-loading-skeleton";
+import { useTranslation } from "react-i18next";
+import { PageContainer } from "./ui/PageContainer";
+import { Skeleton, SkeletonCard, SkeletonGroup, SkeletonText, SkeletonTitle } from "./ui/Skeleton";
 
-export default function SkeletonPage() {
+/** Full-page loading placeholder: decorative blocks + one sr-only status (docs/design/components.md §17). */
+const SkeletonPage = () => {
+    const { t } = useTranslation();
+
     return (
-        <Container className="py-5">
-            <Row>
-                <Col md={12}>
-                    <h1 className="mb-5"><Skeleton /></h1>
-                </Col>
-            </Row>
-            <Row>
-                <Col md={9}>
-                    <h3 className="mb-5"><Skeleton /></h3>
-                    <div className="mb-5"><Skeleton count={3} /></div>
-                    <div className="mb-5"><Skeleton count={5} /></div>
-                </Col>
-                <Col md={3}>
-                    <h3><Skeleton circle={true} height={300} /></h3>
-                    <p><Skeleton count={3} /></p>
-                </Col>
-            </Row>
-            <Row>
-                <Col md={3}>
-                    <p><Skeleton count={2} /></p>
-                    <h3><Skeleton circle={true} height={300} /></h3>
-                </Col>
-                <Col md={9}>
-                    <h3 className="mb-5"><Skeleton /></h3>
-                    <div className="mb-5"><Skeleton count={4} /></div>
-                    <div className="mb-5"><Skeleton count={3} /></div>
-                </Col>
-            </Row>
-        </Container>
+        <PageContainer>
+            <SkeletonGroup label={t('shared.loading')} className="flex flex-col gap-10">
+                <SkeletonTitle className="h-9" />
+                <div className="grid gap-8 md:grid-cols-[1fr_16rem]">
+                    <div className="flex flex-col gap-6">
+                        <Skeleton className="h-6 w-1/2" />
+                        <SkeletonText lines={3} />
+                        <SkeletonText lines={5} />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        <SkeletonCard className="aspect-square h-auto" />
+                        <SkeletonText lines={3} />
+                    </div>
+                </div>
+                <div className="grid gap-8 md:grid-cols-[16rem_1fr]">
+                    <div className="flex flex-col gap-4">
+                        <SkeletonText lines={2} />
+                        <SkeletonCard className="aspect-square h-auto" />
+                    </div>
+                    <div className="flex flex-col gap-6">
+                        <Skeleton className="h-6 w-1/2" />
+                        <SkeletonText lines={4} />
+                        <SkeletonText lines={3} />
+                    </div>
+                </div>
+            </SkeletonGroup>
+        </PageContainer>
     );
-}
+};
+
+export default SkeletonPage;

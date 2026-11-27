@@ -18,7 +18,7 @@ import ITemplateService from './Interfaces/ITemplateService';
 import TemplateService from './Impl/TemplateService';
 
 const httpClientAuth : IHttpClient = HttpClient();
-httpClientAuth.init(process.env.REACT_APP_API_URL);
+httpClientAuth.init(import.meta.env.VITE_API_URL);
 
 const userServiceImpl : IUserService = UserService;
 userServiceImpl.init(httpClientAuth);

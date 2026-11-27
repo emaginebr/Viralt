@@ -1,15 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faCheck, faEnvelope, faMinus, faPaperPlane, faShuffle, faTrophy,
+} from '@fortawesome/free-solid-svg-icons';
 import { useWinner } from '../../hooks/useWinner';
-import type { DrawRequest, NotifyAllResult } from '../../types/winner';
+import type { DrawRequest, NotifyAllResult, WinnerInfo } from '../../types/winner';
+import { PageContainer, PageHeader } from '../../Components/ui/PageContainer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../Components/ui/Card';
+import { Button } from '../../Components/ui/Button';
+import { Input } from '../../Components/ui/Input';
+import { Select } from '../../Components/ui/Select';
+import { Alert } from '../../Components/ui/Alert';
+import { Badge } from '../../Components/ui/Badge';
+import { Table, type TableColumn } from '../../Components/ui/Table';
+import Breadcrumb from '../../Components/Breadcrumb';
 
-const SELECTION_METHODS: { value: number; label: string }[] = [
-  { value: 0, label: 'Random' },
-  { value: 1, label: 'Leaderboard' },
-  { value: 2, label: 'Manual' },
+const SELECTION_METHODS: { value: number; key: string }[] = [
+  { value: 0, key: 'random' },
+  { value: 1, key: 'leaderboard' },
+  { value: 2, key: 'manual' },
 ];
 
 const WinnerSelectionPage = () => {
+  const { t, i18n } = useTranslation();
   const { campaignId } = useParams<{ campaignId: string }>();
   const { winners, loading, error, loadWinners, drawWinners, notifyWinner, notifyAllWinners, clearError } = useWinner();
 
@@ -57,172 +72,198 @@ const WinnerSelectionPage = () => {
   }, [campaignIdNum, notifyAllWinners]);
 
   const getMethodLabel = (method: number): string => {
-    return SELECTION_METHODS.find((m) => m.value === method)?.label || 'Unknown';
+    const found = SELECTION_METHODS.find((m) => m.value === method);
+    return found ? t(`winnerSelection.methods.${found.key}`) : t('shared.unknown');
   };
 
+  const yesNoBadge = (value: boolean) =>
+    value ? (
+      <Badge variant="success" icon={<FontAwesomeIcon icon={faCheck} />}>{t('shared.yes')}</Badge>
+    ) : (
+      <Badge variant="neutral" icon={<FontAwesomeIcon icon={faMinus} />}>{t('shared.no')}</Badge>
+    );
+
+  const columns: TableColumn<WinnerInfo>[] = [
+    { key: 'winnerId', header: t('winnerSelection.columns.winnerId'), rowHeader: true, numeric: true },
+    { key: 'clientId', header: t('winnerSelection.columns.clientId'), numeric: true },
+    {
+      key: 'prizeId',
+      header: t('winnerSelection.columns.prizeId'),
+      numeric: true,
+      accessor: (w) => w.prizeId ?? '—',
+    },
+    {
+      key: 'selectionMethod',
+      header: t('winnerSelection.columns.method'),
+      accessor: (w) => getMethodLabel(w.selectionMethod),
+    },
+    {
+      key: 'selectedAt',
+      header: t('winnerSelection.columns.selectedAt'),
+      className: 'tabular-nums',
+      accessor: (w) => new Date(w.selectedAt).toLocaleString(i18n.language),
+    },
+    {
+      key: 'notified',
+      header: t('winnerSelection.columns.notified'),
+      accessor: (w) => yesNoBadge(w.notified),
+    },
+    {
+      key: 'claimed',
+      header: t('winnerSelection.columns.claimed'),
+      accessor: (w) => yesNoBadge(w.claimed),
+    },
+    {
+      key: 'actions',
+      header: t('winnerSelection.columns.actions'),
+      actions: true,
+      className: 'px-2 py-1',
+      accessor: (w) =>
+        !w.notified ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleNotify(w.winnerId)}
+            disabled={loading}
+            aria-label={t('winnerSelection.notifyNamed', { id: w.winnerId })}
+            leftIcon={<FontAwesomeIcon icon={faEnvelope} aria-hidden="true" />}
+          >
+            {t('winnerSelection.notify')}
+          </Button>
+        ) : null,
+    },
+  ];
+
   return (
-    <div className="container py-4">
-      <h2 className="mb-4">Winner Selection</h2>
-      <p className="text-muted">Campaign ID: {campaignId}</p>
+    <PageContainer>
+      <PageHeader
+        breadcrumb={
+          <Breadcrumb
+            className="mb-1"
+            label={t('shared.breadcrumb')}
+            items={[
+              { label: t('layout.nav.campaigns'), to: '/campaigns' },
+              { label: t('participantList.campaign'), to: `/campaigns/${campaignId}` },
+              { label: t('winnerSelection.title') },
+            ]}
+          />
+        }
+        title={t('winnerSelection.title')}
+        description={t('winnerSelection.campaignId', { id: campaignId })}
+      />
 
       {error && (
-        <div className="alert alert-danger alert-dismissible" role="alert">
+        <Alert
+          variant="danger"
+          className="mb-6"
+          dismissible
+          dismissLabel={t('shared.dismissAlert')}
+          onDismiss={clearError}
+        >
           {error}
-          <button type="button" className="btn-close" onClick={clearError} aria-label="Close" />
-        </div>
+        </Alert>
       )}
 
       {notifyResult && (
-        <div
-          className={`alert ${notifyFailures.length > 0 ? 'alert-warning' : 'alert-success'} alert-dismissible`}
-          role="status"
-          aria-live="polite"
+        <Alert
+          variant={notifyFailures.length > 0 ? 'warning' : 'success'}
+          className="mb-6"
+          title={notifyResult.mensagem}
+          dismissible
+          dismissLabel={t('winnerSelection.closeSummary')}
+          onDismiss={() => setNotifyResult(null)}
         >
-          {notifyResult.mensagem}
           {notifyFailures.length > 0 && (
             <>
-              <p className="mb-1 mt-2 fw-semibold">Falhas:</p>
-              <ul className="mb-0">
+              <p className="mb-1 mt-2 font-semibold">{t('winnerSelection.failures')}</p>
+              <ul className="list-disc pl-5">
                 {notifyFailures.map((f) => (
                   <li key={f.winnerId}>
-                    {f.clientName ?? 'Sem nome'} ({f.email ?? 'sem e-mail'}): {f.motivo}
+                    {f.clientName ?? t('winnerSelection.noName')} ({f.email ?? t('winnerSelection.noEmail')}): {f.motivo}
                   </li>
                 ))}
               </ul>
             </>
           )}
-          <button
-            type="button"
-            className="btn-close"
-            onClick={() => setNotifyResult(null)}
-            aria-label="Close notification summary"
-          />
-        </div>
+        </Alert>
       )}
 
       {/* Draw Form */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">Draw Winners</h5>
-          <div className="row g-3 align-items-end">
-            <div className="col-md-3">
-              <label htmlFor="winnerCount" className="form-label">Number of Winners</label>
-              <input
-                type="number"
-                id="winnerCount"
-                className="form-control"
-                min={1}
-                value={winnerCount}
-                onChange={(e) => setWinnerCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              />
-            </div>
-            <div className="col-md-4">
-              <label htmlFor="selectionMethod" className="form-label">Selection Method</label>
-              <select
-                id="selectionMethod"
-                className="form-select"
-                value={selectionMethod}
-                onChange={(e) => setSelectionMethod(Number(e.target.value))}
-              >
-                {SELECTION_METHODS.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-3">
-              <button
-                className="btn btn-primary"
-                onClick={handleDraw}
-                disabled={loading}
-              >
-                {loading ? 'Drawing...' : 'Draw Winners'}
-              </button>
-            </div>
+      <Card as="section" aria-labelledby="draw-title" className="mb-6">
+        <CardHeader>
+          <div>
+            <CardTitle id="draw-title">{t('winnerSelection.drawTitle')}</CardTitle>
+            <CardDescription>{t('winnerSelection.drawDescription')}</CardDescription>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent>
+          <form
+            className="grid gap-4 sm:grid-cols-[10rem_16rem_auto] sm:items-end"
+            onSubmit={(e) => { e.preventDefault(); void handleDraw(); }}
+          >
+            <Input
+              type="number"
+              id="winnerCount"
+              min={1}
+              className="tabular-nums"
+              label={t('winnerSelection.winnerCount')}
+              value={winnerCount}
+              onChange={(e) => setWinnerCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            />
+            <Select
+              id="selectionMethod"
+              label={t('winnerSelection.selectionMethod')}
+              value={selectionMethod}
+              onChange={(e) => setSelectionMethod(Number(e.target.value))}
+              options={SELECTION_METHODS.map((m) => ({ value: m.value, label: t(`winnerSelection.methods.${m.key}`) }))}
+            />
+            <Button
+              type="submit"
+              loading={loading}
+              loadingText={t('winnerSelection.drawing')}
+              leftIcon={<FontAwesomeIcon icon={faShuffle} aria-hidden="true" />}
+            >
+              {t('winnerSelection.draw')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Winners List */}
-      <div className="card">
-        <div className="card-body">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="card-title mb-0">Selected Winners ({winners.length})</h5>
-            {winners.length > 0 && (
-              <button
-                className="btn btn-outline-primary btn-sm"
-                onClick={handleNotifyAll}
-                disabled={loading}
-              >
-                Notify All
-              </button>
-            )}
-          </div>
-
-          {winners.length === 0 && !loading && (
-            <p className="text-muted">No winners selected yet. Use the form above to draw winners.</p>
-          )}
-
-          {loading && winners.length === 0 && (
-            <div className="text-center py-3">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          )}
-
+      <section aria-labelledby="winners-title">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 id="winners-title" className="font-display text-xl font-bold">
+            {t('winnerSelection.selectedWinners', { count: winners.length })}
+          </h2>
           {winners.length > 0 && (
-            <div className="table-responsive">
-              <table className="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Winner ID</th>
-                    <th>Client ID</th>
-                    <th>Prize ID</th>
-                    <th>Method</th>
-                    <th>Selected At</th>
-                    <th>Notified</th>
-                    <th>Claimed</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {winners.map((w) => (
-                    <tr key={w.winnerId}>
-                      <td>{w.winnerId}</td>
-                      <td>{w.clientId}</td>
-                      <td>{w.prizeId ?? '-'}</td>
-                      <td>{getMethodLabel(w.selectionMethod)}</td>
-                      <td>{new Date(w.selectedAt).toLocaleString()}</td>
-                      <td>
-                        <span className={`badge ${w.notified ? 'bg-success' : 'bg-secondary'}`}>
-                          {w.notified ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge ${w.claimed ? 'bg-success' : 'bg-secondary'}`}>
-                          {w.claimed ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td>
-                        {!w.notified && (
-                          <button
-                            className="btn btn-sm btn-outline-success"
-                            onClick={() => handleNotify(w.winnerId)}
-                            disabled={loading}
-                          >
-                            Notify
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Button
+              variant="outline"
+              onClick={handleNotifyAll}
+              disabled={loading}
+              leftIcon={<FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />}
+            >
+              {t('winnerSelection.notifyAll')}
+            </Button>
           )}
         </div>
-      </div>
-    </div>
+
+        <Table
+          columns={columns}
+          rows={winners}
+          caption={t('winnerSelection.caption')}
+          rowKey={(w) => w.winnerId}
+          loading={loading && winners.length === 0}
+          loadingRows={3}
+          className="[&_table]:min-w-208"
+          empty={
+            <div className="flex flex-col items-center gap-3 py-4">
+              <FontAwesomeIcon icon={faTrophy} className="text-2xl" aria-hidden="true" />
+              <p>{t('winnerSelection.empty')}</p>
+            </div>
+          }
+        />
+      </section>
+    </PageContainer>
   );
 };
 

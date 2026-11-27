@@ -1,40 +1,43 @@
-import { useContext, useEffect, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Form from 'react-bootstrap/Form';
-import AuthContext from "../../Contexts/Auth/AuthContext";
-import Button from "react-bootstrap/esm/Button";
-import Card from 'react-bootstrap/Card';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAddressBook, faArrowLeft, faArrowRight, faBitcoinSign, faCalendar, faCalendarAlt, faCancel, faClose, faCode, faDollar, faEnvelope, faEthernet, faIdCard, faLock, faPercent, faPhone, faSave, faSignInAlt, faTrash, faUpload, faUser } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import InputGroup from 'react-bootstrap/InputGroup';
-import UserContext from "../../Contexts/User/UserContext";
-import MessageToast from "../../Components/MessageToast";
+import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Moment from 'moment';
+import ReactQuill from "react-quill";
+import 'react-quill/dist/quill.snow.css';
+import './RichTextEditor.css';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft, faCode, faImage, faSave, faTag, faUpload } from '@fortawesome/free-solid-svg-icons';
+import MessageToast from "../../Components/MessageToast";
 import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
 import { CustomToolbar } from "../../Components/CustomToolbar";
-import ReactQuill from "react-quill";
 import NetworkContext from "../../Contexts/Network/NetworkContext";
 import ProductContext from "../../Contexts/Product/ProductContext";
 import ProductInfo from "../../DTO/Domain/ProductInfo";
 import { ProductStatusEnum } from "../../DTO/Enum/ProductStatusEnum";
-import 'react-quill/dist/quill.snow.css';
 import { ImageModal, ImageTypeEnum } from "../../Components/ImageModal";
-import ImageContext from "../../Contexts/Image/ImageContext";
-import { useTranslation } from "react-i18next";
+import { Breadcrumb } from "../../Components/Breadcrumb";
+import { Button, Card, CardContent, FieldLabel, Input, PageContainer, PageHeader, Select } from "../../Components/ui";
 
-export default function ProductEditPage() {
+const DESCRIPTION_LABEL_ID = "product-description-label";
 
-    const { t } = useTranslation();
+/** Toolbar button selector → i18n key (aria-label), applied only when the button has none. */
+const TOOLBAR_LABELS: Record<string, string> = {
+    ".ql-bold": "adminUi.richText.bold",
+    ".ql-italic": "adminUi.richText.italic",
+    ".ql-underline": "adminUi.richText.underline",
+    ".ql-link": "adminUi.richText.link",
+    ".ql-clean": "adminUi.richText.clean",
+    ".ql-save": "adminUi.richText.save",
+};
 
+const ProductEditPage = () => {
+
+    const { t, i18n } = useTranslation();
 
     const networkContext = useContext(NetworkContext);
     const productContext = useContext(ProductContext);
 
-    let { productId } = useParams();
+    const { productId } = useParams();
 
     const [insertMode, setInsertMode] = useState<boolean>(false);
     const [showImageModal, setShowImageModal] = useState<boolean>(false);
@@ -43,7 +46,9 @@ export default function ProductEditPage() {
     const [showMessage, setShowMessage] = useState<boolean>(false);
     const [messageText, setMessageText] = useState<string>("");
 
-    let navigate = useNavigate();
+    const quillRef = useRef<ReactQuill>(null);
+
+    const navigate = useNavigate();
     Moment.locale('en');
 
     const throwError = (message: string) => {
@@ -58,7 +63,7 @@ export default function ProductEditPage() {
     };
 
     useEffect(() => {
-        let productIdNum: number = parseInt(productId);
+        const productIdNum: number = parseInt(productId);
         if (productIdNum > 0) {
             productContext.getById(productIdNum).then((ret) => {
                 if (!ret.sucesso) {
@@ -70,13 +75,71 @@ export default function ProductEditPage() {
             return;
         }
         setInsertMode(true);
-        let product: ProductInfo = null;
+        const product: ProductInfo = null;
         productContext.setProduct({
             ...product,
             networkId: networkContext.userNetwork?.networkId,
             status: ProductStatusEnum.Active
         });
     }, []);
+
+    // Accessibility of the Quill DOM (components.md §25.1): textbox role and label on the editor,
+    // translated aria-labels on the toolbar buttons that have none.
+    useEffect(() => {
+        const editor = quillRef.current?.getEditor();
+        const root = editor?.root;
+        if (root) {
+            root.setAttribute("role", "textbox");
+            root.setAttribute("aria-multiline", "true");
+            root.setAttribute("aria-labelledby", DESCRIPTION_LABEL_ID);
+        }
+        const toolbar = document.getElementById("custom-toolbar");
+        if (toolbar) {
+            // The toolbar sits inside the <form>: buttons without a type would submit it.
+            toolbar.querySelectorAll<HTMLButtonElement>("button:not([type])").forEach((button) => {
+                button.type = "button";
+            });
+            Object.entries(TOOLBAR_LABELS).forEach(([selector, key]) => {
+                toolbar.querySelectorAll<HTMLElement>(selector).forEach((element) => {
+                    if (!element.getAttribute("aria-label") || element.dataset.i18nLabel === "1") {
+                        element.setAttribute("aria-label", t(key));
+                        element.setAttribute("title", t(key));
+                        element.dataset.i18nLabel = "1";
+                    }
+                });
+            });
+        }
+    }, [i18n.language]);
+
+    const handleSave = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (insertMode) {
+            productContext.setProduct({
+                ...productContext.product,
+                productId: 0,
+                networkId: networkContext.userNetwork?.networkId
+            });
+            const ret = await productContext.insert(productContext.product);
+            if (ret.sucesso) {
+                showSuccessMessage(ret.mensagemSucesso ? ret.mensagemSucesso : t('product_edit_insert_success_message'));
+            }
+            else {
+                throwError(ret.mensagemErro);
+            }
+        }
+        else {
+            const ret = await productContext.update(productContext.product);
+            if (ret.sucesso) {
+                showSuccessMessage(ret.mensagemSucesso ? ret.mensagemSucesso : t('product_edit_update_success_message'));
+            }
+            else {
+                throwError(ret.mensagemErro);
+            }
+        }
+    };
+
+    const product = productContext.product;
+    const priceValue = product?.price === undefined || product?.price === null || Number.isNaN(product?.price) ? "" : product.price;
 
     return (
         <>
@@ -92,218 +155,179 @@ export default function ProductEditPage() {
                 show={showImageModal}
                 onClose={() => setShowImageModal(false)}
                 onSuccess={(url: string) => {
-                    //navigate("/admin/products/" + productId);
                     productContext.setProduct({
                         ...productContext.product,
                         imageUrl: url
                     });
                 }}
             />
-            <Container>
-                <Row>
-                    <Col md={12}>
-                        <h3>
-                            <nav aria-label="breadcrumb">
-                                <ol className="breadcrumb">
-                                    <li className="breadcrumb-item"><Link to="/admin/dashboard">{t('breadcrumb_my_network')}</Link></li>
-                                    <li className="breadcrumb-item"><Link to="/admin/products">{t('breadcrumb_products_list')}</Link></li>
-                                    <li className="breadcrumb-item active" aria-current="page">{t('breadcrumb_my_product')}</li>
-                                </ol>
-                            </nav>
-                        </h3>
-                    </Col>
-                </Row>
+            <PageContainer>
+                <PageHeader
+                    breadcrumb={<Breadcrumb items={[
+                        { label: t('breadcrumb_my_network'), to: "/admin/dashboard" },
+                        { label: t('breadcrumb_products_list'), to: "/admin/products" },
+                        { label: t('breadcrumb_my_product') },
+                    ]} />}
+                    title={product?.name || t('breadcrumb_my_product')}
+                />
                 <Card>
-                    <Card.Body>
-                        <Row>
-                            <Col md="4" className="text-center">
-                                <div className="mb-2">
-                                    {productContext.product?.imageUrl &&
-                                        <img src={productContext.product?.imageUrl} style={{ width: "100%", height: "auto" }} />
-                                    }
+                    <CardContent className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                        <div className="flex flex-col items-center gap-4">
+                            {product?.imageUrl ?
+                                <img
+                                    src={product?.imageUrl}
+                                    alt={product?.name ?? ""}
+                                    className="h-auto w-full rounded-md border border-border object-cover"
+                                />
+                                :
+                                <div aria-hidden="true" className="flex aspect-square w-full items-center justify-center rounded-md bg-muted text-3xl text-muted-foreground">
+                                    <FontAwesomeIcon icon={faImage} />
                                 </div>
-                                <div className="lc-block d-grid gap-3 d-md-block">
-                                    {productContext.product?.productId > 0 &&
-                                        <Button variant="primary" className="me-md-2" size="lg" onClick={async (e) => {
-                                            e.preventDefault();
-                                            setShowImageModal(true);
-                                        }}>
-                                            <FontAwesomeIcon icon={faUpload} fixedWidth />&nbsp;{t('product_edit_change_image_button')}
-                                        </Button>
-                                    }
-                                </div>
-                            </Col>
-                            <Col md="8">
-                                <Form>
-                                    <div className="text-center mb-3"> {/* TODO: Confirm if this text is appropriate here or should be changed/removed */}
-                                        {t('network_edit_registration_info')}
-                                    </div>
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="2">{t('form_label_name')}:</Form.Label>
-                                        <Col sm="10">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faUser} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="text" size="lg"
-                                                    placeholder={t('product_edit_name_placeholder')}
-                                                    value={productContext.product?.name}
-                                                    onChange={(e) => {
-                                                        productContext.setProduct({
-                                                            ...productContext.product,
-                                                            name: e.target.value
-                                                        });
-                                                    }} />
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    {productContext.product?.productId > 0 &&
-                                        <Form.Group as={Row} className="mb-3">
-                                            <Form.Label column sm="2">{t('form_label_slug')}:</Form.Label>
-                                            <Col sm="10">
-                                                <InputGroup>
-                                                    <InputGroup.Text><FontAwesomeIcon icon={faCode} fixedWidth /></InputGroup.Text>
-                                                    <Form.Control type="text" size="lg"
-                                                        placeholder={t('product_edit_slug_placeholder')}
-                                                        value={productContext.product?.slug}
-                                                        onChange={(e) => {
-                                                            productContext.setProduct({
-                                                                ...productContext.product,
-                                                                slug: e.target.value
-                                                            });
-                                                        }} />
-                                                </InputGroup>
-                                            </Col>
-                                        </Form.Group>
-                                    }
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="2">{t('product_edit_frequency_label')}:</Form.Label>
-                                        <Col sm="5">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faCalendar} fixedWidth /></InputGroup.Text>
-                                                <Form.Select size="lg"
-                                                    value={productContext.product?.frequency}
-                                                    onChange={(e) => {
-                                                        //alert(e.target.value);
-                                                        productContext.setProduct({
-                                                            ...productContext.product,
-                                                            frequency: parseInt(e.target.value)
-                                                        });
-                                                    }}
-                                                >
-                                                    <option value={0}>{t('product_edit_frequency_one_time')}</option>
-                                                    <option value={30}>{t('product_edit_frequency_monthly')}</option>
-                                                    <option value={365}>{t('product_edit_frequency_annually')}</option>
-                                                </Form.Select>
-                                            </InputGroup>
-                                        </Col>
-                                        <Form.Label column sm="1">{t('product_edit_price_label')}:</Form.Label>
-                                        <Col sm="4">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faDollar} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="number" size="lg"
-                                                    placeholder={t('product_edit_price_placeholder')}
-                                                    value={productContext.product?.price}
-                                                    onChange={(e) => {
-                                                        productContext.setProduct({
-                                                            ...productContext.product,
-                                                            price: parseFloat(e.target.value)
-                                                        });
-                                                    }} />
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="2">{t('product_edit_status_label')}:</Form.Label>
-                                        <Col sm="10">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faPercent} fixedWidth /></InputGroup.Text>
-                                                <Form.Select size="lg"
-                                                    value={productContext.product?.status}
-                                                    onChange={(e) => {
-                                                        productContext.setProduct({
-                                                            ...productContext.product,
-                                                            status: parseInt(e.target.value)
-                                                        });
-                                                    }} >
-                                                    <option value={ProductStatusEnum.Active}>{t('product_status_active')}</option>
-                                                    <option value={ProductStatusEnum.Inactive}>{t('product_status_inactive')}</option>
-                                                    <option value={ProductStatusEnum.Expired}>{t('product_status_expired')}</option>
-                                                </Form.Select>
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    <div className="py-3">
-                                        <CustomToolbar />
-                                        <ReactQuill
-                                            theme="snow"
-                                            value={productContext.product?.description}
-                                            placeholder={t('product_edit_description_placeholder')}
-                                            onChange={(value) => {
-                                                productContext.setProduct({
-                                                    ...productContext.product,
-                                                    description: value
-                                                });
-                                            }}
-                                            modules={{
-                                                toolbar: {
-                                                    container: "#custom-toolbar",
-                                                },
-                                            }}
-                                            formats={[
-                                                "header",
-                                                "bold",
-                                                "italic",
-                                                "underline",
-                                                "size",
-                                                "link",
-                                                "clean",
-                                            ]}
-                                        />
-                                    </div>
-                                    <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <Button variant="danger" size="lg" onClick={() => {
-                                            navigate("/admin/products"); // TODO: Consider if this route should be dynamic or translated if it's a label
-                                        }}><FontAwesomeIcon icon={faArrowLeft} fixedWidth /> {t('back_button')}</Button>
-                                        <Button variant="success" size="lg" onClick={async (e) => {
-                                            if (insertMode) {
-                                                productContext.setProduct({
-                                                    ...productContext.product,
-                                                    productId: 0,
-                                                    networkId: networkContext.userNetwork?.networkId
-                                                });
-                                                let ret = await productContext.insert(productContext.product);
-                                                if (ret.sucesso) {
-                                                    showSuccessMessage(ret.mensagemSucesso ? ret.mensagemSucesso : t('product_edit_insert_success_message'));
-                                                    //alert(userContext.user?.id);
-                                                }
-                                                else {
-                                                    throwError(ret.mensagemErro);
-                                                }
-                                            }
-                                            else {
-                                                let ret = await productContext.update(productContext.product);
-                                                if (ret.sucesso) {
-                                                    //alert(userContext.user?.id);
-                                                    showSuccessMessage(ret.mensagemSucesso ? ret.mensagemSucesso : t('product_edit_update_success_message'));
-                                                }
-                                                else {
-                                                    throwError(ret.mensagemErro);
-                                                }
-                                            }
+                            }
+                            {product?.productId > 0 &&
+                                <Button
+                                    variant="outline"
+                                    fullWidth
+                                    leftIcon={<FontAwesomeIcon icon={faUpload} fixedWidth aria-hidden="true" />}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setShowImageModal(true);
+                                    }}
+                                >
+                                    {t('product_edit_change_image_button')}
+                                </Button>
+                            }
+                        </div>
+                        <form className="flex min-w-0 flex-col gap-4" onSubmit={handleSave} noValidate>
+                            <p className="text-muted-foreground">{t('network_edit_registration_info')}</p>
+                            <Input
+                                label={t('form_label_name')}
+                                leftIcon={<FontAwesomeIcon icon={faTag} fixedWidth />}
+                                placeholder={t('product_edit_name_placeholder')}
+                                value={product?.name ?? ""}
+                                onChange={(e) => {
+                                    productContext.setProduct({
+                                        ...productContext.product,
+                                        name: e.target.value
+                                    });
+                                }}
+                            />
+                            {product?.productId > 0 &&
+                                <Input
+                                    label={t('form_label_slug')}
+                                    leftIcon={<FontAwesomeIcon icon={faCode} fixedWidth />}
+                                    placeholder={t('product_edit_slug_placeholder')}
+                                    value={product?.slug ?? ""}
+                                    onChange={(e) => {
+                                        productContext.setProduct({
+                                            ...productContext.product,
+                                            slug: e.target.value
+                                        });
+                                    }}
+                                />
+                            }
+                            <div className="grid gap-4 sm:grid-cols-3">
+                                <Select
+                                    label={t('product_edit_frequency_label')}
+                                    value={product?.frequency ?? 0}
+                                    onChange={(e) => {
+                                        productContext.setProduct({
+                                            ...productContext.product,
+                                            frequency: parseInt(e.target.value)
+                                        });
+                                    }}
+                                    options={[
+                                        { value: 0, label: t('product_edit_frequency_one_time') },
+                                        { value: 30, label: t('product_edit_frequency_monthly') },
+                                        { value: 365, label: t('product_edit_frequency_annually') },
+                                    ]}
+                                />
+                                <Input
+                                    type="number"
+                                    inputMode="decimal"
+                                    step="0.01"
+                                    label={t('product_edit_price_label')}
+                                    leftAddon="R$"
+                                    placeholder={t('product_edit_price_placeholder')}
+                                    value={priceValue}
+                                    onChange={(e) => {
+                                        productContext.setProduct({
+                                            ...productContext.product,
+                                            price: parseFloat(e.target.value)
+                                        });
+                                    }}
+                                />
+                                <Select
+                                    label={t('product_edit_status_label')}
+                                    value={product?.status ?? ProductStatusEnum.Active}
+                                    onChange={(e) => {
+                                        productContext.setProduct({
+                                            ...productContext.product,
+                                            status: parseInt(e.target.value)
+                                        });
+                                    }}
+                                    options={[
+                                        { value: ProductStatusEnum.Active, label: t('product_status_active') },
+                                        { value: ProductStatusEnum.Inactive, label: t('product_status_inactive') },
+                                        { value: ProductStatusEnum.Expired, label: t('product_status_expired') },
+                                    ]}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <FieldLabel id={DESCRIPTION_LABEL_ID}>{t('adminUi.productDescription')}</FieldLabel>
+                                <div className="rich-text">
+                                    <CustomToolbar />
+                                    <ReactQuill
+                                        ref={quillRef}
+                                        theme="snow"
+                                        value={product?.description ?? ""}
+                                        placeholder={t('product_edit_description_placeholder')}
+                                        onChange={(value) => {
+                                            productContext.setProduct({
+                                                ...productContext.product,
+                                                description: value
+                                            });
                                         }}
-                                            disabled={productContext.loadingUpdate}
-                                        >
-                                            {productContext.loadingUpdate ? t('loading') :
-                                                <>
-                                                    <FontAwesomeIcon icon={faSave} fixedWidth />&nbsp;{t('save_button')}
-                                                </>}
-                                        </Button>
-                                    </div>
-                                </Form>
-                            </Col>
-                        </Row>
-                    </Card.Body>
+                                        modules={{
+                                            toolbar: {
+                                                container: "#custom-toolbar",
+                                            },
+                                        }}
+                                        formats={[
+                                            "header",
+                                            "bold",
+                                            "italic",
+                                            "underline",
+                                            "size",
+                                            "link",
+                                            "clean",
+                                        ]}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+                                <Button
+                                    variant="outline"
+                                    leftIcon={<FontAwesomeIcon icon={faArrowLeft} fixedWidth aria-hidden="true" />}
+                                    onClick={() => navigate("/admin/products")}
+                                >
+                                    {t('back_button')}
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    loading={productContext.loadingUpdate}
+                                    loadingText={t('loading')}
+                                    leftIcon={<FontAwesomeIcon icon={faSave} fixedWidth aria-hidden="true" />}
+                                >
+                                    {t('save_button')}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
                 </Card>
-            </Container>
+            </PageContainer>
         </>
     );
-}
+};
+
+export default ProductEditPage;

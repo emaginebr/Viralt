@@ -7,14 +7,20 @@ import { graphqlQuery, GRAPHQL_ADMIN } from './graphqlClient';
 
 const API_BASE = `${getApiUrl()}/api/Campaign`;
 
+/** Page size limit configured on the GraphQL server (ModifyPagingOptions.MaxPageSize). */
+const MAX_PAGE_SIZE = 50;
+
 interface CampaignServiceConfig {
   onUnauthorized?: () => void;
 }
 
-/** Campaign fields fragment for GraphQL queries */
+/**
+ * Campaign fields fragment for GraphQL queries.
+ * The schema is single: CampaignPublicType ignores `userId`, `password`, `geoCountries`,
+ * `welcomeEmailSubject` and `welcomeEmailBody` on `Campaign` for every query (admin included).
+ */
 const CAMPAIGN_FIELDS = `
   campaignId
-  userId
   title
   description
   startTime
@@ -34,7 +40,6 @@ const CAMPAIGN_FIELDS = `
   maxEntriesPerUser
   winnerCount
   isPublished
-  password
   themePrimaryColor
   themeSecondaryColor
   themeBgColor
@@ -43,9 +48,6 @@ const CAMPAIGN_FIELDS = `
   termsUrl
   redirectUrl
   welcomeEmailEnabled
-  welcomeEmailSubject
-  welcomeEmailBody
-  geoCountries
   blockVpn
   requireEmailVerification
   entryType
@@ -59,6 +61,69 @@ const CAMPAIGN_FIELDS = `
   brandId
   language
 `;
+
+/** Fields of CampaignInfo that the GraphQL schema hides. */
+type HiddenCampaignField = 'userId' | 'password' | 'geoCountries' | 'welcomeEmailSubject' | 'welcomeEmailBody';
+
+/** `Campaign` as returned by GraphQL. */
+interface CampaignNode extends Omit<CampaignInfo, HiddenCampaignField> {}
+
+/**
+ * Campaign DTO as returned by REST insert/update (Viralt.DTO.Campaign.CampaignInfo):
+ * every field is present, but `entryType` is a string.
+ */
+interface CampaignDto extends Omit<CampaignInfo, 'entryType'> {
+  entryType: string | number | null;
+}
+
+/** REST body (Viralt.DTO.Campaign.CampaignInfo): `entryType` must be a string. */
+interface CampaignRequestBody extends Omit<CampaignInfo, 'entryType'> {
+  entryType: string;
+}
+
+/** `{ sucesso: false, mensagem }` returned by the API instead of a DTO (e.g. empty body). */
+interface FailureBody {
+  sucesso?: boolean;
+  mensagem?: string | null;
+  erros?: string[] | null;
+}
+
+const toNumberOrNull = (value: string | number | null | undefined): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+/** GraphQL node → CampaignInfo (hidden fields become null: not readable through GraphQL). */
+const fromNode = (node: CampaignNode): CampaignInfo => ({
+  ...node,
+  userId: null,
+  password: null,
+  geoCountries: null,
+  welcomeEmailSubject: null,
+  welcomeEmailBody: null,
+});
+
+/** REST DTO → CampaignInfo (`entryType` back to a number). */
+const fromDto = (dto: CampaignDto): CampaignInfo => ({
+  ...dto,
+  entryType: toNumberOrNull(dto.entryType),
+});
+
+/** Builds the full REST body: every DTO field, with `entryType` as a string and counters preserved. */
+const toRequestBody = (data: CampaignInsertInfo | CampaignUpdateInfo, campaignId: number): CampaignRequestBody => {
+  const update = data as Partial<CampaignUpdateInfo>;
+  return {
+    ...data,
+    campaignId,
+    userId: data.userId ?? 0,
+    entryType: String(data.entryType ?? 0),
+    // CampaignService.Update maps the whole DTO onto the row: missing counters would reset them to 0.
+    totalEntries: update.totalEntries ?? 0,
+    totalParticipants: update.totalParticipants ?? 0,
+    viewCount: update.viewCount ?? 0,
+  };
+};
 
 /** Campaign Service — Manages all API operations related to campaigns */
 class CampaignService {
@@ -80,37 +145,53 @@ class CampaignService {
     return response.json();
   }
 
-  /** List all campaigns (GraphQL) */
-  async list(take: number): Promise<CampaignListResult> {
+  /** Insert/update return the CampaignInfo DTO itself, or a StatusResult on failure. */
+  private toGetResult(body: CampaignDto | FailureBody | null): CampaignGetResult {
+    const failure = body as FailureBody | null;
+    if (!body || failure.sucesso === false || !('campaignId' in body)) {
+      return {
+        sucesso: false,
+        mensagem: failure?.mensagem ?? 'Request failed',
+        erros: failure?.erros ?? null,
+        campaign: null,
+      };
+    }
+    return { sucesso: true, mensagem: null, erros: null, campaign: fromDto(body as CampaignDto) };
+  }
+
+  /** List campaigns (GraphQL `campaigns`, offset paging: `skip`/`take` → `{ items, totalCount }`) */
+  async list(take: number, skip: number = 0): Promise<CampaignListResult> {
     const query = `
-      query ListCampaigns($take: Int!) {
-        campaigns(take: $take) {
-          ${CAMPAIGN_FIELDS}
+      query ListCampaigns($skip: Int!, $take: Int!) {
+        campaigns(skip: $skip, take: $take) {
+          items {
+            ${CAMPAIGN_FIELDS}
+          }
+          totalCount
         }
       }
     `;
-    const data = await graphqlQuery<{ campaigns: CampaignInfo[] }>(
-      GRAPHQL_ADMIN, query, { take }, true
+    const pageSize = Math.min(Math.max(Math.trunc(take) || 1, 1), MAX_PAGE_SIZE);
+    const data = await graphqlQuery<{ campaigns: { items: CampaignNode[] | null; totalCount: number } | null }>(
+      GRAPHQL_ADMIN, query, { skip: Math.max(0, Math.trunc(skip) || 0), take: pageSize }, true
     );
-    return { sucesso: true, mensagem: null, erros: null, campaigns: data.campaigns };
+    const items = data?.campaigns?.items ?? [];
+    return {
+      sucesso: true, mensagem: null, erros: null,
+      campaigns: items.map(fromNode),
+      totalCount: data?.campaigns?.totalCount ?? items.length,
+    };
   }
 
-  /** List campaigns by user (GraphQL) */
-  async listByUser(userId: number): Promise<CampaignListResult> {
-    const query = `
-      query ListCampaignsByUser($userId: Long!) {
-        campaignsByUser(userId: $userId) {
-          ${CAMPAIGN_FIELDS}
-        }
-      }
-    `;
-    const data = await graphqlQuery<{ campaignsByUser: CampaignInfo[] }>(
-      GRAPHQL_ADMIN, query, { userId }, true
-    );
-    return { sucesso: true, mensagem: null, erros: null, campaigns: data.campaignsByUser };
+  /**
+   * List campaigns of a user. There is no `campaignsByUser` query and `userId` is hidden from the
+   * schema, so it cannot be filtered: this returns the same first page as `list` (see report).
+   */
+  async listByUser(_userId: number): Promise<CampaignListResult> {
+    return this.list(MAX_PAGE_SIZE);
   }
 
-  /** Get a campaign by ID (GraphQL) */
+  /** Get a campaign by ID (GraphQL `campaignById` is a list: first item or null) */
   async getById(id: number): Promise<CampaignGetResult> {
     const query = `
       query GetCampaignById($id: Long!) {
@@ -119,13 +200,14 @@ class CampaignService {
         }
       }
     `;
-    const data = await graphqlQuery<{ campaignById: CampaignInfo | null }>(
+    const data = await graphqlQuery<{ campaignById: CampaignNode[] | null }>(
       GRAPHQL_ADMIN, query, { id }, true
     );
-    return { sucesso: true, mensagem: null, erros: null, campaign: data.campaignById };
+    const node = data?.campaignById?.[0];
+    return { sucesso: true, mensagem: null, erros: null, campaign: node ? fromNode(node) : null };
   }
 
-  /** Get a campaign by slug (GraphQL) */
+  /** Get a campaign by slug (GraphQL `campaignBySlug` is a list: first item or null) */
   async getBySlug(slug: string): Promise<CampaignGetResult> {
     const query = `
       query GetCampaignBySlug($slug: String!) {
@@ -134,29 +216,30 @@ class CampaignService {
         }
       }
     `;
-    const data = await graphqlQuery<{ campaignBySlug: CampaignInfo | null }>(
+    const data = await graphqlQuery<{ campaignBySlug: CampaignNode[] | null }>(
       GRAPHQL_ADMIN, query, { slug }, true
     );
-    return { sucesso: true, mensagem: null, erros: null, campaign: data.campaignBySlug };
+    const node = data?.campaignBySlug?.[0];
+    return { sucesso: true, mensagem: null, erros: null, campaign: node ? fromNode(node) : null };
   }
 
-  /** Create a new campaign (REST) */
+  /** Create a new campaign (REST POST /api/Campaign/insert; the backend sets userId from the session) */
   async insert(data: CampaignInsertInfo): Promise<CampaignGetResult> {
     const response = await fetch(`${API_BASE}/insert`, {
-      method: 'POST', headers: getHeaders(true), body: JSON.stringify(data),
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(toRequestBody(data, 0)),
     });
-    return this.handleResponse<CampaignGetResult>(response);
+    return this.toGetResult(await this.handleResponse<CampaignDto | FailureBody>(response));
   }
 
-  /** Update an existing campaign (REST) */
+  /** Update an existing campaign (REST POST /api/Campaign/update; the whole row is overwritten) */
   async update(data: CampaignUpdateInfo): Promise<CampaignGetResult> {
     const response = await fetch(`${API_BASE}/update`, {
-      method: 'POST', headers: getHeaders(true), body: JSON.stringify(data),
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(toRequestBody(data, data.campaignId)),
     });
-    return this.handleResponse<CampaignGetResult>(response);
+    return this.toGetResult(await this.handleResponse<CampaignDto | FailureBody>(response));
   }
 
-  /** Delete a campaign by ID (REST) */
+  /** Delete a campaign by ID (REST DELETE /api/Campaign/delete/{id}) */
   async delete(id: number): Promise<StatusResult> {
     const response = await fetch(`${API_BASE}/delete/${id}`, {
       method: 'DELETE', headers: getHeaders(true),

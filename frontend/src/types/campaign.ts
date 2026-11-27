@@ -94,14 +94,22 @@ export interface CampaignInsertInfo {
   language: string | null;
 }
 
-/** Data required to update an existing campaign (includes ID) */
+/**
+ * Data required to update an existing campaign (includes ID).
+ * The backend overwrites the whole row, so the counters must be sent back unchanged.
+ */
 export interface CampaignUpdateInfo extends CampaignInsertInfo {
   campaignId: number;
+  totalEntries?: number;
+  totalParticipants?: number;
+  viewCount?: number;
 }
 
 /** Campaign list API result */
 export interface CampaignListResult {
   campaigns: CampaignInfo[];
+  /** Total available on the server (GraphQL offset paging) */
+  totalCount?: number;
   sucesso: boolean;
   mensagem: string | null;
   erros: string[] | null;

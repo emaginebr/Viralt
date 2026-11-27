@@ -1,31 +1,35 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import Container from 'react-bootstrap/esm/Container';
-import Row from 'react-bootstrap/esm/Row';
-import Col from 'react-bootstrap/esm/Col';
-import Table from 'react-bootstrap/esm/Table';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Badge from 'react-bootstrap/Badge';
-import Spinner from 'react-bootstrap/Spinner';
-import Alert from 'react-bootstrap/Alert';
-import Pagination from 'react-bootstrap/Pagination';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faBan, faTrash, faFileExport, faDownload } from '@fortawesome/free-solid-svg-icons';
-import { useParams, Link } from 'react-router-dom';
+import {
+  faBan, faCircleCheck, faClock, faCode, faFileCsv, faTrash, faTrophy, faUsers,
+} from '@fortawesome/free-solid-svg-icons';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useClient } from '../../hooks/useClient';
 import type { ClientInfo } from '../../types/client';
 import { getApiUrl, getHeaders } from '../../Services/apiHelpers';
+import { PageContainer, PageHeader } from '../../Components/ui/PageContainer';
+import { Button } from '../../Components/ui/Button';
+import { Input } from '../../Components/ui/Input';
+import { Badge } from '../../Components/ui/Badge';
+import { Alert } from '../../Components/ui/Alert';
+import { Table, type TableColumn } from '../../Components/ui/Table';
+import { Pagination } from '../../Components/ui/Pagination';
+import { useConfirm } from '../../Components/ui/ConfirmModal';
+import Breadcrumb from '../../Components/Breadcrumb';
+import { usePaginationLabels } from '../../hooks/usePaginationLabels';
 
 const PAGE_SIZE = 20;
 
-export default function ParticipantListPage() {
-  const { t } = useTranslation();
+const ParticipantListPage = () => {
+  const { t, i18n } = useTranslation();
+  const confirm = useConfirm();
+  const paginationLabels = usePaginationLabels(t('participantList.paginationNav'));
   const { campaignId } = useParams<{ campaignId: string }>();
   const campaignIdNum = parseInt(campaignId || '0', 10);
 
-  const { clients, loading, error, loadClients, updateClient, deleteClient, clearError } = useClient();
+  const { clients, loading, error, loadClients, disqualifyClient, deleteClient, clearError } = useClient();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,45 +62,50 @@ export default function ParticipantListPage() {
   }, [searchTerm]);
 
   const handleDisqualify = useCallback(async (client: ClientInfo) => {
-    if (!window.confirm(`Disqualify ${client.name || client.email}?`)) return;
+    const who = client.name || client.email;
+    const confirmed = await confirm({
+      title: t('participantList.disqualifyTitle', { name: who }),
+      description: t('participantList.disqualifyDescription'),
+      confirmLabel: t('participantList.disqualify'),
+      cancelLabel: t('shared.cancel'),
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     setActionError(null);
     try {
-      await updateClient({
-        clientId: client.clientId,
-        campaignId: client.campaignId,
-        name: client.name,
-        email: client.email,
-        phone: client.phone,
-        birthday: client.birthday,
-        referredByClientId: client.referredByClientId,
-        ipAddress: client.ipAddress,
-        countryCode: client.countryCode,
-        userAgent: client.userAgent,
-        emailVerified: client.emailVerified,
-        isWinner: client.isWinner,
-        isDisqualified: true,
-      });
+      const result = await disqualifyClient(client.clientId);
+      if (result?.sucesso) toast.success(t('participantList.disqualified', { name: who }));
+      else setActionError(result?.mensagem || t('participantList.disqualifyFailed'));
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to disqualify');
+      setActionError(err instanceof Error ? err.message : t('participantList.disqualifyFailed'));
     }
-  }, [updateClient]);
+  }, [disqualifyClient, confirm, t]);
 
   const handleDelete = useCallback(async (client: ClientInfo) => {
-    if (!window.confirm(`Delete participant ${client.name || client.email}? This cannot be undone.`)) return;
+    const who = client.name || client.email;
+    const confirmed = await confirm({
+      title: t('participantList.deleteTitle', { name: who }),
+      description: t('participantList.deleteDescription'),
+      confirmLabel: t('participantList.delete'),
+      cancelLabel: t('shared.cancel'),
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     setActionError(null);
     try {
-      await deleteClient(client.clientId);
+      const result = await deleteClient(client.clientId);
+      if (result?.sucesso) toast.success(t('participantList.deleted', { name: who }));
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to delete');
+      setActionError(err instanceof Error ? err.message : t('participantList.deleteFailed'));
     }
-  }, [deleteClient]);
+  }, [deleteClient, confirm, t]);
 
   const handleExport = useCallback((format: 'csv' | 'json') => {
     const url = `${getApiUrl()}/api/Client/export/${campaignIdNum}?format=${format}`;
     // Use fetch with auth headers for download
     fetch(url, { headers: getHeaders(true) })
       .then((res) => {
-        if (!res.ok) throw new Error('Export failed');
+        if (!res.ok) throw new Error(t('participantList.exportFailed'));
         return res.blob();
       })
       .then((blob) => {
@@ -109,135 +118,185 @@ export default function ParticipantListPage() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
       })
-      .catch((err) => setActionError(err instanceof Error ? err.message : 'Export failed'));
-  }, [campaignIdNum]);
+      .catch((err) => setActionError(err instanceof Error ? err.message : t('participantList.exportFailed')));
+  }, [campaignIdNum, t]);
 
   const getStatusBadge = (client: ClientInfo) => {
-    if (client.isDisqualified) return <Badge bg="danger">Disqualified</Badge>;
-    if (client.isWinner) return <Badge bg="success">Winner</Badge>;
-    if (client.emailVerified) return <Badge bg="primary">Verified</Badge>;
-    return <Badge bg="secondary">Pending</Badge>;
+    if (client.isDisqualified) {
+      return <Badge variant="danger" icon={<FontAwesomeIcon icon={faBan} />}>{t('participantList.status.disqualified')}</Badge>;
+    }
+    if (client.isWinner) {
+      return <Badge variant="success" icon={<FontAwesomeIcon icon={faTrophy} />}>{t('participantList.status.winner')}</Badge>;
+    }
+    if (client.emailVerified) {
+      return <Badge variant="primary" icon={<FontAwesomeIcon icon={faCircleCheck} />}>{t('participantList.status.verified')}</Badge>;
+    }
+    return <Badge variant="neutral" icon={<FontAwesomeIcon icon={faClock} />}>{t('participantList.status.pending')}</Badge>;
   };
 
-  return (
-    <section style={{ paddingTop: '160px', paddingBottom: '40px', background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-color), transparent 95%) 50%, color-mix(in srgb, var(--accent-color), transparent 98%) 25%, transparent 50%)' }}>
-      <Container>
-        <Row className="mb-3">
-          <Col md={6}>
-            <h3>
-              <nav aria-label="breadcrumb">
-                <ol className="breadcrumb">
-                  <li className="breadcrumb-item"><Link to="/admin/campaigns">Campaigns</Link></li>
-                  <li className="breadcrumb-item"><Link to={`/admin/campaigns/${campaignIdNum}`}>Campaign</Link></li>
-                  <li className="breadcrumb-item active" aria-current="page">Participants</li>
-                </ol>
-              </nav>
-            </h3>
-          </Col>
-          <Col md={6} className="text-end">
-            <Button variant="outline-success" size="sm" className="me-2" onClick={() => handleExport('csv')}>
-              <FontAwesomeIcon icon={faDownload} fixedWidth className="me-1" />Export CSV
-            </Button>
-            <Button variant="outline-info" size="sm" onClick={() => handleExport('json')}>
-              <FontAwesomeIcon icon={faFileExport} fixedWidth className="me-1" />Export JSON
-            </Button>
-          </Col>
-        </Row>
-
-        {(error || actionError) && (
-          <Alert variant="danger" onClose={() => { clearError(); setActionError(null); }} dismissible>
-            {error || actionError}
-          </Alert>
-        )}
-
-        <Row className="mb-3">
-          <Col md={6}>
-            <InputGroup>
-              <InputGroup.Text><FontAwesomeIcon icon={faSearch} /></InputGroup.Text>
-              <Form.Control
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </InputGroup>
-          </Col>
-          <Col md={6} className="text-end">
-            <span className="text-muted">{filteredClients.length} participant(s) found</span>
-          </Col>
-        </Row>
-
-        {loading ? (
-          <div className="text-center py-5">
-            <Spinner animation="border" />
-            <p className="mt-2">Loading participants...</p>
-          </div>
-        ) : (
-          <>
-            <Table striped bordered hover responsive>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Total Entries</th>
-                  <th>Status</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedClients.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center text-muted py-4">
-                      {searchTerm ? 'No participants match your search.' : 'No participants yet.'}
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedClients.map((client) => (
-                    <tr key={client.clientId}>
-                      <td>{client.name || '-'}</td>
-                      <td>{client.email || '-'}</td>
-                      <td>{client.totalEntries}</td>
-                      <td>{getStatusBadge(client)}</td>
-                      <td>{new Date(client.createdAt).toLocaleDateString()}</td>
-                      <td>
-                        {!client.isDisqualified && (
-                          <Button variant="outline-warning" size="sm" className="me-1" onClick={() => handleDisqualify(client)} title="Disqualify">
-                            <FontAwesomeIcon icon={faBan} fixedWidth />
-                          </Button>
-                        )}
-                        <Button variant="outline-danger" size="sm" onClick={() => handleDelete(client)} title="Delete">
-                          <FontAwesomeIcon icon={faTrash} fixedWidth />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center">
-                <Pagination>
-                  <Pagination.First disabled={currentPage === 1} onClick={() => setCurrentPage(1)} />
-                  <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} />
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
-                    const page = startPage + i;
-                    if (page > totalPages) return null;
-                    return (
-                      <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
-                        {page}
-                      </Pagination.Item>
-                    );
-                  })}
-                  <Pagination.Next disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} />
-                  <Pagination.Last disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} />
-                </Pagination>
-              </div>
+  const columns: TableColumn<ClientInfo>[] = [
+    {
+      key: 'name',
+      header: t('participantList.columns.name'),
+      rowHeader: true,
+      accessor: (client) => client.name || '—',
+    },
+    {
+      key: 'email',
+      header: t('participantList.columns.email'),
+      className: 'break-all',
+      accessor: (client) => client.email || '—',
+    },
+    {
+      key: 'totalEntries',
+      header: t('participantList.columns.totalEntries'),
+      numeric: true,
+      accessor: (client) => (client.totalEntries ?? 0).toLocaleString(i18n.language),
+    },
+    {
+      key: 'status',
+      header: t('participantList.columns.status'),
+      accessor: (client) => getStatusBadge(client),
+    },
+    {
+      key: 'createdAt',
+      header: t('participantList.columns.createdAt'),
+      className: 'tabular-nums',
+      accessor: (client) => new Date(client.createdAt).toLocaleDateString(i18n.language),
+    },
+    {
+      key: 'actions',
+      header: t('participantList.columns.actions'),
+      actions: true,
+      className: 'px-2 py-1',
+      accessor: (client) => {
+        const who = client.name || client.email;
+        return (
+          <div className="flex items-center justify-end">
+            {!client.isDisqualified && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-warning hover:bg-warning-subtle"
+                aria-label={t('participantList.disqualifyNamed', { name: who })}
+                title={t('participantList.disqualify')}
+                onClick={() => handleDisqualify(client)}
+              >
+                <FontAwesomeIcon icon={faBan} aria-hidden="true" />
+              </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-danger hover:bg-danger-subtle"
+              aria-label={t('participantList.deleteNamed', { name: who })}
+              title={t('participantList.delete')}
+              onClick={() => handleDelete(client)}
+            >
+              <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  return (
+    <PageContainer>
+      <PageHeader
+        breadcrumb={
+          <Breadcrumb
+            className="mb-1"
+            label={t('shared.breadcrumb')}
+            items={[
+              { label: t('layout.nav.campaigns'), to: '/campaigns' },
+              { label: t('participantList.campaign'), to: `/campaigns/${campaignIdNum}` },
+              { label: t('participantList.title') },
+            ]}
+          />
+        }
+        title={t('participantList.title')}
+        description={t('participantList.description')}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              leftIcon={<FontAwesomeIcon icon={faFileCsv} aria-hidden="true" />}
+              onClick={() => handleExport('csv')}
+            >
+              {t('participantList.exportCsv')}
+            </Button>
+            <Button
+              variant="outline"
+              leftIcon={<FontAwesomeIcon icon={faCode} aria-hidden="true" />}
+              onClick={() => handleExport('json')}
+            >
+              {t('participantList.exportJson')}
+            </Button>
           </>
-        )}
-      </Container>
-    </section>
+        }
+      />
+
+      {(error || actionError) && (
+        <Alert
+          variant="danger"
+          className="mb-6"
+          dismissible
+          dismissLabel={t('shared.dismissAlert')}
+          onDismiss={() => { clearError(); setActionError(null); }}
+        >
+          {error || actionError}
+        </Alert>
+      )}
+
+      <form
+        role="search"
+        aria-label={t('participantList.searchLabel')}
+        onSubmit={(e) => e.preventDefault()}
+        className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <Input
+          variant="search"
+          label={t('participantList.searchLabel')}
+          hideLabel={false}
+          placeholder={t('participantList.searchPlaceholder')}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          wrapperClassName="w-full sm:max-w-md"
+        />
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {loading ? '' : t('participantList.found', { count: filteredClients.length })}
+        </p>
+      </form>
+
+      <Table
+        columns={columns}
+        rows={paginatedClients}
+        caption={t('participantList.caption', { page: currentPage, total: totalPages })}
+        rowKey={(client) => client.clientId}
+        loading={loading}
+        className="[&_table]:min-w-3xl"
+        empty={
+          <div className="flex flex-col items-center gap-3 py-4">
+            <FontAwesomeIcon icon={faUsers} className="text-2xl" aria-hidden="true" />
+            <p>{searchTerm ? t('participantList.emptyFiltered') : t('participantList.empty')}</p>
+          </div>
+        }
+      />
+
+      {totalPages > 1 && (
+        <Pagination
+          className="mt-4"
+          page={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredClients.length}
+          pageSize={PAGE_SIZE}
+          onChange={setCurrentPage}
+          labels={paginationLabels}
+        />
+      )}
+    </PageContainer>
   );
-}
+};
+
+export default ParticipantListPage;

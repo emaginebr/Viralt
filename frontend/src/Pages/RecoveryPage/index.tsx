@@ -1,53 +1,46 @@
-import { useContext } from "react";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import AuthContext from "../../Contexts/Auth/AuthContext";
-import Button from "react-bootstrap/esm/Button";
-import Card from 'react-bootstrap/Card';
+import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBitcoinSign, faClose, faEnvelope, faLock, faMailBulk, faSave, faSign, faSignIn, faSignInAlt, faTrash, faUser } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link } from "react-router-dom";
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { Button, Card, CardContent, Input, PageContainer } from "../../Components/ui";
 
-export default function RecoveryPage() {
+const RecoveryPage = () => {
 
-    const authContext = useContext(AuthContext);
+    const { t } = useTranslation();
 
     return (
-        <Container>
-            <Row>
-                <Col md="6" className='offset-md-3'>
-                    <Card>
-                        <Card.Header>
-                            <h3 className="text-center">Recovery Password</h3>
-                        </Card.Header>
-                        <Card.Body>
-                            <Form>
-                                <div className="text-center mb-3">
-                                    Registration is not required to make swaps, but you can do so anyway to access your transaction history.
-                                </div>
-                                <Form.Group as={Row} className="mb-3">
-                                    <Form.Label column sm="2">Email:</Form.Label>
-                                    <Col sm="10">
-                                        <InputGroup>
-                                            <InputGroup.Text><FontAwesomeIcon icon={faEnvelope} fixedWidth /></InputGroup.Text>
-                                            <Form.Control type="email" placeholder="Your email" size="lg" onChange={(e) => {
-                                                //_setName(e.target.value);
-                                            }} />
-                                        </InputGroup>
-                                    </Col>
-                                </Form.Group>
-                                <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <Button variant="danger" size="lg"><FontAwesomeIcon icon={faEnvelope} fixedWidth /> Send recovery password email</Button>
-                                </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+        <PageContainer variant="narrow">
+            <Card as="section" aria-labelledby="recovery-title">
+                <CardContent className="flex flex-col gap-6">
+                    <div className="text-center">
+                        <h1 id="recovery-title" tabIndex={-1} className="font-display text-2xl font-bold focus:outline-none">
+                            {t('recoveryPage.title')}
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('recoveryPage.instruction')}</p>
+                    </div>
+                    <form noValidate onSubmit={(e) => e.preventDefault()} aria-labelledby="recovery-title" className="flex flex-col gap-4">
+                        <Input
+                            id="recovery-email"
+                            type="email"
+                            autoComplete="email"
+                            inputMode="email"
+                            label={t('recoveryPage.emailLabel')}
+                            leftIcon={<FontAwesomeIcon icon={faEnvelope} />}
+                            placeholder={t('recoveryPage.emailPlaceholder')}
+                        />
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            leftIcon={<FontAwesomeIcon icon={faEnvelope} />}
+                        >
+                            {t('recoveryPage.sendButton')}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </PageContainer>
     );
-}
+};
+
+export default RecoveryPage;

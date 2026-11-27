@@ -1,9 +1,14 @@
 import UserNetworkInfo from "../DTO/Domain/UserNetworkInfo";
 import { LanguageEnum } from "../DTO/Enum/LanguageEnum";
 import { UserRoleEnum } from "../DTO/Enum/UserRoleEnum";
-import NavDropdown from 'react-bootstrap/NavDropdown';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronDown, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { getLangInfo } from "../i18n";
+import { Button } from './ui/Button';
+import { DropdownMenu } from './ui/DropdownMenu';
+import { Select } from './ui/Select';
+import { cn } from './ui/cn';
 
 const showFrequencyMin = (frequency: number, t: (key: string) => string) => {
     switch (frequency) {
@@ -80,46 +85,103 @@ function formatPhoneNumber(phone: string) {
     const secondPart = digits.slice(7);
 
     return (
-        <><small>({ddd})</small> {firstDigit} {firstPart}-{secondPart}</>
+        <span className="tabular-nums"><small className="text-muted-foreground">({ddd})</small> {firstDigit} {firstPart}-{secondPart}</span>
     );
 }
 
-const MenuLanguage = () => {
+/** Language names are shown in their own language (autonyms), so they are not translated. */
+const LANGUAGE_AUTONYMS: Record<string, string> = {
+    pt: 'Português',
+    en: 'English',
+    es: 'Español',
+    fr: 'Français',
+};
+
+const getSupportedLanguages = () => [
+    getLangInfo(LanguageEnum.Portuguese), // Default/BR
+    getLangInfo(LanguageEnum.English),
+    getLangInfo(LanguageEnum.Spanish),
+    getLangInfo(LanguageEnum.French),
+];
+
+const flagUrl = (flag: string) => `${import.meta.env.BASE_URL}flags/${flag}`;
+
+interface MenuLanguageProps {
+    /** Trigger look: light top bar (default) or the dark sidebar/drawer. */
+    tone?: 'default' | 'inverse';
+    className?: string;
+}
+
+/** Language switcher for the top bar: DropdownMenu with radio items (docs/design/components.md §19). */
+const MenuLanguage = ({ tone = 'default', className }: MenuLanguageProps) => {
     const { i18n, t } = useTranslation();
-    const currentLangInfo = getLangInfo(i18n.language);
-
-    const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
-    };
-
-    const supportedLanguages = [
-        getLangInfo(LanguageEnum.Portuguese), // Default/BR
-        getLangInfo(LanguageEnum.English),
-        getLangInfo(LanguageEnum.Spanish),
-        getLangInfo(LanguageEnum.French),
-    ];
+    const current = getLangInfo(i18n.resolvedLanguage || i18n.language);
+    const currentName = LANGUAGE_AUTONYMS[current.code] ?? current.code;
 
     return (
-        <NavDropdown title={
-            <>
-                <img 
-                    src={`${process.env.PUBLIC_URL}/flags/${currentLangInfo.flag}`} 
-                    alt={t(currentLangInfo.nameKey)}
-                    style={{ width: "21px", height: "21px" }} 
-                />
-            </>
-        } id="basic-nav-dropdown">
-            {supportedLanguages.map(lang => (
-                <NavDropdown.Item key={lang.code} onClick={() => changeLanguage(lang.code)}>
-                    <img 
-                        src={`${process.env.PUBLIC_URL}/flags/${lang.flag}`} 
-                        alt={t(lang.nameKey)}
-                        style={{ width: "21px", height: "21px" }} 
+        <DropdownMenu
+            align="end"
+            className="min-w-48"
+            trigger={
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                        'group',
+                        tone === 'inverse' &&
+                            'text-secondary-foreground hover:bg-secondary-hover focus-visible:outline-ring-inverse',
+                        className,
+                    )}
+                >
+                    <FontAwesomeIcon icon={faGlobe} aria-hidden="true" />
+                    <span aria-hidden="true">{current.code.toUpperCase()}</span>
+                    <span className="sr-only">{t('layout.languageCurrent', { language: currentName })}</span>
+                    <FontAwesomeIcon
+                        icon={faChevronDown}
+                        aria-hidden="true"
+                        className="text-xs motion-safe:transition-transform group-data-[state=open]:rotate-180"
                     />
-                    &nbsp;{t(lang.nameKey)}
-                </NavDropdown.Item>
-            ))}
-        </NavDropdown>
+                </Button>
+            }
+            items={[
+                { type: 'label', label: t('layout.language') },
+                {
+                    type: 'radio',
+                    value: current.code,
+                    onValueChange: (lng: string) => { i18n.changeLanguage(lng); },
+                    options: getSupportedLanguages().map((lang) => ({
+                        value: lang.code,
+                        label: <span lang={lang.code}>{LANGUAGE_AUTONYMS[lang.code] ?? t(lang.nameKey)}</span>,
+                        icon: <img src={flagUrl(lang.flag)} alt="" className="size-5 rounded-full object-cover" />,
+                    })),
+                },
+            ]}
+        />
+    );
+};
+
+interface LanguageSelectProps {
+    id?: string;
+    className?: string;
+}
+
+/** Native `<select>` language switcher, used inside the mobile menu (docs/design/components.md §28). */
+const LanguageSelect = ({ id = 'language-select', className }: LanguageSelectProps) => {
+    const { i18n, t } = useTranslation();
+    const current = getLangInfo(i18n.resolvedLanguage || i18n.language);
+
+    return (
+        <Select
+            id={id}
+            label={t('layout.language')}
+            value={current.code}
+            wrapperClassName={className}
+            onChange={(e) => { i18n.changeLanguage(e.target.value); }}
+            options={getSupportedLanguages().map((lang) => ({
+                value: lang.code,
+                label: LANGUAGE_AUTONYMS[lang.code] ?? t(lang.nameKey),
+            }))}
+        />
     );
 };
 
@@ -128,7 +190,7 @@ const langToStr = (lang: LanguageEnum) => {
     return getLangInfo(lang).code;
 };
 
-export { showFrequencyMin, showFrequencyMax, showProfile, formatPhoneNumber, MenuLanguage, langToStr };
+export { showFrequencyMin, showFrequencyMax, showProfile, formatPhoneNumber, MenuLanguage, LanguageSelect, langToStr };
 
 // Note: Functions like showFrequencyMin, showFrequencyMax, showProfile now expect 't' as an argument.
 // You'll need to call them like this from your components:

@@ -1,52 +1,44 @@
-import { useContext, useEffect, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Form from 'react-bootstrap/Form';
-import AuthContext from "../../Contexts/Auth/AuthContext";
-import Button from "react-bootstrap/esm/Button";
-import Card from 'react-bootstrap/Card';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import InputGroup from 'react-bootstrap/InputGroup';
-import { faBitcoinSign, faClose, faLock, faMailBulk, faSave, faTrash, faUser, faUserEdit, faWarning } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link, useNavigate } from "react-router-dom";
-import MessageToast from "../../Components/MessageToast";
-import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
-import Alert from 'react-bootstrap/Alert';
-import UserContext from "../../Contexts/User/UserContext";
+import { useContext, useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLock, faSave, faUser, faUserEdit } from '@fortawesome/free-solid-svg-icons';
+import AuthContext from "../../Contexts/Auth/AuthContext";
+import UserContext from "../../Contexts/User/UserContext";
+import { Alert, Button, Card, CardContent, Input, PageContainer } from "../../Components/ui";
 
-export default function PasswordPage() {
+type PasswordField = 'oldPassword' | 'newPassword' | 'confirmPassword';
+type PasswordErrors = Partial<Record<PasswordField, string>>;
+
+const PasswordPage = () => {
 
     const { t } = useTranslation();
-
 
     const authContext = useContext(AuthContext);
     const userContext = useContext(UserContext);
 
     const [showAlert, setShowAlert] = useState<boolean>(true);
 
-    const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
-    const [showMessage, setShowMessage] = useState<boolean>(false);
-    const [messageText, setMessageText] = useState<string>("");
-
     const [oldPassword, setOldPassword] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
     const [confirmPassword, setConfirmPassword] = useState<string>("");
+    const [errors, setErrors] = useState<PasswordErrors>({});
+
+    const refs: Record<PasswordField, RefObject<HTMLInputElement>> = {
+        oldPassword: useRef<HTMLInputElement>(null),
+        newPassword: useRef<HTMLInputElement>(null),
+        confirmPassword: useRef<HTMLInputElement>(null),
+    };
 
     const throwError = (message: string) => {
-        setDialog(MessageToastEnum.Error)
-        setMessageText(message);
-        setShowMessage(true);
+        toast.error(message);
     };
     const showSuccessMessage = (message: string) => {
-        setDialog(MessageToastEnum.Success)
-        setMessageText(message);
-        setShowMessage(true);
+        toast.success(message);
     };
 
-    let navigate = useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (authContext.sessionInfo && authContext.sessionInfo?.userId > 0) {
@@ -63,129 +55,143 @@ export default function PasswordPage() {
         }
     }, []);
 
+    const fail = (field: PasswordField, message: string) => {
+        const next: PasswordErrors = {};
+        next[field] = message;
+        setErrors(next);
+        refs[field].current?.focus();
+    };
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!userContext.user?.email) return;
+        if (userContext.userHasPassword) {
+            if (!oldPassword) {
+                fail('oldPassword', t('password_page_error_old_password_empty'));
+                return;
+            }
+        }
+        if (!newPassword) {
+            fail('newPassword', t('password_page_error_new_password_empty'));
+            return;
+        }
+        if (!confirmPassword) {
+            fail('confirmPassword', t('password_page_error_confirm_password_empty'));
+            return;
+        }
+        if (newPassword != confirmPassword) {
+            fail('confirmPassword', t('password_page_error_passwords_not_equal'));
+            return;
+        }
+        setErrors({});
+        const ret = await userContext.changePassword(oldPassword, newPassword);
+        if (ret.sucesso) {
+            showSuccessMessage(ret.mensagemSucesso);
+        }
+        else {
+            throwError(ret.mensagemErro);
+        }
+    };
+
+    const hasEmail = Boolean(userContext.user?.email);
+
     return (
-        <>
-            <MessageToast
-                dialog={dialog}
-                showMessage={showMessage}
-                messageText={messageText}
-                onClose={() => setShowMessage(false)}
-            ></MessageToast>
-            <Container>
-                <Row>
-                    <Col md="6" className='offset-md-3'>
-                        <Card>
-                            <Card.Header>
-                                <h3 className="text-center">{t('password_page_change_password_title')}</h3>
-                            </Card.Header>
-                            <Card.Body>
-                                <Form>
-                                    <div className="text-center mb-3">
-                                        {t('password_page_instruction')}
-                                    </div>
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="3">{t('form_label_email')}:</Form.Label>
-                                        <Col sm="9">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faUser} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="email" readOnly={true} disabled={true} size="lg" value={userContext.user?.email} />
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    {userContext.userHasPassword &&
-                                        <Form.Group as={Row} className="mb-3">
-                                            <Form.Label column sm="3">{t('password_page_old_password_label')}:</Form.Label>
-                                            <Col sm="9">
-                                                <InputGroup>
-                                                    <InputGroup.Text><FontAwesomeIcon icon={faLock} fixedWidth /></InputGroup.Text>
-                                                    <Form.Control type="password" size="lg" placeholder={t('password_page_old_password_placeholder')} value={oldPassword} onChange={(e) => {
-                                                        setOldPassword(e.target.value);
-                                                    }} />
-                                                </InputGroup>
-                                            </Col>
-                                        </Form.Group>
-                                    }
-                                    <Form.Group as={Row} className="mb-3">
-                                        <Form.Label column sm="3">{t('password_page_new_password_label')}:</Form.Label>
-                                        <Col sm="9">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faLock} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="password" size="lg" placeholder={t('password_page_new_password_placeholder')} value={newPassword} onChange={(e) => {
-                                                    setNewPassword(e.target.value);
-                                                }} />
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    <Form.Group as={Row} className="mb-4">
-                                        <Form.Label column sm="3">{t('form_label_confirm_password')}:</Form.Label>
-                                        <Col sm="9">
-                                            <InputGroup>
-                                                <InputGroup.Text><FontAwesomeIcon icon={faLock} fixedWidth /></InputGroup.Text>
-                                                <Form.Control type="password" size="lg" placeholder={t('password_page_confirm_new_password_placeholder')} value={confirmPassword} onChange={(e) => {
-                                                    setConfirmPassword(e.target.value);
-                                                }} />
-                                            </InputGroup>
-                                        </Col>
-                                    </Form.Group>
-                                    {showAlert && !userContext.user?.email &&
-                                        <Alert key="danger" variant="danger" onClose={() => setShowAlert(false)} dismissible>
-                                            <FontAwesomeIcon icon={faWarning} /> {t('password_page_alert_enter_email_first_part_1')} <strong>{t('password_page_alert_password')}</strong>, {t('password_page_alert_enter_email_first_part_2')} <strong>{t('password_page_alert_email')}</strong>!
-                                        </Alert>
-                                    }
-                                    <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-                                        {userContext.user?.email ?
-                                            <Button variant="success" disabled={userContext.loadingUpdate} size="lg" onClick={async (e) => {
-                                                e.preventDefault();
-                                                if (userContext.userHasPassword) {
-                                                    if (!oldPassword) {
-                                                        throwError(t('password_page_error_old_password_empty'));
-                                                        return;
-                                                    }
-                                                }
-                                                if (!newPassword) {
-                                                    throwError(t('password_page_error_new_password_empty'));
-                                                    return;
-                                                }
-                                                if (!confirmPassword) {
-                                                    throwError(t('password_page_error_confirm_password_empty'));
-                                                    return;
-                                                }
-                                                if (newPassword != confirmPassword) {
-                                                    throwError(t('password_page_error_passwords_not_equal'));
-                                                    return;
-                                                }
-                                                let ret = await userContext.changePassword(oldPassword, newPassword);
-                                                console.log("ret:", JSON.stringify(ret));
-                                                if (ret.sucesso) {
-                                                    showSuccessMessage(ret.mensagemSucesso);
-                                                }
-                                                else {
-                                                    throwError(ret.mensagemErro);
-                                                }
-                                            }}>
-                                                <FontAwesomeIcon icon={faSave} fixedWidth />&nbsp;
-                                                {userContext.loadingUpdate ? t('loading') : t('password_page_change_password_button')}
-                                            </Button>
-                                            :
-                                            <>
-                                                <Button variant="danger" size="lg" onClick={(e) => {
-                                                    e.preventDefault();
-                                                    navigate("/edit-account");
-                                                }}>
-                                                    <FontAwesomeIcon icon={faUserEdit} fixedWidth /> {t('password_page_edit_account_button')}
-                                                </Button>
-                                                <Button variant="success" size="lg" disabled={true}>
-                                                    <FontAwesomeIcon icon={faSave} fixedWidth /> {t('password_page_change_password_button')}
-                                                </Button>
-                                            </>
-                                        }
-                                    </div>
-                                </Form>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-            </Container>
-        </>
+        <PageContainer variant="narrow">
+            <Card as="section" aria-labelledby="password-title">
+                <CardContent className="flex flex-col gap-6">
+                    <div className="text-center">
+                        <h1 id="password-title" tabIndex={-1} className="font-display text-2xl font-bold focus:outline-none">
+                            {t('password_page_change_password_title')}
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('password_page_instruction')}</p>
+                    </div>
+
+                    <form noValidate onSubmit={handleSubmit} aria-labelledby="password-title" className="flex flex-col gap-4">
+                        <Input
+                            id="password-email"
+                            type="email"
+                            label={t('form_label_email')}
+                            leftIcon={<FontAwesomeIcon icon={faUser} />}
+                            readOnly
+                            value={userContext.user?.email ?? ""}
+                        />
+                        {userContext.userHasPassword &&
+                            <Input
+                                ref={refs.oldPassword}
+                                id="password-old"
+                                type="password"
+                                autoComplete="current-password"
+                                label={t('password_page_old_password_label')}
+                                leftIcon={<FontAwesomeIcon icon={faLock} />}
+                                placeholder={t('password_page_old_password_placeholder')}
+                                value={oldPassword}
+                                error={errors.oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                            />
+                        }
+                        <Input
+                            ref={refs.newPassword}
+                            id="password-new"
+                            type="password"
+                            autoComplete="new-password"
+                            label={t('password_page_new_password_label')}
+                            leftIcon={<FontAwesomeIcon icon={faLock} />}
+                            placeholder={t('password_page_new_password_placeholder')}
+                            value={newPassword}
+                            error={errors.newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <Input
+                            ref={refs.confirmPassword}
+                            id="password-confirm"
+                            type="password"
+                            autoComplete="new-password"
+                            label={t('form_label_confirm_password')}
+                            leftIcon={<FontAwesomeIcon icon={faLock} />}
+                            placeholder={t('password_page_confirm_new_password_placeholder')}
+                            value={confirmPassword}
+                            error={errors.confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+
+                        {showAlert && !hasEmail &&
+                            <Alert
+                                variant="warning"
+                                dismissible
+                                dismissLabel={t('shared.dismissAlert')}
+                                onDismiss={() => setShowAlert(false)}
+                            >
+                                {t('password_page_alert_enter_email_first_part_1')} <strong>{t('password_page_alert_password')}</strong>
+                                {t('password_page_alert_enter_email_first_part_2')} <strong>{t('password_page_alert_email')}</strong>!
+                            </Alert>
+                        }
+
+                        <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+                            {!hasEmail &&
+                                <Button
+                                    variant="outline"
+                                    leftIcon={<FontAwesomeIcon icon={faUserEdit} />}
+                                    onClick={() => navigate("/account/edit-account")}
+                                >
+                                    {t('password_page_edit_account_button')}
+                                </Button>
+                            }
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                disabled={!hasEmail}
+                                loading={hasEmail && userContext.loadingUpdate}
+                                loadingText={t('loading')}
+                                leftIcon={<FontAwesomeIcon icon={faSave} />}
+                            >
+                                {t('password_page_change_password_button')}
+                            </Button>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </PageContainer>
     );
-}
+};
+
+export default PasswordPage;

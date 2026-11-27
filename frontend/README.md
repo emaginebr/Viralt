@@ -1,70 +1,167 @@
-# Getting Started with Create React App
+# Viralt Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Web client for **Viralt**: the admin dashboard (campaign builder, participants, winners, moderation), the public campaign page and the embeddable widget.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Tech Stack
 
-### `npm start`
+- **React 18** + **TypeScript 5**
+- **Vite 6** (dev server, build, preview) with `@vitejs/plugin-react`
+- **Tailwind CSS 4** through `@tailwindcss/vite`, with tokens from the "Bilhete Premiado" design system
+- **Radix UI** for modals, alert dialogs, dropdown menus and tabs
+- **sonner** for toasts
+- **FontAwesome** for icons
+- **@fontsource-variable** for self-hosted fonts (Bricolage Grotesque, Figtree, JetBrains Mono)
+- **react-router-dom 6** for routing
+- **i18next** / **react-i18next** for i18n (pt, en, es)
+- **Vitest** + **Testing Library** + **jsdom** for tests
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Requirements
 
-### `npm test`
+- **Node.js 20 or newer.** The Docker image uses `node:22-alpine`.
+- npm (ships with Node)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Getting Started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The dev server runs at [http://localhost:3000](http://localhost:3000).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`npm install` no longer needs `--legacy-peer-deps`.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Scripts
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Script | Command | Description |
+|---|---|---|
+| `npm run dev` | `vite` | Starts the dev server on port 3000 |
+| `npm start` | `vite` | Alias of `npm run dev` |
+| `npm run build` | `tsc --noEmit && vite build` | Type-checks, then builds for production into `build/` |
+| `npm run preview` | `vite preview --port 3000` | Serves the production build locally on port 3000 |
+| `npm test` | `vitest run` | Runs the test suite once |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Environment Variables
 
-## Learn More
+Vite only exposes variables with the `VITE_` prefix. They are read from `.env`, `.env.[mode]` and `.env.local` in the `frontend/` folder. `REACT_APP_*` variables are **no longer used**.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| Variable | Description | Example |
+|---|---|---|
+| `VITE_API_URL` | Backend API base URL. If empty, the app calls the API on the same origin. In dev, when it is set, the Vite server also proxies `/api` to it | `https://localhost:44374` |
+| `VITE_SITE_BASENAME` | Router base path, also used as the Vite `base` | `/` |
+| `VITE_PROJECT_NAME` | Project name shown in the header and footer | `Viralt` |
+| `VITE_WEBSITE_NAME` | Site name used in the `<title>` of `index.html` | `Viralt - Viral Digital Marketing` |
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Example `.env`:
 
-### Code Splitting
+```env
+VITE_SITE_BASENAME=/
+VITE_PROJECT_NAME=Viralt
+VITE_WEBSITE_NAME=Viralt - Viral Digital Marketing
+VITE_API_URL=https://localhost:44374
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+> `VITE_*` values are embedded at build time. Changing them requires a new build.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Project Structure
 
-### Making a Progressive Web App
+```
+frontend/
+├── index.html              → Vite entry HTML (<title> uses %VITE_WEBSITE_NAME%)
+├── vite.config.ts          → Vite, Tailwind, dev proxy and Vitest config
+├── nginx.conf              → nginx config used by the Docker image
+├── public/
+│   └── locales/            → i18n files (pt, en, es)/translation.json
+└── src/
+    ├── index.tsx           → App entry point
+    ├── App.tsx             → Routes and provider chain
+    ├── i18n.tsx            → i18next configuration
+    ├── styles/
+    │   ├── index.css       → Global styles (imports Tailwind and the theme)
+    │   └── theme.css       → Design tokens (copy of docs/design/theme.css)
+    ├── Components/
+    │   ├── ui/             → Base components (Button, Input, Field, Modal, ConfirmModal,
+    │   │                     DropdownMenu, Tabs, Table, Pagination, Toaster, ...)
+    │   └── ...             → Shared app components (Header, Footer, CampaignWidget, ...)
+    ├── Pages/              → Route pages (one folder per page with index.tsx)
+    ├── Contexts/           → Context + Provider per entity
+    ├── Services/           → API services (fetch-based) and apiHelpers.ts
+    ├── hooks/              → Custom hooks (useAuth, useCampaign, useClient, ...)
+    ├── types/              → TypeScript types for the new architecture
+    ├── Business/, DTO/, Infra/ → Legacy layers
+    └── test/               → Vitest setup and tests
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+New entities follow the `react-arch` skill: **Types → Service → Context → Hook → Provider**.
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Design System
 
-### Deployment
+The UI follows the **"Bilhete Premiado"** design system. Its documentation lives in [`docs/design/README.md`](../docs/design/README.md): tokens, component specs and HTML mockups.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **Tokens:** `src/styles/theme.css` is a copy of [`docs/design/theme.css`](../docs/design/theme.css). If the tokens change, update the file in `docs/design/` and copy it again. Do not edit only the frontend copy.
+- **Palette:** the default Tailwind palette is **disabled**. Use only the semantic tokens defined in the theme, not classes like `bg-blue-500`.
+- **Base components:** import them from `src/Components/ui/` and do not restyle them in each page.
+- **Fonts:** self-hosted through `@fontsource-variable`. No CDN is used.
+- **Modals and menus:** Radix UI, wrapped by `Modal`, `ConfirmModal` and `DropdownMenu`.
+- **Toasts:** sonner, through `Toaster`.
+- **Icons:** FontAwesome (`@fortawesome/react-fontawesome`).
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Tests
+
+```bash
+npm test
+```
+
+Vitest runs in a `jsdom` environment with global APIs enabled. The setup file is `src/test/setup.ts`, and tests live in `src/test/`.
+
+---
+
+## Docker Build
+
+The `Dockerfile` has two stages:
+
+1. **build** (`node:22-alpine`): runs `npm ci` and `npm run build`.
+2. **final** (`nginx:alpine`): serves `build/` with `nginx.conf` on port 80.
+
+`VITE_API_URL` and `VITE_SITE_BASENAME` are passed as build args because they are embedded at build time:
+
+```bash
+docker build \
+  --build-arg VITE_API_URL= \
+  --build-arg VITE_SITE_BASENAME=/ \
+  -t viralt-frontend ./frontend
+```
+
+Leave `VITE_API_URL` empty when the API is served on the same origin, for example behind the reverse proxy in `nginx/`. In the full stack, the image is built by `docker-compose.yml` / `docker-compose-prod.yml` at the repository root.
+
+---
+
+## Case Sensitivity
+
+Folder casing matters in Docker and Linux builds. Imports must match the casing on disk exactly:
+
+| Folder | Casing |
+|---|---|
+| `src/Contexts/` | uppercase **C** |
+| `src/Services/` | uppercase **S** |
+| `src/hooks/` | lowercase |
+| `src/types/` | lowercase |
+
+An import like `../contexts/AuthContext` works on Windows but fails in the Linux build.

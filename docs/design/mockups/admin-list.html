@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Campanhas (lista) | Viralt Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- Mesmo @theme de docs/design/theme.css (copiado pelo build; não editar aqui) -->
+<style type="text/tailwindcss">
+@import "tailwindcss";
+/*
+ * Viralt Design System — direção "Bilhete Premiado"
+ * Tailwind CSS 4 — tokens em CSS (sem tailwind.config.js).
+ *
+ * Destino na implementação: frontend/src/styles/theme.css
+ * Uso em frontend/src/styles/index.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme.css";
+ *
+ * Fontes (Google Fonts), carregadas no <head> do index.html:
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+ *
+ * Todos os pares texto/fundo estão validados em docs/design/tokens.md (WCAG 2.1 AA).
+ */
+
+@theme {
+  /* ------------------------------------------------------------------
+   * Cores. A paleta padrão do Tailwind é desligada para que só os
+   * tokens semânticos existam (SC-008: nada de bg-red-500 avulso).
+   * bg-transparent, bg-current e bg-inherit continuam disponíveis.
+   * ------------------------------------------------------------------ */
+  --color-*: initial;
+
+  /* Base */
+  --color-background: #fff8f1;          /* papel quente: fundo da página */
+  --color-foreground: #1a1423;          /* tinta: texto principal */
+  --color-surface: #ffffff;             /* cards, inputs, modais, tabelas */
+  --color-surface-foreground: #1a1423;
+  --color-muted: #f4ece4;               /* faixas, cabeçalho de tabela, hover neutro */
+  --color-muted-foreground: #5c5266;    /* texto secundário, placeholder, metadados */
+  --color-border: #e7dcd1;              /* divisores decorativos (não delimita controles) */
+  --color-input: #8c8194;               /* borda de controles de formulário (>= 3:1) */
+  --color-overlay: #1a1423;             /* scrim de modal e de hero: usar /60 ou /72 */
+
+  /* Marca */
+  --color-primary: #c2185b;             /* framboesa: CTA, links de ação, seleção */
+  --color-primary-hover: #9e1049;
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: #fce4ee;
+
+  --color-secondary: #2b2250;           /* uva escura: sidebar, botão secundário, página atual */
+  --color-secondary-hover: #3c3270;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-muted-foreground: #cfc7ea; /* texto secundário sobre secondary */
+
+  --color-accent: #ffc738;              /* amarelo bilhete: pontos, destaque, item ativo na sidebar */
+  --color-accent-hover: #f2b517;
+  --color-accent-foreground: #1a1423;
+  --color-accent-subtle: #fff1c7;
+
+  /* Estados */
+  --color-success: #13703a;
+  --color-success-hover: #0e5a2e;
+  --color-success-foreground: #ffffff;
+  --color-success-subtle: #e3f3e8;
+
+  --color-warning: #8f5200;
+  --color-warning-foreground: #ffffff;
+  --color-warning-subtle: #fff0d1;
+
+  --color-danger: #b42318;
+  --color-danger-hover: #8f1b12;
+  --color-danger-foreground: #ffffff;
+  --color-danger-subtle: #fde7e4;
+
+  --color-info: #1f57c3;
+  --color-info-foreground: #ffffff;
+  --color-info-subtle: #e3ecfc;
+
+  /* Foco */
+  --color-ring: #2b5bdb;                /* anel de foco sobre fundos claros */
+  --color-ring-inverse: #ffc738;        /* anel de foco sobre secondary (sidebar) e overlay */
+
+  /* ------------------------------------------------------------------
+   * Tipografia
+   * ------------------------------------------------------------------ */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala única (SC-008). Corpo nunca abaixo de text-base no mobile. */
+  --text-xs: 0.75rem;     --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;    --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;      --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;    --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;     --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;     --text-2xl--line-height: 2rem;       --text-2xl--letter-spacing: -0.01em;
+  --text-3xl: 1.875rem;   --text-3xl--line-height: 2.25rem;    --text-3xl--letter-spacing: -0.015em;
+  --text-4xl: 2.25rem;    --text-4xl--line-height: 2.5rem;     --text-4xl--letter-spacing: -0.02em;
+  --text-5xl: 3rem;       --text-5xl--line-height: 1.05;       --text-5xl--letter-spacing: -0.025em; /* só título do hero (desktop) */
+
+  /* ------------------------------------------------------------------
+   * Raios
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.375rem;  /* 6px: badges retangulares, checkbox */
+  --radius-md: 0.625rem;  /* 10px: botões, inputs, alertas */
+  --radius-lg: 1rem;      /* 16px: cards, modais, tabela */
+  --radius-xl: 1.5rem;    /* 24px: hero, widget */
+  --radius-full: 9999px;  /* pílulas e avatares */
+
+  /* ------------------------------------------------------------------
+   * Sombras. "pop" é a assinatura do lado público (sombra dura, sem blur).
+   * ------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px 0 rgb(26 20 35 / 0.06), 0 1px 1px 0 rgb(26 20 35 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(26 20 35 / 0.10), 0 2px 4px -2px rgb(26 20 35 / 0.06);
+  --shadow-lg: 0 16px 40px -8px rgb(26 20 35 / 0.22), 0 4px 10px -4px rgb(26 20 35 / 0.10);
+  --shadow-pop: 4px 4px 0 0 #1a1423;
+  --shadow-pop-sm: 2px 2px 0 0 #1a1423;
+
+  /* ------------------------------------------------------------------
+   * Movimento. Durações usadas como duration-150 / duration-200 / duration-300
+   * (o Tailwind 4 não tem namespace de duração; estes valores ficam
+   * expostos como variáveis CSS para JS e para var()).
+   * ------------------------------------------------------------------ */
+  --duration-fast: 150ms;   /* hover, cor, foco */
+  --duration-base: 200ms;   /* entrada de modal, toast, abas */
+  --duration-slow: 300ms;   /* skeleton -> conteúdo, sucesso da inscrição */
+
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);  /* entrada */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* saída */
+
+  --animate-fade-in: fade-in 200ms var(--ease-snappy) both;
+  --animate-pop-in: pop-in 200ms var(--ease-snappy) both;
+  --animate-slide-in-left: slide-in-left 200ms var(--ease-snappy) both;
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-pulse: pulse 1.6s ease-in-out infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+}
+
+/* --------------------------------------------------------------------
+ * Utilitários do design system (assinatura "bilhete").
+ * São tokens de forma: usar só nestes componentes (PrizeCard, widget).
+ * -------------------------------------------------------------------- */
+
+/* Recortes semicirculares nas laterais, como um bilhete de rifa. */
+@utility ticket {
+  --ticket-notch: 0.75rem;
+  --ticket-at: 50%;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at 0 var(--ticket-at), #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at 100% var(--ticket-at), #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Linha picotada (divisor do bilhete). */
+@utility perforation {
+  border-top: 2px dashed var(--color-border);
+}
+
+/* Anel de foco padrão (para elementos sem variantes próprias). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* --------------------------------------------------------------------
+ * Base
+ * -------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* Links de texto: sublinhados por padrão (não dependem só da cor). */
+  :where(main, [role="dialog"]) a:not([class]) {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Foco nunca é removido sem substituto. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  button, [role="button"], a, label[for], summary { touch-action: manipulation; }
+
+  /* Rede de segurança para prefers-reduced-motion. Os componentes já usam
+   * motion-safe:, isto cobre animações de terceiros (sonner, Radix). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Modo de alto contraste do Windows: mantém bordas e foco visíveis. */
+  @media (forced-colors: active) {
+    :focus-visible { outline-color: Highlight; }
+  }
+}
+
+</style>
+</head>
+<body class="min-h-dvh">
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-surface focus:px-4 focus:py-3 focus:font-semibold focus:shadow-lg">Pular para o conteúdo</a>
+
+<!-- Sidebar (lg+) -->
+<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-secondary text-secondary-foreground lg:flex">
+  <div class="flex h-16 items-center px-6"><a href="#" class="flex min-h-11 items-center rounded-md font-display text-xl font-extrabold text-secondary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse">Viralt<span class="text-accent" aria-hidden="true">.</span></a></div>
+  <nav aria-label="Principal" class="flex-1 overflow-y-auto px-3 py-4">
+<h2 id="g-Pri-Campanhas" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Campanhas</h2>
+<ul aria-labelledby="g-Pri-Campanhas" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-gauge-high w-5 text-center" aria-hidden="true"></i>Painel</a></li>
+<li><a href="#" aria-current="page" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse bg-accent font-semibold text-accent-foreground"><i class="fa-solid fa-bullhorn w-5 text-center" aria-hidden="true"></i>Campanhas</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-images w-5 text-center" aria-hidden="true"></i>Moderação</a></li>
+</ul>
+<h2 id="g-Pri-Loja" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Loja</h2>
+<ul aria-labelledby="g-Pri-Loja" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-box w-5 text-center" aria-hidden="true"></i>Produtos</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-receipt w-5 text-center" aria-hidden="true"></i>Pedidos</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-file-invoice-dollar w-5 text-center" aria-hidden="true"></i>Faturas</a></li>
+</ul>
+<h2 id="g-Pri-Equipe" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Equipe</h2>
+<ul aria-labelledby="g-Pri-Equipe" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-diagram-project w-5 text-center" aria-hidden="true"></i>Redes</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-id-badge w-5 text-center" aria-hidden="true"></i>Perfis</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-users w-5 text-center" aria-hidden="true"></i>Usuários</a></li>
+</ul>
+</nav>
+</aside>
+
+<div class="lg:pl-64">
+  <!-- Top bar -->
+<header class="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-surface/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+  <button type="button" id="drawer-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="drawer" class="inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"><i class="fa-solid fa-bars text-lg" aria-hidden="true"></i></button>
+  <span class="font-display text-lg font-extrabold lg:hidden">Viralt<span class="text-primary" aria-hidden="true">.</span></span>
+  <div class="ml-auto flex items-center gap-1">
+    <div class="relative">
+      <button type="button" data-dd="lang-menu" aria-haspopup="menu" aria-expanded="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><i class="fa-solid fa-globe" aria-hidden="true"></i><span>PT</span><span class="sr-only">, idioma: Português. Trocar idioma</span><i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i></button>
+      <div id="lang-menu" role="menu" hidden class="absolute right-0 top-full z-50 mt-1 min-w-48 rounded-md border border-border bg-surface p-1.5 text-sm shadow-md motion-safe:animate-pop-in">
+        <button role="menuitemradio" aria-checked="true" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left font-semibold hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-check w-4" aria-hidden="true"></i>Português</button>
+        <button role="menuitemradio" aria-checked="false" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><span class="w-4" aria-hidden="true"></span>English</button>
+        <button role="menuitemradio" aria-checked="false" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><span class="w-4" aria-hidden="true"></span>Español</button>
+      </div>
+    </div>
+    <div class="relative">
+      <button type="button" data-dd="user-menu" aria-haspopup="menu" aria-expanded="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md pl-1.5 pr-3 text-sm font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <span class="inline-grid size-8 place-items-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground" aria-hidden="true">RL</span>
+        <span class="hidden sm:inline">Rodrigo</span><span class="sr-only sm:hidden">Conta de Rodrigo</span>
+        <i class="fa-solid fa-chevron-down text-xs" aria-hidden="true"></i>
+      </button>
+      <div id="user-menu" role="menu" hidden class="absolute right-0 top-full z-50 mt-1 min-w-56 rounded-md border border-border bg-surface p-1.5 text-sm shadow-md motion-safe:animate-pop-in">
+        <p class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground" role="presentation">Minha conta</p>
+        <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-image w-4 text-muted-foreground" aria-hidden="true"></i>Alterar foto</button>
+        <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-pen w-4 text-muted-foreground" aria-hidden="true"></i>Editar conta</button>
+        <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-lock w-4 text-muted-foreground" aria-hidden="true"></i>Alterar senha</button>
+        <div role="separator" class="my-1 h-px bg-border"></div>
+        <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-danger hover:bg-danger-subtle focus:bg-danger-subtle focus:outline-none"><i class="fa-solid fa-right-from-bracket w-4" aria-hidden="true"></i>Sair</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+  <main id="main" tabindex="-1" class="mx-auto w-full max-w-7xl px-4 py-6 focus:outline-none sm:px-6 lg:px-8 lg:py-8">
+    <!-- PageHeader -->
+    <div class="flex flex-col gap-4 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <nav aria-label="Trilha" class="text-sm text-muted-foreground">
+          <ol class="flex items-center gap-1.5"><li><a href="#" class="underline-offset-2 hover:text-foreground hover:underline focus-ring">Painel</a></li><li aria-hidden="true"><i class="fa-solid fa-chevron-right text-xs"></i></li><li aria-current="page" class="font-semibold text-foreground">Campanhas</li></ol>
+        </nav>
+        <h1 class="mt-1 font-display text-2xl font-bold lg:text-3xl">Campanhas</h1>
+        <p class="text-muted-foreground">Crie, acompanhe e sorteie as suas campanhas.</p>
+      </div>
+      <a href="admin-form.html" class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>Nova campanha
+      </a>
+    </div>
+
+    <!-- Alert de sucesso (dispensável) -->
+    <div id="ok-alert" role="status" class="relative mb-6 flex gap-3 rounded-md border border-success/30 border-l-4 border-l-success bg-success-subtle p-4 pr-14 text-sm">
+      <i class="fa-solid fa-circle-check mt-0.5 text-base text-success" aria-hidden="true"></i>
+      <div>
+        <p class="font-semibold">Campanha publicada</p>
+        <p>"Sorteio Café Aurora" já está no ar. <a href="public-campaign.html" class="font-semibold text-foreground underline underline-offset-2 focus-ring">Ver página pública</a></p>
+      </div>
+      <button type="button" id="ok-close" class="absolute right-1.5 top-1.5 inline-flex size-11 cursor-pointer items-center justify-center rounded-md text-foreground hover:bg-success/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label="Fechar aviso"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <!-- Filtros -->
+    <form role="search" aria-label="Filtrar campanhas" class="mb-4 grid gap-3 sm:grid-cols-[1fr_12rem_12rem_auto] sm:items-end">
+      <div class="flex flex-col gap-1.5">
+        <label for="q" class="text-sm font-semibold">Buscar</label>
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true"></i>
+          <input id="q" type="search" value="café" placeholder="Título ou slug" class="block min-h-11 w-full rounded-md border border-input bg-surface pl-10 pr-3 text-base placeholder:text-muted-foreground hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="status" class="text-sm font-semibold">Status</label>
+        <div class="relative">
+          <select id="status" class="block min-h-11 w-full cursor-pointer appearance-none rounded-md border border-input bg-surface pl-3 pr-10 text-base hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+            <option>Todos</option><option>Rascunho</option><option>Ativa</option><option>Pausada</option><option>Encerrada</option>
+          </select>
+          <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground" aria-hidden="true"></i>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="type" class="text-sm font-semibold">Tipo</label>
+        <div class="relative">
+          <select id="type" class="block min-h-11 w-full cursor-pointer appearance-none rounded-md border border-input bg-surface pl-3 pr-10 text-base hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+            <option>Todos</option><option>Sorteio</option><option>Ranking</option><option>Concurso</option><option>Cupom</option>
+          </select>
+          <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground" aria-hidden="true"></i>
+        </div>
+      </div>
+      <button type="reset" class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md px-4 font-semibold text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>Limpar</button>
+    </form>
+
+    <!-- Tabela -->
+    <div role="region" aria-labelledby="tbl-cap" tabindex="0" class="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm focus-ring">
+      <table class="w-full min-w-[56rem] border-collapse text-left text-sm">
+        <caption id="tbl-cap" class="sr-only">Campanhas com "café", página 2 de 7, ordenadas por término</caption>
+        <thead class="bg-muted">
+          <tr>
+            <th scope="col" class="sticky left-0 bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Campanha</th>
+            <th scope="col" class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+            <th scope="col" class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo</th>
+            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Participantes</th>
+            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Inscrições</th>
+            <th scope="col" aria-sort="ascending" class="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <button type="button" class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-sm uppercase tracking-wide text-foreground focus-ring">Termina em<i class="fa-solid fa-sort-up" aria-hidden="true"></i></button>
+            </th>
+            <th scope="col" class="w-px px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="rows" class="divide-y divide-border"></tbody>
+      </table>
+    </div>
+
+    <!-- Paginação -->
+    <nav aria-label="Paginação das campanhas" class="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+      <p class="text-sm text-muted-foreground" aria-live="polite">Mostrando <b class="font-semibold text-foreground tabular-nums">10–18</b> de <b class="font-semibold text-foreground tabular-nums">57</b></p>
+      <ul class="flex items-center gap-1">
+        <li><a href="#" class="inline-flex size-11 items-center justify-center rounded-md border border-input bg-surface hover:bg-muted focus-ring" aria-label="Página anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a></li>
+        <li class="hidden sm:block"><a href="#" class="inline-flex size-11 items-center justify-center rounded-md font-semibold tabular-nums hover:bg-muted focus-ring" aria-label="Página 1">1</a></li>
+        <li class="hidden sm:block"><a aria-current="page" class="inline-flex size-11 items-center justify-center rounded-md bg-secondary font-bold tabular-nums text-secondary-foreground focus-ring" href="#" aria-label="Página 2, atual">2</a></li>
+        <li class="hidden sm:block"><a href="#" class="inline-flex size-11 items-center justify-center rounded-md font-semibold tabular-nums hover:bg-muted focus-ring" aria-label="Página 3">3</a></li>
+        <li class="hidden px-1 text-muted-foreground sm:block" aria-hidden="true">…</li>
+        <li class="hidden sm:block"><a href="#" class="inline-flex size-11 items-center justify-center rounded-md font-semibold tabular-nums hover:bg-muted focus-ring" aria-label="Página 7">7</a></li>
+        <li class="px-2 text-sm font-semibold tabular-nums sm:hidden">2 de 7</li>
+        <li><a href="#" class="inline-flex size-11 items-center justify-center rounded-md border border-input bg-surface hover:bg-muted focus-ring" aria-label="Próxima página"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a></li>
+      </ul>
+    </nav>
+  </main>
+</div>
+
+<!-- DropdownMenu "mais ações" (um só, reposicionado) -->
+<div id="row-menu" role="menu" hidden aria-label="Mais ações" class="fixed z-50 min-w-56 rounded-md border border-border bg-surface p-1.5 text-sm shadow-md motion-safe:animate-pop-in">
+  <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-users w-4 text-muted-foreground" aria-hidden="true"></i>Participantes</button>
+  <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-trophy w-4 text-muted-foreground" aria-hidden="true"></i>Sortear vencedores</button>
+  <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-code w-4 text-muted-foreground" aria-hidden="true"></i>Código do widget</button>
+  <button role="menuitem" tabindex="-1" class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left hover:bg-muted focus:bg-muted focus:outline-none"><i class="fa-solid fa-copy w-4 text-muted-foreground" aria-hidden="true"></i>Duplicar</button>
+  <div role="separator" class="my-1 h-px bg-border"></div>
+  <button role="menuitem" tabindex="-1" data-delete class="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-danger hover:bg-danger-subtle focus:bg-danger-subtle focus:outline-none"><i class="fa-solid fa-trash w-4" aria-hidden="true"></i>Excluir…</button>
+</div>
+
+<!-- ConfirmModal (danger). Abra pelo menu "Excluir…" ou com ?modal=delete -->
+<div id="confirm" hidden>
+  <div class="fixed inset-0 z-50 bg-overlay/60 motion-safe:animate-fade-in" data-overlay></div>
+  <div role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-desc" class="fixed inset-x-4 top-1/2 z-50 mx-auto max-h-[85dvh] max-w-lg -translate-y-1/2 overflow-y-auto rounded-lg bg-surface p-6 shadow-lg motion-safe:animate-pop-in">
+    <div class="flex gap-4">
+      <span class="grid size-12 shrink-0 place-items-center rounded-full bg-danger-subtle text-lg text-danger" aria-hidden="true"><i class="fa-solid fa-trash"></i></span>
+      <div>
+        <h2 id="cf-title" class="pr-10 font-display text-xl font-bold">Excluir a campanha "<span data-name>Sorteio Café Aurora</span>"?</h2>
+        <p id="cf-desc" class="mt-2 text-sm text-muted-foreground">Os <b class="text-foreground">1.284 participantes</b> e as inscrições serão apagados. Isso não pode ser desfeito.</p>
+      </div>
+    </div>
+    <button type="button" data-close class="absolute right-3 top-3 inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label="Fechar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <button type="button" data-close data-initial class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-input bg-surface px-4 font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">Cancelar</button>
+      <button type="button" data-close class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md bg-danger px-4 font-semibold text-danger-foreground hover:bg-danger-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><i class="fa-solid fa-trash" aria-hidden="true"></i>Excluir campanha</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer mobile (Radix Dialog na implementação) -->
+<div id="drawer" hidden>
+  <div class="fixed inset-0 z-50 bg-overlay/60 motion-safe:animate-fade-in" data-overlay></div>
+  <div role="dialog" aria-modal="true" aria-label="Menu" class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col bg-secondary text-secondary-foreground shadow-lg motion-safe:animate-slide-in-left">
+    <div class="flex h-16 items-center justify-between px-4"><a href="#" class="flex min-h-11 items-center rounded-md font-display text-xl font-extrabold text-secondary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse">Viralt<span class="text-accent" aria-hidden="true">.</span></a>
+      <button type="button" data-close aria-label="Fechar menu" class="inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-secondary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse"><i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i></button>
+    </div>
+    <nav aria-label="Principal (menu móvel)" class="flex-1 overflow-y-auto px-3 py-4">
+<h2 id="g-Pri-Campanhas" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Campanhas</h2>
+<ul aria-labelledby="g-Pri-Campanhas" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-gauge-high w-5 text-center" aria-hidden="true"></i>Painel</a></li>
+<li><a href="#" aria-current="page" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse bg-accent font-semibold text-accent-foreground"><i class="fa-solid fa-bullhorn w-5 text-center" aria-hidden="true"></i>Campanhas</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-images w-5 text-center" aria-hidden="true"></i>Moderação</a></li>
+</ul>
+<h2 id="g-Pri-Loja" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Loja</h2>
+<ul aria-labelledby="g-Pri-Loja" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-box w-5 text-center" aria-hidden="true"></i>Produtos</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-receipt w-5 text-center" aria-hidden="true"></i>Pedidos</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-file-invoice-dollar w-5 text-center" aria-hidden="true"></i>Faturas</a></li>
+</ul>
+<h2 id="g-Pri-Equipe" class="px-3 pb-1 pt-4 font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground first:pt-0">Equipe</h2>
+<ul aria-labelledby="g-Pri-Equipe" class="flex flex-col gap-0.5">
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-diagram-project w-5 text-center" aria-hidden="true"></i>Redes</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-id-badge w-5 text-center" aria-hidden="true"></i>Perfis</a></li>
+<li><a href="#" class="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse text-secondary-muted-foreground hover:bg-secondary-hover hover:text-secondary-foreground"><i class="fa-solid fa-users w-5 text-center" aria-hidden="true"></i>Usuários</a></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+<script>
+(() => {
+  const STATUS = {
+    0: ['Rascunho', 'bg-muted text-foreground', 'fa-pen'],
+    1: ['Ativa', 'bg-success-subtle text-success', 'fa-circle-play'],
+    2: ['Pausada', 'bg-warning-subtle text-warning', 'fa-circle-pause'],
+    3: ['Encerrada', 'bg-info-subtle text-info', 'fa-flag-checkered'],
+  };
+  const data = [
+    ['Sorteio Café Aurora', 'cafe-aurora', 1, 'Sorteio', 1284, 4102, '12/12/2026'],
+    ['Concurso de latte art', 'latte-art-2026', 1, 'Concurso', 342, 389, '15/12/2026'],
+    ['Ranking baristas do mês', 'ranking-dezembro', 2, 'Ranking', 918, 2730, '31/12/2026'],
+    ['Cupom de café no Natal', 'natal-cupom', 0, 'Cupom', 0, 0, '24/12/2026'],
+    ['Sorteio de inverno', 'inverno-cafe', 3, 'Sorteio', 5210, 16388, '30/08/2026'],
+    ['Café com a comunidade', 'comunidade', 1, 'Sorteio', 77, 120, '05/01/2027'],
+    ['Melhor foto de cafeteria', 'foto-cafeteria', 0, 'Concurso', 0, 0, '—'],
+    ['Assinatura grátis por 3 meses', 'assinatura-3m', 3, 'Sorteio', 2311, 6020, '10/10/2026'],
+    ['Degustação às cegas', 'degustacao', 2, 'Ranking', 156, 402, '20/01/2027'],
+  ];
+  const fmt = (n) => n.toLocaleString('pt-BR');
+  const iconBtn = (icon, label, extra = '') => `<a href="#" class="inline-flex size-11 items-center justify-center rounded-md text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${extra}" aria-label="${label}"><i class="fa-solid ${icon}" aria-hidden="true"></i></a>`;
+  document.getElementById('rows').innerHTML = data.map(([t, slug, st, type, part, ent, end]) => {
+    const [label, cls, ic] = STATUS[st];
+    return `<tr class="transition-colors duration-150 hover:bg-muted/60">
+      <th scope="row" class="sticky left-0 bg-surface px-4 py-3 text-left font-normal">
+        <a href="#" class="font-semibold text-foreground hover:text-primary hover:underline focus-ring">${t}</a>
+        <span class="block font-mono text-xs text-muted-foreground">/c/${slug}</span>
+      </th>
+      <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${cls}"><i class="fa-solid ${ic}" aria-hidden="true"></i>${label}</span></td>
+      <td class="px-4 py-3">${type}</td>
+      <td class="px-4 py-3 text-right tabular-nums">${fmt(part)}</td>
+      <td class="px-4 py-3 text-right tabular-nums">${fmt(ent)}</td>
+      <td class="px-4 py-3 tabular-nums">${end}</td>
+      <td class="whitespace-nowrap px-2 py-1 text-right">
+        ${iconBtn('fa-eye', 'Ver ' + t)}${iconBtn('fa-pen', 'Editar ' + t)}
+        <button type="button" data-menu="${t}" aria-haspopup="menu" aria-expanded="false" class="inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label="Mais ações para ${t}"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></button>
+      </td></tr>`;
+  }).join('');
+
+  // Alert dispensável: o foco vai para o título da página
+  document.getElementById('ok-close').addEventListener('click', () => { document.getElementById('ok-alert').remove(); document.querySelector('h1').setAttribute('tabindex', '-1'); document.querySelector('h1').focus(); });
+
+  // DropdownMenu simplificado (na implementação: Radix DropdownMenu)
+  const menu = document.getElementById('row-menu');
+  let trigger = null;
+  const items = () => [...menu.querySelectorAll('[role=menuitem]')];
+  const closeMenu = (refocus = true) => { menu.hidden = true; if (trigger) { trigger.setAttribute('aria-expanded', 'false'); if (refocus) trigger.focus(); } };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-menu]');
+    if (b) {
+      if (!menu.hidden && trigger === b) return closeMenu();
+      trigger = b; const r = b.getBoundingClientRect();
+      menu.hidden = false; b.setAttribute('aria-expanded', 'true');
+      menu.style.top = Math.min(r.bottom + 4, innerHeight - menu.offsetHeight - 8) + 'px';
+      menu.style.left = Math.max(8, r.right - menu.offsetWidth) + 'px';
+      menu.dataset.name = b.dataset.menu; items()[0].focus(); return;
+    }
+    if (!menu.contains(e.target) && !menu.hidden) closeMenu(false);
+  });
+  menu.addEventListener('keydown', (e) => {
+    const list = items(), i = list.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); list[(i + 1) % list.length].focus(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); list[(i - 1 + list.length) % list.length].focus(); }
+    if (e.key === 'Home') { e.preventDefault(); list[0].focus(); }
+    if (e.key === 'End') { e.preventDefault(); list[list.length - 1].focus(); }
+    if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); closeMenu(); }
+  });
+  menu.querySelector('[data-delete]').addEventListener('click', () => { const t = trigger; closeMenu(false); openModal(t, menu.dataset.name); });
+
+  // ConfirmModal com focus trap (na implementação: Radix AlertDialog)
+  const modal = document.getElementById('confirm');
+  let origin = null;
+  const focusables = () => [...modal.querySelectorAll('button, [href], input, select, textarea')].filter((el) => !el.disabled);
+  function openModal(from, name) {
+    origin = from || document.activeElement;
+    if (name) modal.querySelector('[data-name]').textContent = name;
+    modal.hidden = false; document.body.style.overflow = 'hidden';
+    modal.querySelector('[data-initial]').focus(); // destrutivo: foco em "Cancelar"
+  }
+  function closeModal() { modal.hidden = true; document.body.style.overflow = ''; origin && origin.focus && origin.focus(); }
+  modal.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target.matches('[data-overlay]')) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (modal.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+    if (e.key === 'Tab') {
+      const f = focusables(), first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  if (new URLSearchParams(location.search).get('modal') === 'delete') openModal(document.querySelector('[data-menu]'));
+})();
+</script>
+<script>
+/* Shell do painel: drawer mobile e menus do top bar (Radix na implementação). */
+(() => {
+  const btn = document.getElementById('drawer-btn'), d = document.getElementById('drawer');
+  const f = () => [...d.querySelectorAll('a, button')];
+  const open = () => { d.hidden = false; btn.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; f()[0].focus(); };
+  const close = () => { d.hidden = true; btn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; btn.focus(); };
+  btn.addEventListener('click', open);
+  d.addEventListener('click', (e) => { if (e.target.closest('[data-close]') || e.target.matches('[data-overlay]')) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (d.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'Tab') { const l = f(), a = l[0], z = l[l.length - 1];
+      if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+      else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } }
+  });
+
+  document.querySelectorAll('[data-dd]').forEach((t) => {
+    const m = document.getElementById(t.dataset.dd);
+    const items = () => [...m.querySelectorAll('[role^=menuitem]')];
+    const hide = (refocus) => { m.hidden = true; t.setAttribute('aria-expanded', 'false'); if (refocus) t.focus(); };
+    t.addEventListener('click', () => { if (!m.hidden) return hide(true); m.hidden = false; t.setAttribute('aria-expanded', 'true'); items()[0].focus(); });
+    m.addEventListener('keydown', (e) => {
+      const l = items(), i = l.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') { e.preventDefault(); l[(i + 1) % l.length].focus(); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); l[(i - 1 + l.length) % l.length].focus(); }
+      if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); hide(true); }
+    });
+    m.addEventListener('click', (e) => { if (e.target.closest('[role^=menuitem]')) hide(true); });
+    document.addEventListener('click', (e) => { if (!m.hidden && !m.contains(e.target) && !t.contains(e.target)) hide(false); });
+  });
+})();
+</script>
+</body>
+</html>

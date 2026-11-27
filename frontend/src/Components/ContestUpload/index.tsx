@@ -1,11 +1,9 @@
-import { useState, useCallback } from 'react';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
-import Alert from 'react-bootstrap/Alert';
-import Spinner from 'react-bootstrap/Spinner';
+import { useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faFileImage, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { Alert, Button, Card, CardContent, CardTitle, FileInput, Input } from '../ui';
+import { getApiUrl } from '../../Services/apiHelpers';
 
 interface ContestUploadProps {
   campaignId: number;
@@ -13,27 +11,38 @@ interface ContestUploadProps {
   onSubmitted?: () => void;
 }
 
+const formatSize = (bytes: number): string =>
+  bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
 /**
  * ContestUpload component - File upload for contest submissions.
  * Shown when campaign.entryType === 3 (Contest).
- * Can be integrated into PublicCampaignPage when it exists.
  */
-export default function ContestUpload({ campaignId, clientId, onSubmitted }: ContestUploadProps) {
+const ContestUpload = ({ campaignId, clientId, onSubmitted }: ContestUploadProps) => {
+  const { t } = useTranslation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0] || null;
-    setFile(selected);
+  const handleFilesChange = useCallback((files: FileList | null) => {
+    setFile(files?.[0] ?? null);
     setError(null);
+    setSuccess(false);
+  }, []);
+
+  const handleRemove = useCallback(() => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    fileInputRef.current?.focus();
   }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!file) {
-      setError('Please select a file to upload.');
+      setError(t('contestUpload.error_no_file'));
+      fileInputRef.current?.focus();
       return;
     }
 
@@ -48,76 +57,110 @@ export default function ContestUpload({ campaignId, clientId, onSubmitted }: Con
       formData.append('clientId', clientId.toString());
       formData.append('caption', caption);
 
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://localhost:44374';
-      const response = await fetch(`${apiUrl}/api/Submission/upload`, {
+      const response = await fetch(`${getApiUrl()}/api/Submission/upload`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || 'Upload failed');
+        throw new Error(text || t('contestUpload.error_failed'));
       }
 
       setSuccess(true);
       setFile(null);
       setCaption('');
-      // Reset the file input
-      const fileInput = document.getElementById('contest-file-input') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = '';
 
       onSubmitted?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setError(err instanceof Error ? err.message : t('contestUpload.error_failed'));
     } finally {
       setSubmitting(false);
     }
-  }, [file, caption, campaignId, clientId, onSubmitted]);
+  }, [file, caption, campaignId, clientId, onSubmitted, t]);
 
   return (
-    <Card className="mb-4">
-      <Card.Body>
-        <Card.Title>Submit Your Entry</Card.Title>
+    <Card as="section" aria-labelledby="contest-upload-title">
+      <CardContent className="flex flex-col gap-5">
+        <CardTitle id="contest-upload-title">{t('contestUpload.title')}</CardTitle>
 
-        {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
-        {success && <Alert variant="success">Your submission has been uploaded successfully!</Alert>}
+        <div aria-live="polite" className="flex flex-col gap-3">
+          {success && <Alert variant="success" title={t('contestUpload.success')} />}
+        </div>
+        {error && (
+          <Alert
+            variant="danger"
+            title={t('contestUpload.error_title')}
+            dismissible
+            dismissLabel={t('shared.dismissAlert')}
+            onDismiss={() => setError(null)}
+          >
+            {error}
+          </Alert>
+        )}
 
-        <Form.Group className="mb-3">
-          <Form.Label>Upload Image or Video</Form.Label>
-          <Form.Control
-            id="contest-file-input"
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleFileChange}
-          />
-          <Form.Text className="text-muted">
-            Accepted formats: JPG, PNG, GIF, MP4, MOV, WebM
-          </Form.Text>
-        </Form.Group>
+        <FileInput
+          ref={fileInputRef}
+          id="contest-file-input"
+          label={t('contestUpload.file_label')}
+          hint={t('contestUpload.file_hint')}
+          prompt={t('contestUpload.file_prompt')}
+          dropPrompt={t('contestUpload.file_drop')}
+          dragPrompt={t('contestUpload.file_drag')}
+          accept="image/*,video/*"
+          disabled={submitting}
+          onFilesChange={handleFilesChange}
+          selected={
+            file ? (
+              <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted p-3">
+                <FontAwesomeIcon icon={faFileImage} aria-hidden="true" className="text-xl text-muted-foreground" />
+                <p className="min-w-0 flex-1 text-sm">
+                  <span className="block truncate font-semibold">{file.name}</span>
+                  <span className="text-muted-foreground">{formatSize(file.size)}</span>
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemove}
+                  aria-label={t('contestUpload.remove_aria', { name: file.name })}
+                >
+                  {t('contestUpload.remove')}
+                </Button>
+              </div>
+            ) : undefined
+          }
+        />
 
-        <Form.Group className="mb-3">
-          <Form.Label>Caption (optional)</Form.Label>
-          <Form.Control
-            type="text"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Add a caption to your submission"
-            maxLength={280}
-          />
-        </Form.Group>
+        <Input
+          label={
+            <>
+              {t('contestUpload.caption_label')}{' '}
+              <span className="font-normal text-muted-foreground">{t('shared.optional')}</span>
+            </>
+          }
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          placeholder={t('contestUpload.caption_placeholder')}
+          maxLength={280}
+          disabled={submitting}
+        />
 
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={submitting || !file}
-        >
-          {submitting ? (
-            <><Spinner animation="border" size="sm" className="me-2" />Uploading...</>
-          ) : (
-            <><FontAwesomeIcon icon={faUpload} fixedWidth className="me-2" />Submit Entry</>
-          )}
-        </Button>
-      </Card.Body>
+        <div>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={!file}
+            loading={submitting}
+            loadingText={t('contestUpload.submitting')}
+            leftIcon={<FontAwesomeIcon icon={faUpload} aria-hidden="true" />}
+          >
+            {t('contestUpload.submit')}
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
-}
+};
+
+export default ContestUpload;

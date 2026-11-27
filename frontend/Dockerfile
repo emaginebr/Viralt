@@ -1,10 +1,11 @@
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+RUN npm ci
 COPY . .
-ARG REACT_APP_API_URL
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ARG VITE_API_URL
+ARG VITE_SITE_BASENAME=/
+ENV VITE_API_URL=$VITE_API_URL VITE_SITE_BASENAME=$VITE_SITE_BASENAME
 RUN npm run build
 
 FROM nginx:alpine AS final

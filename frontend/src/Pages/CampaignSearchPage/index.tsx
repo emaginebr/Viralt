@@ -1,36 +1,45 @@
 import { useEffect, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faEye, faPlus, faSearch, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { Link, useNavigate } from "react-router-dom";
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Dropdown from 'react-bootstrap/Dropdown';
-import Pagination from 'react-bootstrap/Pagination';
-import Card from 'react-bootstrap/Card';
-import Badge from 'react-bootstrap/Badge';
-import Spinner from 'react-bootstrap/Spinner';
-import Alert from 'react-bootstrap/Alert';
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faBullhorn,
+    faCode,
+    faEllipsisVertical,
+    faEye,
+    faFilterCircleXmark,
+    faImages,
+    faPen,
+    faPlus,
+    faTrash,
+    faTrophy,
+    faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import { useCampaign } from "../../hooks/useCampaign";
 import type { CampaignInfo } from "../../types/campaign";
-
-const STATUS_LABELS: Record<number, { label: string; variant: string }> = {
-    0: { label: 'Draft', variant: 'secondary' },
-    1: { label: 'Active', variant: 'success' },
-    2: { label: 'Paused', variant: 'warning' },
-    3: { label: 'Ended', variant: 'dark' },
-};
+import { PageContainer, PageHeader } from "../../Components/ui/PageContainer";
+import { Button, buttonClasses } from "../../Components/ui/Button";
+import { Input } from "../../Components/ui/Input";
+import { Select } from "../../Components/ui/Select";
+import { Alert } from "../../Components/ui/Alert";
+import { Table, type TableColumn } from "../../Components/ui/Table";
+import { Pagination } from "../../Components/ui/Pagination";
+import { DropdownMenu } from "../../Components/ui/DropdownMenu";
+import { useConfirm } from "../../Components/ui/ConfirmModal";
+import { focusRing } from "../../Components/ui/cn";
+import Breadcrumb from "../../Components/Breadcrumb";
+import { CAMPAIGN_STATUS_VALUES, CampaignStatusBadge, campaignStatusKey, entryTypeKey } from "../../Components/CampaignStatusBadge";
+import { usePaginationLabels } from "../../hooks/usePaginationLabels";
 
 const PAGE_SIZE = 9;
 
-export default function CampaignSearchPage() {
+const CampaignSearchPage = () => {
 
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+    const confirm = useConfirm();
+    const paginationLabels = usePaginationLabels(t('campaignSearch.paginationNav'));
 
     const { campaigns, loading, error, loadCampaigns, deleteCampaign, clearError } = useCampaign();
 
@@ -40,7 +49,8 @@ export default function CampaignSearchPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadCampaigns(100).catch(() => { /* handled by context */ });
+        // GraphQL MaxPageSize is 50 (offset paging)
+        loadCampaigns(50).catch(() => { /* handled by context */ });
     }, [loadCampaigns]);
 
     // Filter campaigns
@@ -59,182 +69,262 @@ export default function CampaignSearchPage() {
         currentPage * PAGE_SIZE
     );
 
+    const hasFilters = Boolean(searchTerm) || statusFilter !== null;
+
     const handleDelete = async (campaign: CampaignInfo) => {
-        if (!window.confirm(`Delete campaign "${campaign.title}"? This cannot be undone.`)) return;
+        const confirmed = await confirm({
+            title: t('campaignSearch.deleteTitle', { title: campaign.title }),
+            description: t('campaignSearch.deleteDescription', { count: campaign.totalParticipants ?? 0 }),
+            confirmLabel: t('campaignSearch.deleteConfirm'),
+            cancelLabel: t('shared.cancel'),
+            tone: 'danger',
+        });
+        if (!confirmed) return;
         setDeleteError(null);
         try {
-            await deleteCampaign(campaign.campaignId);
+            const result = await deleteCampaign(campaign.campaignId);
+            if (result?.sucesso) {
+                toast.success(t('campaignSearch.deleted', { title: campaign.title }));
+            }
         } catch (err) {
-            setDeleteError(err instanceof Error ? err.message : 'Failed to delete');
+            setDeleteError(err instanceof Error ? err.message : t('campaignSearch.deleteFailed'));
         }
     };
 
-    const getStatusBadge = (status: number) => {
-        const info = STATUS_LABELS[status] || { label: 'Unknown', variant: 'secondary' };
-        return <Badge bg={info.variant}>{info.label}</Badge>;
+    const clearFilters = () => {
+        setSearchTerm('');
+        setStatusFilter(null);
+        setCurrentPage(1);
     };
 
-    return (
-        <>
-            <section style={{paddingTop: "160px", paddingBottom: "40px", background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-color), transparent 95%) 50%, color-mix(in srgb, var(--accent-color), transparent 98%) 25%, transparent 50%)"}}>
-            <Container>
-                <Row>
-                    <Col md="6">
-                        <h3>
-                            <nav aria-label="breadcrumb">
-                                <ol className="breadcrumb">
-                                    <li className="breadcrumb-item active" aria-current="page">My Campaigns</li>
-                                </ol>
-                            </nav>
-                        </h3>
-                    </Col>
-                    <Col md="6" style={{ textAlign: "right" }}>
-                        <InputGroup className="pull-right">
-                            <Form.Control
-                                placeholder="Search by keyword"
-                                aria-label="Search by keyword"
-                                value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                            />
-                            <Button variant="outline-secondary"><FontAwesomeIcon icon={faSearch} fixedWidth /></Button>
-                            <Dropdown>
-                                <Dropdown.Toggle variant="danger" id="dropdown-basic">
-                                    {statusFilter === null ? t('filter_by_all_status') : STATUS_LABELS[statusFilter]?.label || 'Unknown'}
-                                </Dropdown.Toggle>
+    const formatDate = (value: string | null) =>
+        value ? new Date(value).toLocaleDateString(i18n.language) : '—';
 
-                                <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => { setStatusFilter(null); setCurrentPage(1); }}>All Statuses</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => { setStatusFilter(0); setCurrentPage(1); }}>Draft</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => { setStatusFilter(1); setCurrentPage(1); }}>Active</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => { setStatusFilter(2); setCurrentPage(1); }}>Paused</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => { setStatusFilter(3); setCurrentPage(1); }}>Ended</Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
-                            <Button variant="success" onClick={() => navigate("/campaigns/new")}>
-                                <FontAwesomeIcon icon={faPlus} fixedWidth />&nbsp;New Campaign
-                            </Button>
-                        </InputGroup>
-                    </Col>
-                </Row>
-
-                {(error || deleteError) && (
-                    <Row className="mt-3">
-                        <Col>
-                            <Alert variant="danger" onClose={() => { clearError(); setDeleteError(null); }} dismissible>
-                                {error || deleteError}
-                            </Alert>
-                        </Col>
-                    </Row>
-                )}
-
-                {loading ? (
-                    <Row className="py-5">
-                        <Col className="text-center">
-                            <Spinner animation="border" />
-                            <p className="mt-2">Loading campaigns...</p>
-                        </Col>
-                    </Row>
-                ) : paginatedCampaigns.length === 0 ? (
-                    <Row className="py-4">
-                        <Col className="text-center text-muted">
-                            <p>{searchTerm || statusFilter !== null ? 'No campaigns match your filters.' : 'No campaigns yet. Create your first campaign!'}</p>
-                        </Col>
-                    </Row>
-                ) : (
-                    <Row className="py-4">
-                        {paginatedCampaigns.map((campaign) => (
-                            <Col md={4} key={campaign.campaignId} className="mb-4">
-                                <Card className="h-100">
-                                    <Card.Body className="d-flex flex-column">
-                                        <div className="d-flex justify-content-between align-items-start mb-2">
-                                            <Card.Title className="mb-0" style={{ fontSize: '1.1rem' }}>{campaign.title}</Card.Title>
-                                            {getStatusBadge(campaign.status)}
-                                        </div>
-                                        {campaign.slug && (
-                                            <small className="text-muted mb-2">/{campaign.slug}</small>
-                                        )}
-                                        <Card.Text className="text-muted small flex-grow-1">
-                                            {campaign.description
-                                                ? (campaign.description.length > 100
-                                                    ? campaign.description.substring(0, 100) + '...'
-                                                    : campaign.description)
-                                                : 'No description'}
-                                        </Card.Text>
-                                        <div className="mb-3">
-                                            <small className="text-muted d-block">
-                                                <strong>{campaign.totalParticipants}</strong> participants &middot; <strong>{campaign.totalEntries}</strong> entries
-                                            </small>
-                                        </div>
-                                        <div className="mt-auto">
-                                            <Link to={`/campaigns/${campaign.campaignId}`}>
-                                                <Button variant="primary" size="sm">
-                                                    <FontAwesomeIcon icon={faEye} fixedWidth /> View
-                                                </Button>
-                                            </Link>
-                                            &nbsp;
-                                            <Link to={`/campaigns/${campaign.campaignId}/edit`}>
-                                                <Button variant="success" size="sm">
-                                                    <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit
-                                                </Button>
-                                            </Link>
-                                            &nbsp;
-                                            <Link to={`/campaigns/${campaign.campaignId}/participants`}>
-                                                <Button variant="info" size="sm">
-                                                    <FontAwesomeIcon icon={faUsers} fixedWidth /> Participants
-                                                </Button>
-                                            </Link>
-                                            &nbsp;
-                                            <Button variant="danger" size="sm" onClick={() => handleDelete(campaign)}>
-                                                <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
-                                            </Button>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-                )}
-
-                {totalPages > 1 && (
-                    <Row>
-                        <Col md={12} className="text-center">
-                            <Pagination className="justify-content-center">
-                                <Pagination.First
-                                    disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage(1)}
-                                />
-                                <Pagination.Prev
-                                    disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage((p) => p - 1)}
-                                />
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                    const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
-                                    const page = startPage + i;
-                                    if (page > totalPages) return null;
-                                    return (
-                                        <Pagination.Item
-                                            key={page}
-                                            active={page === currentPage}
-                                            onClick={() => setCurrentPage(page)}
-                                        >
-                                            {page}
-                                        </Pagination.Item>
-                                    );
-                                })}
-                                <Pagination.Next
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage((p) => p + 1)}
-                                />
-                                <Pagination.Last
-                                    disabled={currentPage === totalPages}
-                                    onClick={() => setCurrentPage(totalPages)}
-                                />
-                            </Pagination>
-                        </Col>
-                    </Row>
-                )}
-            </Container>
-            </section>
-        </>
+    const iconLink = (to: string, icon: typeof faEye, label: string) => (
+        <Link to={to} aria-label={label} title={label} className={buttonClasses({ variant: 'ghost', size: 'icon' })}>
+            <FontAwesomeIcon icon={icon} aria-hidden="true" />
+        </Link>
     );
-}
+
+    const columns: TableColumn<CampaignInfo>[] = [
+        {
+            key: 'title',
+            header: t('campaignSearch.columns.campaign'),
+            rowHeader: true,
+            className: 'font-normal',
+            accessor: (campaign) => (
+                <>
+                    <Link
+                        to={`/campaigns/${campaign.campaignId}`}
+                        className={`rounded-sm font-semibold text-foreground hover:text-primary hover:underline ${focusRing}`}
+                    >
+                        {campaign.title}
+                    </Link>
+                    {campaign.slug && (
+                        <span className="block font-mono text-xs font-normal text-muted-foreground">/c/{campaign.slug}</span>
+                    )}
+                </>
+            ),
+        },
+        {
+            key: 'status',
+            header: t('campaignSearch.columns.status'),
+            accessor: (campaign) => <CampaignStatusBadge status={campaign.status} />,
+        },
+        {
+            key: 'entryType',
+            header: t('campaignSearch.columns.type'),
+            accessor: (campaign) => t(entryTypeKey(campaign.entryType)),
+        },
+        {
+            key: 'totalParticipants',
+            header: t('campaignSearch.columns.participants'),
+            numeric: true,
+            accessor: (campaign) => (campaign.totalParticipants ?? 0).toLocaleString(i18n.language),
+        },
+        {
+            key: 'totalEntries',
+            header: t('campaignSearch.columns.entries'),
+            numeric: true,
+            accessor: (campaign) => (campaign.totalEntries ?? 0).toLocaleString(i18n.language),
+        },
+        {
+            key: 'endTime',
+            header: t('campaignSearch.columns.endsAt'),
+            className: 'tabular-nums',
+            accessor: (campaign) => formatDate(campaign.endTime),
+        },
+        {
+            key: 'actions',
+            header: t('campaignSearch.columns.actions'),
+            actions: true,
+            className: 'px-2 py-1',
+            accessor: (campaign) => (
+                <div className="flex items-center justify-end">
+                    {iconLink(`/campaigns/${campaign.campaignId}`, faEye, t('campaignSearch.actions.viewNamed', { title: campaign.title }))}
+                    {iconLink(`/campaigns/${campaign.campaignId}/edit`, faPen, t('campaignSearch.actions.editNamed', { title: campaign.title }))}
+                    <DropdownMenu
+                        align="end"
+                        trigger={
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={t('campaignSearch.actions.moreNamed', { title: campaign.title })}
+                            >
+                                <FontAwesomeIcon icon={faEllipsisVertical} aria-hidden="true" />
+                            </Button>
+                        }
+                        items={[
+                            {
+                                label: t('campaignSearch.actions.participants'),
+                                icon: <FontAwesomeIcon icon={faUsers} className="w-4 text-muted-foreground" />,
+                                onSelect: () => navigate(`/campaigns/${campaign.campaignId}/participants`),
+                            },
+                            {
+                                label: t('campaignSearch.actions.submissions'),
+                                icon: <FontAwesomeIcon icon={faImages} className="w-4 text-muted-foreground" />,
+                                onSelect: () => navigate(`/campaigns/${campaign.campaignId}/submissions`),
+                            },
+                            {
+                                label: t('campaignSearch.actions.winners'),
+                                icon: <FontAwesomeIcon icon={faTrophy} className="w-4 text-muted-foreground" />,
+                                onSelect: () => navigate(`/campaigns/${campaign.campaignId}/winners`),
+                            },
+                            {
+                                label: t('campaignSearch.actions.embed'),
+                                icon: <FontAwesomeIcon icon={faCode} className="w-4 text-muted-foreground" />,
+                                onSelect: () => navigate(`/campaigns/${campaign.campaignId}`),
+                            },
+                            { type: 'separator' },
+                            {
+                                label: t('campaignSearch.actions.delete'),
+                                icon: <FontAwesomeIcon icon={faTrash} className="w-4" />,
+                                destructive: true,
+                                // Deferred so the menu finishes closing before the AlertDialog opens.
+                                onSelect: () => { window.setTimeout(() => { void handleDelete(campaign); }, 0); },
+                            },
+                        ]}
+                    />
+                </div>
+            ),
+        },
+    ];
+
+    const caption = t('campaignSearch.caption', { page: currentPage, total: totalPages });
+
+    return (
+        <PageContainer>
+            <PageHeader
+                breadcrumb={
+                    <Breadcrumb
+                        className="mb-1"
+                        label={t('shared.breadcrumb')}
+                        items={[
+                            { label: t('layout.nav.dashboard'), to: '/admin/dashboard' },
+                            { label: t('campaignSearch.title') },
+                        ]}
+                    />
+                }
+                title={t('campaignSearch.title')}
+                description={t('campaignSearch.description')}
+                actions={
+                    <Button
+                        asChild
+                        leftIcon={<FontAwesomeIcon icon={faPlus} aria-hidden="true" />}
+                    >
+                        <Link to="/campaigns/new">{t('layout.nav.newCampaign')}</Link>
+                    </Button>
+                }
+            />
+
+            {(error || deleteError) && (
+                <Alert
+                    variant="danger"
+                    className="mb-6"
+                    dismissible
+                    dismissLabel={t('shared.dismissAlert')}
+                    onDismiss={() => { clearError(); setDeleteError(null); }}
+                >
+                    {error || deleteError}
+                </Alert>
+            )}
+
+            <form
+                role="search"
+                aria-label={t('campaignSearch.filtersLabel')}
+                onSubmit={(e) => e.preventDefault()}
+                className="mb-4 grid gap-3 sm:grid-cols-[1fr_12rem_auto] sm:items-end"
+            >
+                <Input
+                    variant="search"
+                    label={t('campaignSearch.searchLabel')}
+                    hideLabel={false}
+                    placeholder={t('campaignSearch.searchPlaceholder')}
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                />
+                <Select
+                    label={t('campaignSearch.statusLabel')}
+                    value={statusFilter === null ? '' : String(statusFilter)}
+                    onChange={(e) => {
+                        setStatusFilter(e.target.value === '' ? null : parseInt(e.target.value, 10));
+                        setCurrentPage(1);
+                    }}
+                    options={[
+                        { value: '', label: t('campaignSearch.allStatuses') },
+                        ...CAMPAIGN_STATUS_VALUES.map((status) => ({ value: String(status), label: t(campaignStatusKey(status)) })),
+                    ]}
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={!hasFilters}
+                    leftIcon={<FontAwesomeIcon icon={faFilterCircleXmark} aria-hidden="true" />}
+                    onClick={clearFilters}
+                >
+                    {t('shared.clearFilters')}
+                </Button>
+            </form>
+
+            <p className="sr-only" aria-live="polite">
+                {loading ? '' : t('campaignSearch.resultCount', { count: filteredCampaigns.length })}
+            </p>
+
+            <Table
+                columns={columns}
+                rows={paginatedCampaigns}
+                caption={caption}
+                rowKey={(campaign) => campaign.campaignId}
+                loading={loading}
+                className="[&_table]:min-w-4xl"
+                empty={
+                    <div className="flex flex-col items-center gap-3 py-4">
+                        <FontAwesomeIcon icon={faBullhorn} className="text-2xl" aria-hidden="true" />
+                        <p>{hasFilters ? t('campaignSearch.emptyFiltered') : t('campaignSearch.empty')}</p>
+                        {hasFilters ? (
+                            <Button variant="outline" size="sm" onClick={clearFilters}>{t('shared.clearFilters')}</Button>
+                        ) : (
+                            <Button asChild size="sm" leftIcon={<FontAwesomeIcon icon={faPlus} aria-hidden="true" />}>
+                                <Link to="/campaigns/new">{t('layout.nav.newCampaign')}</Link>
+                            </Button>
+                        )}
+                    </div>
+                }
+            />
+
+            {totalPages > 1 && (
+                <Pagination
+                    className="mt-4"
+                    page={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredCampaigns.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={setCurrentPage}
+                    labels={paginationLabels}
+                />
+            )}
+        </PageContainer>
+    );
+};
+
+export default CampaignSearchPage;

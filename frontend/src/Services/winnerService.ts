@@ -5,6 +5,18 @@ import { getApiUrl, getHeaders } from './apiHelpers';
 import { graphqlQuery, GRAPHQL_ADMIN } from './graphqlClient';
 
 const API_BASE = `${getApiUrl()}/api/Winner`;
+/** The draw lives on CampaignController: POST /api/Campaign/draw/{id} */
+const CAMPAIGN_API_BASE = `${getApiUrl()}/api/Campaign`;
+
+/** Winner as returned by REST (WinnerInfo DTO: `selectionMethod` is a string) or GraphQL (int). */
+interface WinnerDto extends Omit<WinnerInfo, 'selectionMethod'> {
+  selectionMethod: string | number | null;
+}
+
+const normalizeWinner = (dto: WinnerDto): WinnerInfo => {
+  const method = Number(dto.selectionMethod);
+  return { ...dto, selectionMethod: Number.isFinite(method) ? method : 0 };
+};
 
 interface WinnerServiceConfig {
   onUnauthorized?: () => void;
@@ -52,18 +64,20 @@ class WinnerService {
         }
       }
     `;
-    const data = await graphqlQuery<{ winnersByCampaign: WinnerInfo[] }>(
+    const data = await graphqlQuery<{ winnersByCampaign: WinnerDto[] | null }>(
       GRAPHQL_ADMIN, query, { campaignId }, true
     );
-    return { sucesso: true, mensagem: '', erros: null, winners: data.winnersByCampaign };
+    return { sucesso: true, mensagem: '', erros: null, winners: (data?.winnersByCampaign ?? []).map(normalizeWinner) };
   }
 
-  /** Draw winners for a campaign (REST) */
+  /** Draw winners for a campaign (REST POST /api/Campaign/draw/{campaignId}, body DrawRequest) */
   async draw(campaignId: number, request: DrawRequest): Promise<WinnerListResult> {
-    const response = await fetch(`${API_BASE}/draw/${campaignId}`, {
-      method: 'POST', headers: getHeaders(true), body: JSON.stringify(request),
+    const body: DrawRequest = { winnerCount: request.winnerCount, selectionMethod: request.selectionMethod };
+    const response = await fetch(`${CAMPAIGN_API_BASE}/draw/${campaignId}`, {
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(body),
     });
-    return this.handleResponse<WinnerListResult>(response);
+    const result = await this.handleResponse<Omit<WinnerListResult, 'winners'> & { winners: WinnerDto[] | null }>(response);
+    return { ...result, winners: (result.winners ?? []).map(normalizeWinner) };
   }
 
   /** Notify a single winner (REST) */

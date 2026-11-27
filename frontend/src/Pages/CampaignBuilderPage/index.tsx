@@ -1,29 +1,38 @@
-import { useState, useEffect, useCallback } from 'react';
-import Container from 'react-bootstrap/esm/Container';
-import Row from 'react-bootstrap/esm/Row';
-import Col from 'react-bootstrap/esm/Col';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Tab from 'react-bootstrap/Tab';
-import Nav from 'react-bootstrap/Nav';
-import Card from 'react-bootstrap/Card';
-import Badge from 'react-bootstrap/Badge';
-import Alert from 'react-bootstrap/Alert';
-import Spinner from 'react-bootstrap/Spinner';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faInfoCircle, faPaintBrush, faTrophy, faCog, faCheckCircle,
-  faPlus, faTrash, faArrowLeft, faArrowRight, faSave,
+  faArrowLeft, faArrowRight, faCamera, faCircleInfo, faEye, faEyeSlash, faGear,
+  faPaintbrush, faPlus, faRankingStar, faRocket, faTag, faTicket, faTrash, faTrophy, faClipboardCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useCampaign } from '../../hooks/useCampaign';
 import { usePrize } from '../../hooks/usePrize';
-import type { CampaignInsertInfo, CampaignUpdateInfo } from '../../types/campaign';
+import type { CampaignInfo, CampaignInsertInfo, CampaignUpdateInfo } from '../../types/campaign';
+import { getSessionUserId } from '../../Services/apiHelpers';
 import type { PrizeInsertInfo } from '../../types/prize';
+import { PageContainer, PageHeader } from '../../Components/ui/PageContainer';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../Components/ui/Card';
+import { Button } from '../../Components/ui/Button';
+import { Input } from '../../Components/ui/Input';
+import { Textarea } from '../../Components/ui/Textarea';
+import { Select } from '../../Components/ui/Select';
+import { Checkbox } from '../../Components/ui/Checkbox';
+import { Radio, RadioGroup } from '../../Components/ui/Radio';
+import { ColorInput } from '../../Components/ui/ColorInput';
+import { Alert } from '../../Components/ui/Alert';
+import { Badge } from '../../Components/ui/Badge';
+import { Tabs, type TabItem, type TabStatus } from '../../Components/ui/Tabs';
+import { useConfirm } from '../../Components/ui/ConfirmModal';
+import Breadcrumb from '../../Components/Breadcrumb';
+import { CampaignStatusBadge, entryTypeKey } from '../../Components/CampaignStatusBadge';
 
 interface PrizeFormItem {
   key: number;
+  /** Set for prizes loaded from the server (edit mode): updated instead of inserted again. */
+  prizeId?: number;
+  /** Server value, kept on update (the form has no field for it). */
+  minEntriesRequired?: number | null;
   title: string;
   description: string;
   image: string;
@@ -33,30 +42,99 @@ interface PrizeFormItem {
   sortOrder: number;
 }
 
-const ENTRY_TYPES = [
-  { value: 0, label: 'Sorteio' },
-  { value: 1, label: 'Leaderboard' },
-  { value: 2, label: 'Contest' },
-  { value: 3, label: 'Cupom' },
+const ENTRY_TYPE_OPTIONS = [
+  { value: 0, icon: faTicket },
+  { value: 1, icon: faRankingStar },
+  { value: 2, icon: faCamera },
+  { value: 3, icon: faTag },
+];
+
+const TIMEZONES = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Sao_Paulo',
+  'Europe/London',
+  'Europe/Paris',
+  'Asia/Tokyo',
+];
+
+const PRIZE_TYPES = [
+  { value: 0, key: 'physical' },
+  { value: 1, key: 'digital' },
+  { value: 2, key: 'coupon' },
 ];
 
 const TABS = ['basic', 'appearance', 'prizes', 'settings', 'review'];
 
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
 let prizeKeyCounter = 0;
 
-export default function CampaignBuilderPage() {
+/** Vertical tabs on lg+, horizontal and scrollable below (docs/design/components.md §21). */
+const useIsDesktop = (): boolean => {
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(DESKTOP_QUERY).matches
+      : true,
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined;
+    const media = window.matchMedia(DESKTOP_QUERY);
+    const update = () => setIsDesktop(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  return isDesktop;
+};
+
+interface ReviewRowProps {
+  label: ReactNode;
+  children: ReactNode;
+}
+
+const ReviewRow = ({ label, children }: ReviewRowProps) => (
+  <div className="grid gap-1 py-2 sm:grid-cols-[12rem_1fr] sm:gap-4">
+    <dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
+    <dd className="min-w-0 break-words">{children}</dd>
+  </div>
+);
+
+interface SwatchProps {
+  color: string;
+}
+
+const Swatch = ({ color }: SwatchProps) => (
+  <span className="inline-flex items-center gap-2 font-mono text-sm uppercase">
+    <span
+      aria-hidden="true"
+      className="inline-block size-4 rounded-sm border border-foreground/20"
+      style={{ backgroundColor: color }}
+    />
+    {color}
+  </span>
+);
+
+const CampaignBuilderPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const confirm = useConfirm();
+  const isDesktop = useIsDesktop();
   const { campaignId } = useParams<{ campaignId: string }>();
   const isEditing = !!campaignId;
 
   const { getCampaignById, insertCampaign, updateCampaign } = useCampaign();
-  const { loadPrizesByCampaign, prizes: existingPrizes, insertPrize } = usePrize();
+  const { loadPrizesByCampaign, prizes: existingPrizes, insertPrize, updatePrize, deletePrize } = usePrize();
 
   const [activeTab, setActiveTab] = useState('basic');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  // Edit mode: campaign as loaded, so fields without a form control are sent back unchanged
+  const [loadedCampaign, setLoadedCampaign] = useState<CampaignInfo | null>(null);
 
   // Step 1: Basic Info
   const [title, setTitle] = useState('');
@@ -100,6 +178,7 @@ export default function CampaignBuilderPage() {
       getCampaignById(id).then((result) => {
         if (result.sucesso && result.campaign) {
           const c = result.campaign;
+          setLoadedCampaign(c);
           setTitle(c.title || '');
           setDescription(c.description || '');
           setStartTime(c.startTime || '');
@@ -127,17 +206,19 @@ export default function CampaignBuilderPage() {
           setTiktokPixelId(c.tiktokPixelId || '');
           setGtmId(c.gtmId || '');
         }
-      }).catch(() => setError('Failed to load campaign'));
+      }).catch(() => setError(t('campaignBuilder.loadFailed')));
 
       loadPrizesByCampaign(id).catch(() => { /* ignore */ });
     }
-  }, [campaignId, isEditing, getCampaignById, loadPrizesByCampaign]);
+  }, [campaignId, isEditing, getCampaignById, loadPrizesByCampaign, t]);
 
   // Sync existing prizes into form
   useEffect(() => {
     if (isEditing && existingPrizes.length > 0 && prizeItems.length === 0) {
       setPrizeItems(existingPrizes.map((p) => ({
         key: ++prizeKeyCounter,
+        prizeId: p.prizeId,
+        minEntriesRequired: p.minEntriesRequired,
         title: p.title,
         description: p.description || '',
         image: p.image || '',
@@ -235,20 +316,45 @@ export default function CampaignBuilderPage() {
       let resultCampaignId: number;
 
       if (isEditing) {
+        // The backend overwrites the whole row: fields without a form control (status, slug,
+        // required flags, images, counters…) come from the loaded campaign; userId from the session
+        // (it is not readable through GraphQL).
+        const base = loadedCampaign;
         const updateData: CampaignUpdateInfo = {
           ...campaignData,
           campaignId: parseInt(campaignId!, 10),
+          userId: base?.userId || getSessionUserId() || 0,
+          ...(base ? {
+            status: base.status,
+            nameRequired: base.nameRequired,
+            emailRequired: base.emailRequired,
+            phoneRequired: base.phoneRequired,
+            minAge: base.minAge,
+            bgImage: base.bgImage,
+            topImage: base.topImage,
+            youtubeUrl: base.youtubeUrl,
+            minEntry: base.minEntry,
+            slug: base.slug,
+            maxEntriesPerUser: base.maxEntriesPerUser,
+            isPublished: base.isPublished,
+            brandId: base.brandId,
+            language: base.language,
+            totalEntries: base.totalEntries,
+            totalParticipants: base.totalParticipants,
+            viewCount: base.viewCount,
+          } : {}),
         };
         const result = await updateCampaign(updateData);
-        if (!result.sucesso) throw new Error(result.mensagem || 'Failed to update campaign');
+        if (!result.sucesso) throw new Error(result.mensagem || t('campaignBuilder.updateFailed'));
         resultCampaignId = parseInt(campaignId!, 10);
       } else {
         const result = await insertCampaign(campaignData);
-        if (!result.sucesso || !result.campaign) throw new Error(result.mensagem || 'Failed to create campaign');
+        if (!result.sucesso || !result.campaign) throw new Error(result.mensagem || t('campaignBuilder.createFailed'));
         resultCampaignId = result.campaign.campaignId;
       }
 
-      // Save prizes
+      // Save prizes: loaded ones are updated (not inserted again), new ones inserted,
+      // and loaded ones removed from the form are deleted.
       for (const prize of prizeItems) {
         const prizeData: PrizeInsertInfo = {
           campaignId: resultCampaignId,
@@ -259,410 +365,596 @@ export default function CampaignBuilderPage() {
           prizeType: prize.prizeType,
           couponCode: prize.couponCode || null,
           sortOrder: prize.sortOrder,
-          minEntriesRequired: null,
+          minEntriesRequired: prize.minEntriesRequired ?? null,
         };
-        await insertPrize(prizeData);
+        const saved = isEditing && prize.prizeId
+          ? await updatePrize({ ...prizeData, prizeId: prize.prizeId })
+          : await insertPrize(prizeData);
+        if (!saved.sucesso) throw new Error(saved.mensagem || t('campaignBuilder.genericError'));
+      }
+      if (isEditing) {
+        const keptIds = new Set(prizeItems.map((p) => p.prizeId).filter((id) => id));
+        for (const prize of existingPrizes) {
+          if (!keptIds.has(prize.prizeId)) await deletePrize(prize.prizeId);
+        }
       }
 
-      setSuccess(isEditing ? 'Campaign updated successfully!' : 'Campaign published successfully!');
-      setTimeout(() => navigate('/admin/campaigns'), 1500);
+      setSuccess(isEditing ? t('campaignBuilder.updated') : t('campaignBuilder.published'));
+      setTimeout(() => navigate('/campaigns'), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : t('campaignBuilder.genericError'));
     } finally {
       setSubmitting(false);
     }
   };
 
-  return (
-    <section style={{ paddingTop: '160px', paddingBottom: '40px', background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-color), transparent 95%) 50%, color-mix(in srgb, var(--accent-color), transparent 98%) 25%, transparent 50%)' }}>
-      <Container>
-        <Row className="mb-4">
-          <Col>
-            <h3>{isEditing ? 'Edit Campaign' : 'New Campaign'}</h3>
-          </Col>
-        </Row>
+  const requestPublish = async () => {
+    const confirmed = await confirm({
+      title: isEditing
+        ? t('campaignBuilder.confirmUpdateTitle', { title })
+        : t('campaignBuilder.confirmPublishTitle', { title }),
+      description: isEditing
+        ? t('campaignBuilder.confirmUpdateDescription')
+        : t('campaignBuilder.confirmPublishDescription'),
+      confirmLabel: isEditing ? t('campaignBuilder.update') : t('campaignBuilder.publish'),
+      cancelLabel: t('shared.cancel'),
+    });
+    if (confirmed) await handlePublish();
+  };
 
-        {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
-        {success && <Alert variant="success">{success}</Alert>}
+  const notSet = <em className="text-muted-foreground">{t('shared.notSet')}</em>;
+  const yesNo = (value: boolean) => (value ? t('shared.yes') : t('shared.no'));
+  const stepLabel = (id: string) => t(`campaignBuilder.steps.${id}`);
 
-        <Tab.Container activeKey={activeTab} onSelect={(k) => k && setActiveTab(k)}>
-          <Row>
-            <Col md={3}>
-              <Nav variant="pills" className="flex-column">
-                <Nav.Item>
-                  <Nav.Link eventKey="basic">
-                    <FontAwesomeIcon icon={faInfoCircle} fixedWidth className="me-2" />Basic Info
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="appearance">
-                    <FontAwesomeIcon icon={faPaintBrush} fixedWidth className="me-2" />Appearance
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="prizes">
-                    <FontAwesomeIcon icon={faTrophy} fixedWidth className="me-2" />Prizes
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="settings">
-                    <FontAwesomeIcon icon={faCog} fixedWidth className="me-2" />Settings
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="review">
-                    <FontAwesomeIcon icon={faCheckCircle} fixedWidth className="me-2" />Review & Publish
-                  </Nav.Link>
-                </Nav.Item>
-              </Nav>
-            </Col>
+  const renderFooter = (id: string) => {
+    const idx = TABS.indexOf(id);
+    const isFirst = idx === 0;
+    const isLast = idx === TABS.length - 1;
+    return (
+      <CardFooter className="justify-between">
+        <Button
+          variant="outline"
+          onClick={goPrev}
+          disabled={isFirst}
+          leftIcon={<FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />}
+        >
+          {t('shared.previous')}
+        </Button>
+        {isLast ? (
+          <Button
+            variant="primary"
+            onClick={requestPublish}
+            disabled={!title}
+            loading={submitting}
+            loadingText={t('campaignBuilder.publishing')}
+            leftIcon={<FontAwesomeIcon icon={faRocket} aria-hidden="true" />}
+          >
+            {isEditing ? t('campaignBuilder.update') : t('campaignBuilder.publish')}
+          </Button>
+        ) : (
+          <Button
+            variant="secondary"
+            onClick={goNext}
+            rightIcon={<FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />}
+          >
+            {t('campaignBuilder.nextStep', { step: stepLabel(TABS[idx + 1]) })}
+          </Button>
+        )}
+      </CardFooter>
+    );
+  };
 
-            <Col md={9}>
-              <Tab.Content>
-                {/* Step 1: Basic Info */}
-                <Tab.Pane eventKey="basic">
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Basic Information</Card.Title>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Title *</Form.Label>
-                        <Form.Control type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter campaign title" />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your campaign" />
-                      </Form.Group>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Start Date</Form.Label>
-                            <Form.Control type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>End Date</Form.Label>
-                            <Form.Control type="datetime-local" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Timezone</Form.Label>
-                            <Form.Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                              <option value="">Select timezone</option>
-                              <option value="UTC">UTC</option>
-                              <option value="America/New_York">America/New_York</option>
-                              <option value="America/Chicago">America/Chicago</option>
-                              <option value="America/Denver">America/Denver</option>
-                              <option value="America/Los_Angeles">America/Los_Angeles</option>
-                              <option value="America/Sao_Paulo">America/Sao_Paulo</option>
-                              <option value="Europe/London">Europe/London</option>
-                              <option value="Europe/Paris">Europe/Paris</option>
-                              <option value="Asia/Tokyo">Asia/Tokyo</option>
-                            </Form.Select>
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Entry Type</Form.Label>
-                            <Form.Select value={entryType} onChange={(e) => setEntryType(parseInt(e.target.value, 10))}>
-                              {ENTRY_TYPES.map((et) => (
-                                <option key={et.value} value={et.value}>{et.label}</option>
-                              ))}
-                            </Form.Select>
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Winner Count</Form.Label>
-                            <Form.Control type="number" min={1} value={winnerCount} onChange={(e) => setWinnerCount(parseInt(e.target.value, 10) || 1)} />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Password (optional)</Form.Label>
-                        <Form.Control type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank for no password" />
-                      </Form.Group>
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-
-                {/* Step 2: Appearance */}
-                <Tab.Pane eventKey="appearance">
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Appearance</Card.Title>
-                      <Row>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Primary Color</Form.Label>
-                            <Form.Control type="color" value={themePrimaryColor} onChange={(e) => setThemePrimaryColor(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Secondary Color</Form.Label>
-                            <Form.Control type="color" value={themeSecondaryColor} onChange={(e) => setThemeSecondaryColor(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Background Color</Form.Label>
-                            <Form.Control type="color" value={themeBgColor} onChange={(e) => setThemeBgColor(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Font</Form.Label>
-                        <Form.Control type="text" value={themeFont} onChange={(e) => setThemeFont(e.target.value)} placeholder="e.g., Inter, Roboto, Arial" />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Logo Image URL</Form.Label>
-                        <Form.Control type="text" value={logoImage} onChange={(e) => setLogoImage(e.target.value)} placeholder="https://example.com/logo.png" />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Custom CSS</Form.Label>
-                        <Form.Control as="textarea" rows={5} value={customCss} onChange={(e) => setCustomCss(e.target.value)} placeholder="/* Custom CSS rules */" />
-                      </Form.Group>
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-
-                {/* Step 3: Prizes */}
-                <Tab.Pane eventKey="prizes">
-                  <Card>
-                    <Card.Body>
-                      <Card.Title className="d-flex justify-content-between align-items-center">
-                        Prizes
-                        <Button variant="success" size="sm" onClick={addPrize}>
-                          <FontAwesomeIcon icon={faPlus} fixedWidth className="me-1" />Add Prize
-                        </Button>
-                      </Card.Title>
-                      {prizeItems.length === 0 && (
-                        <p className="text-muted">No prizes added yet. Click "Add Prize" to get started.</p>
-                      )}
-                      {prizeItems.map((prize, idx) => (
-                        <Card key={prize.key} className="mb-3 border">
-                          <Card.Body>
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                              <strong>Prize #{idx + 1}</strong>
-                              <Button variant="outline-danger" size="sm" onClick={() => removePrize(prize.key)}>
-                                <FontAwesomeIcon icon={faTrash} fixedWidth />
-                              </Button>
-                            </div>
-                            <Row>
-                              <Col md={6}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Title</Form.Label>
-                                  <Form.Control type="text" value={prize.title} onChange={(e) => updatePrizeField(prize.key, 'title', e.target.value)} />
-                                </Form.Group>
-                              </Col>
-                              <Col md={3}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Quantity</Form.Label>
-                                  <Form.Control type="number" min={1} value={prize.quantity} onChange={(e) => updatePrizeField(prize.key, 'quantity', parseInt(e.target.value, 10) || 1)} />
-                                </Form.Group>
-                              </Col>
-                              <Col md={3}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Type</Form.Label>
-                                  <Form.Select value={prize.prizeType} onChange={(e) => updatePrizeField(prize.key, 'prizeType', parseInt(e.target.value, 10))}>
-                                    <option value={0}>Physical</option>
-                                    <option value={1}>Digital</option>
-                                    <option value={2}>Coupon</option>
-                                  </Form.Select>
-                                </Form.Group>
-                              </Col>
-                            </Row>
-                            <Form.Group className="mb-2">
-                              <Form.Label>Description</Form.Label>
-                              <Form.Control as="textarea" rows={2} value={prize.description} onChange={(e) => updatePrizeField(prize.key, 'description', e.target.value)} />
-                            </Form.Group>
-                            <Row>
-                              <Col md={4}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Image URL</Form.Label>
-                                  <Form.Control type="text" value={prize.image} onChange={(e) => updatePrizeField(prize.key, 'image', e.target.value)} />
-                                </Form.Group>
-                              </Col>
-                              <Col md={4}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Coupon Code</Form.Label>
-                                  <Form.Control type="text" value={prize.couponCode} onChange={(e) => updatePrizeField(prize.key, 'couponCode', e.target.value)} />
-                                </Form.Group>
-                              </Col>
-                              <Col md={4}>
-                                <Form.Group className="mb-2">
-                                  <Form.Label>Sort Order</Form.Label>
-                                  <Form.Control type="number" value={prize.sortOrder} onChange={(e) => updatePrizeField(prize.key, 'sortOrder', parseInt(e.target.value, 10) || 0)} />
-                                </Form.Group>
-                              </Col>
-                            </Row>
-                          </Card.Body>
-                        </Card>
-                      ))}
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-
-                {/* Step 4: Settings */}
-                <Tab.Pane eventKey="settings">
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Settings</Card.Title>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Terms URL</Form.Label>
-                            <Form.Control type="url" value={termsUrl} onChange={(e) => setTermsUrl(e.target.value)} placeholder="https://example.com/terms" />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Redirect URL</Form.Label>
-                            <Form.Control type="url" value={redirectUrl} onChange={(e) => setRedirectUrl(e.target.value)} placeholder="https://example.com/thanks" />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Form.Group className="mb-3">
-                        <Form.Label>Geo Countries</Form.Label>
-                        <Form.Control type="text" value={geoCountries} onChange={(e) => setGeoCountries(e.target.value)} placeholder="US, BR, GB (comma-separated)" />
-                      </Form.Group>
-                      <Form.Check className="mb-3" type="checkbox" label="Block VPN" checked={blockVpn} onChange={(e) => setBlockVpn(e.target.checked)} />
-                      <Form.Check className="mb-3" type="checkbox" label="Require Email Verification" checked={requireEmailVerification} onChange={(e) => setRequireEmailVerification(e.target.checked)} />
-
-                      <hr />
-                      <h6>Welcome Email</h6>
-                      <Form.Check className="mb-3" type="checkbox" label="Enable Welcome Email" checked={welcomeEmailEnabled} onChange={(e) => setWelcomeEmailEnabled(e.target.checked)} />
-                      {welcomeEmailEnabled && (
-                        <>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Subject</Form.Label>
-                            <Form.Control type="text" value={welcomeEmailSubject} onChange={(e) => setWelcomeEmailSubject(e.target.value)} />
-                          </Form.Group>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Body</Form.Label>
-                            <Form.Control as="textarea" rows={4} value={welcomeEmailBody} onChange={(e) => setWelcomeEmailBody(e.target.value)} />
-                          </Form.Group>
-                        </>
-                      )}
-
-                      <hr />
-                      <h6>Tracking Pixels</h6>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>GA Tracking ID</Form.Label>
-                            <Form.Control type="text" value={gaTrackingId} onChange={(e) => setGaTrackingId(e.target.value)} placeholder="UA-XXXXXXXX-X or G-XXXXXXXXXX" />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Facebook Pixel ID</Form.Label>
-                            <Form.Control type="text" value={fbPixelId} onChange={(e) => setFbPixelId(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>TikTok Pixel ID</Form.Label>
-                            <Form.Control type="text" value={tiktokPixelId} onChange={(e) => setTiktokPixelId(e.target.value)} />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>GTM ID</Form.Label>
-                            <Form.Control type="text" value={gtmId} onChange={(e) => setGtmId(e.target.value)} placeholder="GTM-XXXXXXX" />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-
-                {/* Step 5: Review & Publish */}
-                <Tab.Pane eventKey="review">
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Review & Publish</Card.Title>
-
-                      <h6 className="mt-3">Basic Info</h6>
-                      <ul className="list-unstyled ms-3">
-                        <li><strong>Title:</strong> {title || <em className="text-muted">Not set</em>}</li>
-                        <li><strong>Description:</strong> {description || <em className="text-muted">Not set</em>}</li>
-                        <li><strong>Start:</strong> {startTime || <em className="text-muted">Not set</em>}</li>
-                        <li><strong>End:</strong> {endTime || <em className="text-muted">Not set</em>}</li>
-                        <li><strong>Timezone:</strong> {timezone || <em className="text-muted">Not set</em>}</li>
-                        <li><strong>Entry Type:</strong> {ENTRY_TYPES.find((e) => e.value === entryType)?.label}</li>
-                        <li><strong>Winner Count:</strong> {winnerCount}</li>
-                        {password && <li><strong>Password Protected:</strong> Yes</li>}
-                      </ul>
-
-                      <h6>Appearance</h6>
-                      <ul className="list-unstyled ms-3">
-                        <li><strong>Primary Color:</strong> <span style={{ display: 'inline-block', width: 14, height: 14, backgroundColor: themePrimaryColor, border: '1px solid #ccc', verticalAlign: 'middle' }}></span> {themePrimaryColor}</li>
-                        <li><strong>Secondary Color:</strong> <span style={{ display: 'inline-block', width: 14, height: 14, backgroundColor: themeSecondaryColor, border: '1px solid #ccc', verticalAlign: 'middle' }}></span> {themeSecondaryColor}</li>
-                        <li><strong>Background Color:</strong> <span style={{ display: 'inline-block', width: 14, height: 14, backgroundColor: themeBgColor, border: '1px solid #ccc', verticalAlign: 'middle' }}></span> {themeBgColor}</li>
-                        {themeFont && <li><strong>Font:</strong> {themeFont}</li>}
-                        {logoImage && <li><strong>Logo:</strong> {logoImage}</li>}
-                        {customCss && <li><strong>Custom CSS:</strong> Yes ({customCss.length} chars)</li>}
-                      </ul>
-
-                      <h6>Prizes ({prizeItems.length})</h6>
-                      {prizeItems.length === 0 ? (
-                        <p className="text-muted ms-3">No prizes configured</p>
-                      ) : (
-                        <ul className="ms-3">
-                          {prizeItems.map((p, i) => (
-                            <li key={p.key}>{p.title || `Prize #${i + 1}`} - Qty: {p.quantity}</li>
-                          ))}
-                        </ul>
-                      )}
-
-                      <h6>Settings</h6>
-                      <ul className="list-unstyled ms-3">
-                        {termsUrl && <li><strong>Terms URL:</strong> {termsUrl}</li>}
-                        {redirectUrl && <li><strong>Redirect URL:</strong> {redirectUrl}</li>}
-                        {geoCountries && <li><strong>Geo Countries:</strong> {geoCountries}</li>}
-                        <li><strong>Block VPN:</strong> {blockVpn ? 'Yes' : 'No'}</li>
-                        <li><strong>Email Verification:</strong> {requireEmailVerification ? 'Required' : 'Not required'}</li>
-                        <li><strong>Welcome Email:</strong> {welcomeEmailEnabled ? 'Enabled' : 'Disabled'}</li>
-                        {gaTrackingId && <li><strong>GA:</strong> {gaTrackingId}</li>}
-                        {fbPixelId && <li><strong>FB Pixel:</strong> {fbPixelId}</li>}
-                        {tiktokPixelId && <li><strong>TikTok Pixel:</strong> {tiktokPixelId}</li>}
-                        {gtmId && <li><strong>GTM:</strong> {gtmId}</li>}
-                      </ul>
-
-                      <div className="mt-4 text-center">
-                        <Button variant="primary" size="lg" onClick={handlePublish} disabled={submitting || !title}>
-                          {submitting ? (
-                            <><Spinner animation="border" size="sm" className="me-2" />Publishing...</>
-                          ) : (
-                            <><FontAwesomeIcon icon={faSave} fixedWidth className="me-2" />{isEditing ? 'Update Campaign' : 'Publish Campaign'}</>
-                          )}
-                        </Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Tab.Pane>
-              </Tab.Content>
-
-              {/* Navigation buttons */}
-              <div className="d-flex justify-content-between mt-3">
-                <Button variant="outline-secondary" onClick={goPrev} disabled={activeTab === 'basic'}>
-                  <FontAwesomeIcon icon={faArrowLeft} fixedWidth className="me-1" />Previous
-                </Button>
-                <Button variant="outline-primary" onClick={goNext} disabled={activeTab === 'review'}>
-                  Next<FontAwesomeIcon icon={faArrowRight} fixedWidth className="ms-1" />
-                </Button>
-              </div>
-            </Col>
-          </Row>
-        </Tab.Container>
-      </Container>
-    </section>
+  const renderStep = (id: string, descriptionText: ReactNode, body: ReactNode, headerAction?: ReactNode) => (
+    <Card as="section" aria-labelledby={`step-${id}-title`}>
+      <CardHeader>
+        <div>
+          <CardTitle id={`step-${id}-title`} className="text-xl">{stepLabel(id)}</CardTitle>
+          <CardDescription>{descriptionText}</CardDescription>
+        </div>
+        {headerAction}
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">{body}</CardContent>
+      {renderFooter(id)}
+    </Card>
   );
-}
+
+  const basicStep = renderStep('basic', t('campaignBuilder.basic.description'), (
+    <>
+      <Input
+        label={t('campaignBuilder.basic.title')}
+        required
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder={t('campaignBuilder.basic.titlePlaceholder')}
+        error={!title && activeTab === 'review' ? t('campaignBuilder.basic.titleRequired') : undefined}
+      />
+      <Textarea
+        label={t('campaignBuilder.basic.descriptionLabel')}
+        rows={3}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder={t('campaignBuilder.basic.descriptionPlaceholder')}
+      />
+      <RadioGroup legend={t('campaignBuilder.basic.entryType')}>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {ENTRY_TYPE_OPTIONS.map((option) => (
+            <Radio
+              key={option.value}
+              name="entryType"
+              variant="card"
+              value={option.value}
+              checked={entryType === option.value}
+              onChange={() => setEntryType(option.value)}
+              icon={<FontAwesomeIcon icon={option.icon} />}
+              label={t(entryTypeKey(option.value))}
+              description={t(`campaignBuilder.basic.entryTypeHint.${option.value}`)}
+            />
+          ))}
+        </div>
+      </RadioGroup>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Input
+          type="datetime-local"
+          label={t('campaignBuilder.basic.startDate')}
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+        />
+        <Input
+          type="datetime-local"
+          label={t('campaignBuilder.basic.endDate')}
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+        />
+      </div>
+      <div className="grid gap-5 md:grid-cols-3">
+        <Select
+          label={t('campaignBuilder.basic.timezone')}
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
+          options={[
+            { value: '', label: t('campaignBuilder.basic.timezonePlaceholder') },
+            ...TIMEZONES.map((tz) => ({ value: tz, label: tz })),
+          ]}
+        />
+        <Input
+          type="number"
+          min={1}
+          className="tabular-nums"
+          label={t('campaignBuilder.basic.winnerCount')}
+          value={winnerCount}
+          onChange={(e) => setWinnerCount(parseInt(e.target.value, 10) || 1)}
+        />
+        <Input
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="off"
+          label={<>{t('campaignBuilder.basic.password')} <span className="font-normal text-muted-foreground">{t('shared.optional')}</span></>}
+          hint={t('campaignBuilder.basic.passwordHint')}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          rightAddon={
+            <Button
+              variant="outline"
+              size="icon"
+              aria-pressed={showPassword}
+              aria-label={showPassword ? t('shared.hidePassword') : t('shared.showPassword')}
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} aria-hidden="true" />
+            </Button>
+          }
+        />
+      </div>
+    </>
+  ));
+
+  const appearanceStep = renderStep('appearance', t('campaignBuilder.appearance.description'), (
+    <>
+      <div className="grid gap-5 md:grid-cols-3">
+        <ColorInput
+          label={t('campaignBuilder.appearance.primaryColor')}
+          pickerLabel={t('campaignBuilder.appearance.pickerLabel', { name: t('campaignBuilder.appearance.primaryColor') })}
+          invalidMessage={t('campaignBuilder.appearance.invalidColor')}
+          value={themePrimaryColor}
+          onChange={setThemePrimaryColor}
+        />
+        <ColorInput
+          label={t('campaignBuilder.appearance.secondaryColor')}
+          pickerLabel={t('campaignBuilder.appearance.pickerLabel', { name: t('campaignBuilder.appearance.secondaryColor') })}
+          invalidMessage={t('campaignBuilder.appearance.invalidColor')}
+          value={themeSecondaryColor}
+          onChange={setThemeSecondaryColor}
+        />
+        <ColorInput
+          label={t('campaignBuilder.appearance.backgroundColor')}
+          pickerLabel={t('campaignBuilder.appearance.pickerLabel', { name: t('campaignBuilder.appearance.backgroundColor') })}
+          invalidMessage={t('campaignBuilder.appearance.invalidColor')}
+          contrastWith={null}
+          value={themeBgColor}
+          onChange={setThemeBgColor}
+        />
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Input
+          label={t('campaignBuilder.appearance.font')}
+          value={themeFont}
+          onChange={(e) => setThemeFont(e.target.value)}
+          placeholder={t('campaignBuilder.appearance.fontPlaceholder')}
+        />
+        <Input
+          type="url"
+          label={t('campaignBuilder.appearance.logo')}
+          value={logoImage}
+          onChange={(e) => setLogoImage(e.target.value)}
+          placeholder="https://example.com/logo.png"
+        />
+      </div>
+      <Textarea
+        label={t('campaignBuilder.appearance.customCss')}
+        rows={5}
+        className="font-mono text-sm"
+        spellCheck={false}
+        value={customCss}
+        onChange={(e) => setCustomCss(e.target.value)}
+        placeholder="/* Custom CSS */"
+      />
+    </>
+  ));
+
+  const prizesStep = renderStep(
+    'prizes',
+    t('campaignBuilder.prizes.description'),
+    prizeItems.length === 0 ? (
+      <div className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-input px-4 py-8 text-center text-muted-foreground">
+        <FontAwesomeIcon icon={faTrophy} className="text-2xl" aria-hidden="true" />
+        <p>{t('campaignBuilder.prizes.empty')}</p>
+        <Button variant="outline" size="sm" onClick={addPrize} leftIcon={<FontAwesomeIcon icon={faPlus} aria-hidden="true" />}>
+          {t('campaignBuilder.prizes.add')}
+        </Button>
+      </div>
+    ) : (
+      <ol className="flex flex-col gap-4">
+        {prizeItems.map((prize, idx) => {
+          const prizeName = prize.title || t('campaignBuilder.prizes.prizeNumber', { number: idx + 1 });
+          return (
+            <li key={prize.key}>
+              <fieldset className="rounded-md border border-border p-4">
+                <legend className="px-1 font-display text-base font-bold">
+                  {t('campaignBuilder.prizes.prizeNumber', { number: idx + 1 })}
+                </legend>
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-danger hover:bg-danger-subtle"
+                    onClick={() => removePrize(prize.key)}
+                    aria-label={t('campaignBuilder.prizes.removeNamed', { name: prizeName })}
+                    leftIcon={<FontAwesomeIcon icon={faTrash} aria-hidden="true" />}
+                  >
+                    {t('campaignBuilder.prizes.remove')}
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <div className="grid gap-4 md:grid-cols-[2fr_1fr_1fr]">
+                    <Input
+                      label={t('campaignBuilder.prizes.title')}
+                      value={prize.title}
+                      onChange={(e) => updatePrizeField(prize.key, 'title', e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      className="tabular-nums"
+                      label={t('campaignBuilder.prizes.quantity')}
+                      value={prize.quantity}
+                      onChange={(e) => updatePrizeField(prize.key, 'quantity', parseInt(e.target.value, 10) || 1)}
+                    />
+                    <Select
+                      label={t('campaignBuilder.prizes.type')}
+                      value={prize.prizeType}
+                      onChange={(e) => updatePrizeField(prize.key, 'prizeType', parseInt(e.target.value, 10))}
+                      options={PRIZE_TYPES.map((type) => ({ value: type.value, label: t(`campaignBuilder.prizes.types.${type.key}`) }))}
+                    />
+                  </div>
+                  <Textarea
+                    label={t('campaignBuilder.prizes.descriptionLabel')}
+                    rows={2}
+                    value={prize.description}
+                    onChange={(e) => updatePrizeField(prize.key, 'description', e.target.value)}
+                  />
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Input
+                      type="url"
+                      label={t('campaignBuilder.prizes.image')}
+                      value={prize.image}
+                      onChange={(e) => updatePrizeField(prize.key, 'image', e.target.value)}
+                    />
+                    <Input
+                      label={t('campaignBuilder.prizes.couponCode')}
+                      className="font-mono"
+                      value={prize.couponCode}
+                      onChange={(e) => updatePrizeField(prize.key, 'couponCode', e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      className="tabular-nums"
+                      label={t('campaignBuilder.prizes.sortOrder')}
+                      value={prize.sortOrder}
+                      onChange={(e) => updatePrizeField(prize.key, 'sortOrder', parseInt(e.target.value, 10) || 0)}
+                    />
+                  </div>
+                </div>
+              </fieldset>
+            </li>
+          );
+        })}
+      </ol>
+    ),
+    prizeItems.length > 0 ? (
+      <Button variant="outline" size="sm" onClick={addPrize} leftIcon={<FontAwesomeIcon icon={faPlus} aria-hidden="true" />}>
+        {t('campaignBuilder.prizes.add')}
+      </Button>
+    ) : undefined,
+  );
+
+  const settingsStep = renderStep('settings', t('campaignBuilder.settings.description'), (
+    <>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Input
+          type="url"
+          label={t('campaignBuilder.settings.termsUrl')}
+          value={termsUrl}
+          onChange={(e) => setTermsUrl(e.target.value)}
+          placeholder="https://example.com/terms"
+        />
+        <Input
+          type="url"
+          label={t('campaignBuilder.settings.redirectUrl')}
+          value={redirectUrl}
+          onChange={(e) => setRedirectUrl(e.target.value)}
+          placeholder="https://example.com/thanks"
+        />
+      </div>
+      <Input
+        label={t('campaignBuilder.settings.geoCountries')}
+        hint={t('campaignBuilder.settings.geoCountriesHint')}
+        value={geoCountries}
+        onChange={(e) => setGeoCountries(e.target.value)}
+        placeholder="US, BR, GB"
+      />
+      <fieldset className="flex flex-col">
+        <legend className="mb-1 text-sm font-semibold">{t('campaignBuilder.settings.protection')}</legend>
+        <Checkbox
+          label={t('campaignBuilder.settings.requireEmailVerification')}
+          description={t('campaignBuilder.settings.requireEmailVerificationHint')}
+          checked={requireEmailVerification}
+          onChange={(e) => setRequireEmailVerification(e.target.checked)}
+        />
+        <Checkbox
+          label={t('campaignBuilder.settings.blockVpn')}
+          description={t('campaignBuilder.settings.blockVpnHint')}
+          checked={blockVpn}
+          onChange={(e) => setBlockVpn(e.target.checked)}
+        />
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-4 border-t border-border pt-5">
+        <legend className="sr-only">{t('campaignBuilder.settings.welcomeEmail')}</legend>
+        <h3 className="font-display text-lg font-bold" aria-hidden="true">{t('campaignBuilder.settings.welcomeEmail')}</h3>
+        <Checkbox
+          label={t('campaignBuilder.settings.enableWelcomeEmail')}
+          checked={welcomeEmailEnabled}
+          onChange={(e) => setWelcomeEmailEnabled(e.target.checked)}
+        />
+        {welcomeEmailEnabled && (
+          <>
+            <Input
+              label={t('campaignBuilder.settings.subject')}
+              value={welcomeEmailSubject}
+              onChange={(e) => setWelcomeEmailSubject(e.target.value)}
+            />
+            <Textarea
+              label={t('campaignBuilder.settings.body')}
+              rows={4}
+              value={welcomeEmailBody}
+              onChange={(e) => setWelcomeEmailBody(e.target.value)}
+            />
+          </>
+        )}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-4 border-t border-border pt-5">
+        <legend className="sr-only">{t('campaignBuilder.settings.tracking')}</legend>
+        <h3 className="font-display text-lg font-bold" aria-hidden="true">{t('campaignBuilder.settings.tracking')}</h3>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Input
+            label={t('campaignBuilder.settings.gaTrackingId')}
+            className="font-mono"
+            value={gaTrackingId}
+            onChange={(e) => setGaTrackingId(e.target.value)}
+            placeholder="G-XXXXXXXXXX"
+          />
+          <Input
+            label={t('campaignBuilder.settings.fbPixelId')}
+            className="font-mono"
+            value={fbPixelId}
+            onChange={(e) => setFbPixelId(e.target.value)}
+          />
+          <Input
+            label={t('campaignBuilder.settings.tiktokPixelId')}
+            className="font-mono"
+            value={tiktokPixelId}
+            onChange={(e) => setTiktokPixelId(e.target.value)}
+          />
+          <Input
+            label={t('campaignBuilder.settings.gtmId')}
+            className="font-mono"
+            value={gtmId}
+            onChange={(e) => setGtmId(e.target.value)}
+            placeholder="GTM-XXXXXXX"
+          />
+        </div>
+      </fieldset>
+    </>
+  ));
+
+  const reviewStep = renderStep('review', t('campaignBuilder.review.description'), (
+    <>
+      {!title && (
+        <Alert variant="danger" title={t('campaignBuilder.review.missingTitle')}>
+          <button
+            type="button"
+            className="min-h-11 cursor-pointer rounded-sm font-semibold underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            onClick={() => setActiveTab('basic')}
+          >
+            {t('campaignBuilder.review.goToBasic')}
+          </button>
+        </Alert>
+      )}
+
+      <section aria-labelledby="review-basic">
+        <h3 id="review-basic" className="font-display text-lg font-bold">{stepLabel('basic')}</h3>
+        <dl className="mt-2 divide-y divide-border">
+          <ReviewRow label={t('campaignBuilder.basic.title')}>{title || notSet}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.descriptionLabel')}>{description || notSet}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.startDate')}>{startTime || notSet}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.endDate')}>{endTime || notSet}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.timezone')}>{timezone || notSet}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.entryType')}>{t(entryTypeKey(entryType))}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.basic.winnerCount')}><span className="tabular-nums">{winnerCount}</span></ReviewRow>
+          {password && <ReviewRow label={t('campaignBuilder.review.passwordProtected')}>{t('shared.yes')}</ReviewRow>}
+        </dl>
+      </section>
+
+      <section aria-labelledby="review-appearance">
+        <h3 id="review-appearance" className="font-display text-lg font-bold">{stepLabel('appearance')}</h3>
+        <dl className="mt-2 divide-y divide-border">
+          <ReviewRow label={t('campaignBuilder.appearance.primaryColor')}><Swatch color={themePrimaryColor} /></ReviewRow>
+          <ReviewRow label={t('campaignBuilder.appearance.secondaryColor')}><Swatch color={themeSecondaryColor} /></ReviewRow>
+          <ReviewRow label={t('campaignBuilder.appearance.backgroundColor')}><Swatch color={themeBgColor} /></ReviewRow>
+          {themeFont && <ReviewRow label={t('campaignBuilder.appearance.font')}>{themeFont}</ReviewRow>}
+          {logoImage && <ReviewRow label={t('campaignBuilder.appearance.logo')}>{logoImage}</ReviewRow>}
+          {customCss && (
+            <ReviewRow label={t('campaignBuilder.appearance.customCss')}>
+              {t('campaignBuilder.review.customCssChars', { count: customCss.length })}
+            </ReviewRow>
+          )}
+        </dl>
+      </section>
+
+      <section aria-labelledby="review-prizes">
+        <h3 id="review-prizes" className="font-display text-lg font-bold">
+          {t('campaignBuilder.review.prizesCount', { count: prizeItems.length })}
+        </h3>
+        {prizeItems.length === 0 ? (
+          <p className="mt-2 text-muted-foreground">{t('campaignBuilder.review.noPrizes')}</p>
+        ) : (
+          <ul className="mt-2 list-disc pl-5">
+            {prizeItems.map((p, i) => (
+              <li key={p.key}>
+                {p.title || t('campaignBuilder.prizes.prizeNumber', { number: i + 1 })}
+                {' — '}
+                <span className="tabular-nums">{t('campaignBuilder.review.quantity', { count: p.quantity })}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="review-settings">
+        <h3 id="review-settings" className="font-display text-lg font-bold">{stepLabel('settings')}</h3>
+        <dl className="mt-2 divide-y divide-border">
+          {termsUrl && <ReviewRow label={t('campaignBuilder.settings.termsUrl')}>{termsUrl}</ReviewRow>}
+          {redirectUrl && <ReviewRow label={t('campaignBuilder.settings.redirectUrl')}>{redirectUrl}</ReviewRow>}
+          {geoCountries && <ReviewRow label={t('campaignBuilder.settings.geoCountries')}>{geoCountries}</ReviewRow>}
+          <ReviewRow label={t('campaignBuilder.settings.blockVpn')}>{yesNo(blockVpn)}</ReviewRow>
+          <ReviewRow label={t('campaignBuilder.review.emailVerification')}>
+            {requireEmailVerification ? t('campaignBuilder.review.required') : t('campaignBuilder.review.notRequired')}
+          </ReviewRow>
+          <ReviewRow label={t('campaignBuilder.settings.welcomeEmail')}>
+            {welcomeEmailEnabled ? t('shared.enabled') : t('shared.disabled')}
+          </ReviewRow>
+          {gaTrackingId && <ReviewRow label="GA">{gaTrackingId}</ReviewRow>}
+          {fbPixelId && <ReviewRow label="Facebook Pixel">{fbPixelId}</ReviewRow>}
+          {tiktokPixelId && <ReviewRow label="TikTok Pixel">{tiktokPixelId}</ReviewRow>}
+          {gtmId && <ReviewRow label="GTM">{gtmId}</ReviewRow>}
+        </dl>
+      </section>
+    </>
+  ));
+
+  const basicStatus: TabStatus | undefined = title ? 'complete' : activeTab === 'review' ? 'error' : undefined;
+
+  const tabItems: TabItem[] = [
+    { id: 'basic', label: stepLabel('basic'), icon: <FontAwesomeIcon icon={faCircleInfo} />, status: basicStatus, content: basicStep },
+    { id: 'appearance', label: stepLabel('appearance'), icon: <FontAwesomeIcon icon={faPaintbrush} />, content: appearanceStep },
+    {
+      id: 'prizes',
+      label: stepLabel('prizes'),
+      icon: <FontAwesomeIcon icon={faTrophy} />,
+      status: prizeItems.length > 0 ? 'complete' : undefined,
+      badge: prizeItems.length > 0 ? (
+        <Badge variant="neutral" className="ml-auto tabular-nums" aria-hidden="true">{prizeItems.length}</Badge>
+      ) : undefined,
+      content: prizesStep,
+    },
+    { id: 'settings', label: stepLabel('settings'), icon: <FontAwesomeIcon icon={faGear} />, content: settingsStep },
+    { id: 'review', label: stepLabel('review'), icon: <FontAwesomeIcon icon={faClipboardCheck} />, content: reviewStep },
+  ];
+
+  const pageTitle = isEditing ? t('campaignBuilder.editTitle') : t('campaignBuilder.newTitle');
+
+  return (
+    <PageContainer>
+      <PageHeader
+        breadcrumb={
+          <Breadcrumb
+            className="mb-1"
+            label={t('shared.breadcrumb')}
+            items={[
+              { label: t('layout.nav.campaigns'), to: '/campaigns' },
+              { label: pageTitle },
+            ]}
+          />
+        }
+        title={pageTitle}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            {!isEditing && <CampaignStatusBadge status={0} />}
+            <span>{t('campaignBuilder.pageDescription')}</span>
+          </span>
+        }
+      />
+
+      {error && (
+        <Alert
+          variant="danger"
+          className="mb-6"
+          title={t('campaignBuilder.errorTitle')}
+          dismissible
+          dismissLabel={t('shared.dismissAlert')}
+          onDismiss={() => setError(null)}
+        >
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success" className="mb-6" title={success}>
+          {t('campaignBuilder.redirecting')}
+        </Alert>
+      )}
+
+      <Tabs
+        items={tabItems}
+        label={t('campaignBuilder.stepsLabel')}
+        value={activeTab}
+        onValueChange={setActiveTab}
+        orientation={isDesktop ? 'vertical' : 'horizontal'}
+        steps
+        statusLabels={{ complete: t('campaignBuilder.stepComplete'), error: t('campaignBuilder.stepError') }}
+        listClassName={isDesktop ? undefined : '-mx-4 px-4'}
+      />
+    </PageContainer>
+  );
+};
+
+export default CampaignBuilderPage;

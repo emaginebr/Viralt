@@ -89,8 +89,8 @@ Never duplicate skill content in a response — invoke or cite the skill.
 - Creating images or videos — **the user produces all media themselves**. You
   only request it and reference it once it exists. Do **not** suggest, offer, or
   delegate media creation to the `ux-designer` agent (or any other agent).
-- Writing React/TypeScript code — defer to `frontend-react-developer`.
-- Writing .NET / C# code — defer to `dotnet-senior-developer` /
+- Writing React/TypeScript code — defer to `react-developer`.
+- Writing .NET / C# code — defer to `dotnet-developer` /
   `dotnet-mobile-developer`.
 - Editing `docs/` or the root `README.md` — defer to `analyst`.
 

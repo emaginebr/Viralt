@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Widget embarcável | Viralt Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- Mesmo @theme de docs/design/theme.css (copiado pelo build; não editar aqui) -->
+<style type="text/tailwindcss">
+@import "tailwindcss";
+/*
+ * Viralt Design System — direção "Bilhete Premiado"
+ * Tailwind CSS 4 — tokens em CSS (sem tailwind.config.js).
+ *
+ * Destino na implementação: frontend/src/styles/theme.css
+ * Uso em frontend/src/styles/index.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme.css";
+ *
+ * Fontes (Google Fonts), carregadas no <head> do index.html:
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+ *
+ * Todos os pares texto/fundo estão validados em docs/design/tokens.md (WCAG 2.1 AA).
+ */
+
+@theme {
+  /* ------------------------------------------------------------------
+   * Cores. A paleta padrão do Tailwind é desligada para que só os
+   * tokens semânticos existam (SC-008: nada de bg-red-500 avulso).
+   * bg-transparent, bg-current e bg-inherit continuam disponíveis.
+   * ------------------------------------------------------------------ */
+  --color-*: initial;
+
+  /* Base */
+  --color-background: #fff8f1;          /* papel quente: fundo da página */
+  --color-foreground: #1a1423;          /* tinta: texto principal */
+  --color-surface: #ffffff;             /* cards, inputs, modais, tabelas */
+  --color-surface-foreground: #1a1423;
+  --color-muted: #f4ece4;               /* faixas, cabeçalho de tabela, hover neutro */
+  --color-muted-foreground: #5c5266;    /* texto secundário, placeholder, metadados */
+  --color-border: #e7dcd1;              /* divisores decorativos (não delimita controles) */
+  --color-input: #8c8194;               /* borda de controles de formulário (>= 3:1) */
+  --color-overlay: #1a1423;             /* scrim de modal e de hero: usar /60 ou /72 */
+
+  /* Marca */
+  --color-primary: #c2185b;             /* framboesa: CTA, links de ação, seleção */
+  --color-primary-hover: #9e1049;
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: #fce4ee;
+
+  --color-secondary: #2b2250;           /* uva escura: sidebar, botão secundário, página atual */
+  --color-secondary-hover: #3c3270;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-muted-foreground: #cfc7ea; /* texto secundário sobre secondary */
+
+  --color-accent: #ffc738;              /* amarelo bilhete: pontos, destaque, item ativo na sidebar */
+  --color-accent-hover: #f2b517;
+  --color-accent-foreground: #1a1423;
+  --color-accent-subtle: #fff1c7;
+
+  /* Estados */
+  --color-success: #13703a;
+  --color-success-hover: #0e5a2e;
+  --color-success-foreground: #ffffff;
+  --color-success-subtle: #e3f3e8;
+
+  --color-warning: #8f5200;
+  --color-warning-foreground: #ffffff;
+  --color-warning-subtle: #fff0d1;
+
+  --color-danger: #b42318;
+  --color-danger-hover: #8f1b12;
+  --color-danger-foreground: #ffffff;
+  --color-danger-subtle: #fde7e4;
+
+  --color-info: #1f57c3;
+  --color-info-foreground: #ffffff;
+  --color-info-subtle: #e3ecfc;
+
+  /* Foco */
+  --color-ring: #2b5bdb;                /* anel de foco sobre fundos claros */
+  --color-ring-inverse: #ffc738;        /* anel de foco sobre secondary (sidebar) e overlay */
+
+  /* ------------------------------------------------------------------
+   * Tipografia
+   * ------------------------------------------------------------------ */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala única (SC-008). Corpo nunca abaixo de text-base no mobile. */
+  --text-xs: 0.75rem;     --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;    --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;      --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;    --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;     --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;     --text-2xl--line-height: 2rem;       --text-2xl--letter-spacing: -0.01em;
+  --text-3xl: 1.875rem;   --text-3xl--line-height: 2.25rem;    --text-3xl--letter-spacing: -0.015em;
+  --text-4xl: 2.25rem;    --text-4xl--line-height: 2.5rem;     --text-4xl--letter-spacing: -0.02em;
+  --text-5xl: 3rem;       --text-5xl--line-height: 1.05;       --text-5xl--letter-spacing: -0.025em; /* só título do hero (desktop) */
+
+  /* ------------------------------------------------------------------
+   * Raios
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.375rem;  /* 6px: badges retangulares, checkbox */
+  --radius-md: 0.625rem;  /* 10px: botões, inputs, alertas */
+  --radius-lg: 1rem;      /* 16px: cards, modais, tabela */
+  --radius-xl: 1.5rem;    /* 24px: hero, widget */
+  --radius-full: 9999px;  /* pílulas e avatares */
+
+  /* ------------------------------------------------------------------
+   * Sombras. "pop" é a assinatura do lado público (sombra dura, sem blur).
+   * ------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px 0 rgb(26 20 35 / 0.06), 0 1px 1px 0 rgb(26 20 35 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(26 20 35 / 0.10), 0 2px 4px -2px rgb(26 20 35 / 0.06);
+  --shadow-lg: 0 16px 40px -8px rgb(26 20 35 / 0.22), 0 4px 10px -4px rgb(26 20 35 / 0.10);
+  --shadow-pop: 4px 4px 0 0 #1a1423;
+  --shadow-pop-sm: 2px 2px 0 0 #1a1423;
+
+  /* ------------------------------------------------------------------
+   * Movimento. Durações usadas como duration-150 / duration-200 / duration-300
+   * (o Tailwind 4 não tem namespace de duração; estes valores ficam
+   * expostos como variáveis CSS para JS e para var()).
+   * ------------------------------------------------------------------ */
+  --duration-fast: 150ms;   /* hover, cor, foco */
+  --duration-base: 200ms;   /* entrada de modal, toast, abas */
+  --duration-slow: 300ms;   /* skeleton -> conteúdo, sucesso da inscrição */
+
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);  /* entrada */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* saída */
+
+  --animate-fade-in: fade-in 200ms var(--ease-snappy) both;
+  --animate-pop-in: pop-in 200ms var(--ease-snappy) both;
+  --animate-slide-in-left: slide-in-left 200ms var(--ease-snappy) both;
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-pulse: pulse 1.6s ease-in-out infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+}
+
+/* --------------------------------------------------------------------
+ * Utilitários do design system (assinatura "bilhete").
+ * São tokens de forma: usar só nestes componentes (PrizeCard, widget).
+ * -------------------------------------------------------------------- */
+
+/* Recortes semicirculares nas laterais, como um bilhete de rifa. */
+@utility ticket {
+  --ticket-notch: 0.75rem;
+  --ticket-at: 50%;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at 0 var(--ticket-at), #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at 100% var(--ticket-at), #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Linha picotada (divisor do bilhete). */
+@utility perforation {
+  border-top: 2px dashed var(--color-border);
+}
+
+/* Anel de foco padrão (para elementos sem variantes próprias). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* --------------------------------------------------------------------
+ * Base
+ * -------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* Links de texto: sublinhados por padrão (não dependem só da cor). */
+  :where(main, [role="dialog"]) a:not([class]) {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Foco nunca é removido sem substituto. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  button, [role="button"], a, label[for], summary { touch-action: manipulation; }
+
+  /* Rede de segurança para prefers-reduced-motion. Os componentes já usam
+   * motion-safe:, isto cobre animações de terceiros (sonner, Radix). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Modo de alto contraste do Windows: mantém bordas e foco visíveis. */
+  @media (forced-colors: active) {
+    :focus-visible { outline-color: Highlight; }
+  }
+}
+
+</style>
+<style>
+  /* CSS "agressivo" do site hospedeiro (só existe no board).
+     Prova do isolamento: nada disto atinge o widget, que roda num iframe. */
+  .host-site, .host-site * { font-family: Georgia, "Times New Roman", serif !important; }
+  .host-site p, .host-site li { color: #2f4f2f !important; line-height: 1.9 !important; }
+  .host-site button { background: lime !important; text-transform: uppercase !important; }
+  .host-site input { border: 3px dotted red !important; }
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     BOARD: site hospedeiro fictício com o widget embarcado + mobile 375 px
+     ===================================================================== -->
+<div id="board" hidden class="min-h-dvh bg-muted">
+  <header class="border-b border-border bg-surface">
+    <div class="mx-auto max-w-[100rem] px-6 py-5">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Viralt Design System · T007</p>
+      <h1 class="font-display text-2xl font-bold">Widget embarcável <span class="font-mono text-base font-normal text-muted-foreground">/widget/:slug</span></h1>
+      <p class="mt-1 max-w-prose text-sm text-muted-foreground">À esquerda, um blog fictício com CSS agressivo (serifas, botões verde-limão, inputs pontilhados) incorpora o widget. O iframe isola os dois lados, e a altura chega pelo contrato <code class="font-mono">viralt-resize</code>. À direita, o widget a 375 px depois da inscrição.</p>
+    </div>
+  </header>
+  <main class="mx-auto flex max-w-[100rem] flex-wrap items-start gap-8 px-6 py-8">
+    <figure class="flex flex-col gap-3">
+      <figcaption class="text-sm font-semibold">Site hospedeiro (desktop) · widget com 420 px · formulário</figcaption>
+      <div class="host-site w-[52rem] max-w-full rounded-lg border border-border p-8" style="background:#f6f1e7">
+        <p style="font-size:13px;letter-spacing:.2em">BLOG DO BARISTA · RECEITAS</p>
+        <h2 style="font-size:34px;margin:8px 0 12px;color:#2f4f2f">Como extrair o espresso perfeito</h2>
+        <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <p>A moagem é o primeiro passo. Use 18 g de café para 36 g de bebida, em cerca de 28 segundos. Ajuste a moagem até chegar lá.</p>
+            <p>A temperatura da água deve ficar entre 90 °C e 94 °C. Pré-aqueça a xícara e o porta-filtro.</p>
+            <button type="button" style="padding:8px 14px">Botão do site</button>
+            <p><input type="text" placeholder="Input do site" style="padding:6px"></p>
+          </div>
+          <iframe id="host-frame" src="?frame=1&amp;fid=host" title="Sorteio Café Aurora: inscrição" style="width:420px;max-width:100%;height:320px;border:0;border-radius:24px"></iframe>
+        </div>
+      </div>
+    </figure>
+    <figure class="flex flex-col gap-3">
+      <figcaption class="text-sm font-semibold">Mobile · 375 px · inscrição concluída</figcaption>
+      <div class="overflow-hidden rounded-xl border-4 border-foreground bg-surface shadow-md" style="width:383px">
+        <iframe id="m-frame" src="?frame=1&amp;fid=m&amp;state=success" title="Widget mobile após inscrição" style="width:375px;height:320px;border:0"></iframe>
+      </div>
+    </figure>
+  </main>
+</div>
+
+<!-- =====================================================================
+     WIDGET (o documento dentro do iframe)
+     ===================================================================== -->
+<div id="widget" class="bg-background p-3 sm:p-4">
+  <main class="mx-auto w-full max-w-md overflow-hidden rounded-xl border-2 border-foreground bg-surface shadow-pop">
+    <!-- Cabeçalho compacto -->
+    <div class="relative isolate overflow-hidden bg-secondary px-4 pb-4 pt-5 text-secondary-foreground">
+      <svg class="absolute -right-10 -top-10 -z-10 size-48 opacity-40" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#c2185b"/></svg>
+      <div class="flex items-center gap-2">
+        <span class="grid size-8 place-items-center rounded-full border-2 border-secondary-foreground bg-accent font-display text-sm font-extrabold text-accent-foreground" aria-hidden="true">A</span>
+        <span class="text-sm font-semibold">Café Aurora</span>
+        <span class="ml-auto inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground"><i class="fa-solid fa-ticket" aria-hidden="true"></i>Sorteio</span>
+      </div>
+      <h1 class="mt-3 font-display text-2xl font-extrabold">Ganhe um ano de café especial</h1>
+      <p class="mt-2 flex items-center gap-2 text-sm text-secondary-muted-foreground">
+        <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+        <span>Termina em <b class="font-semibold text-secondary-foreground tabular-nums">14 d 06 h 32 min</b></span>
+      </p>
+    </div>
+
+    <!-- Prêmio principal (bilhete) -->
+    <div class="ticket flex items-center gap-3 border-b-2 border-dashed border-border bg-accent-subtle px-4 py-3" style="--ticket-notch:.6rem">
+      <span class="grid size-11 shrink-0 place-items-center rounded-md border-2 border-foreground bg-surface text-lg" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+      <p class="text-sm"><span class="block text-xs font-semibold uppercase tracking-wide text-primary">1º prêmio</span><b class="font-semibold">Cafeteira espresso + 12 kg de café</b></p>
+    </div>
+
+    <!-- ESTADO: formulário -->
+    <form data-state="form" class="flex flex-col gap-4 p-4" novalidate aria-labelledby="w-join">
+      <h2 id="w-join" class="font-sans text-base font-bold">Inscreva-se para participar</h2>
+      <div class="flex flex-col gap-1.5">
+        <label for="w-name" class="text-sm font-semibold">Nome <span class="text-danger" aria-hidden="true">*</span><span class="sr-only">(obrigatório)</span></label>
+        <input id="w-name" type="text" autocomplete="name" required aria-invalid="true" aria-describedby="w-name-error"
+          class="block min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[invalid=true]:border-danger aria-[invalid=true]:ring-1 aria-[invalid=true]:ring-danger">
+        <p id="w-name-error" class="flex items-start gap-1.5 text-sm font-medium text-danger"><i class="fa-solid fa-circle-exclamation mt-0.5" aria-hidden="true"></i>Informe seu nome.</p>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="w-email" class="text-sm font-semibold">E-mail <span class="text-danger" aria-hidden="true">*</span><span class="sr-only">(obrigatório)</span></label>
+        <input id="w-email" type="email" autocomplete="email" required value="marina@exemplo.com"
+          class="block min-h-11 w-full rounded-md border border-input bg-surface px-3 text-base hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+      </div>
+      <label class="flex min-h-11 cursor-pointer items-start gap-3">
+        <input type="checkbox" required class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <span class="text-sm">Aceito o <a href="#" target="_blank" rel="noopener" class="font-semibold text-primary underline underline-offset-2 focus-ring">regulamento<span class="sr-only"> (abre em nova aba)</span></a>.</span>
+      </label>
+      <button type="submit" class="inline-flex min-h-13 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-foreground bg-primary px-6 text-lg font-semibold text-primary-foreground shadow-pop transition-colors duration-150 hover:bg-primary-hover motion-safe:active:shadow-pop-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+        <i class="fa-solid fa-ticket" aria-hidden="true"></i>Participar agora
+      </button>
+      <p class="text-center text-sm text-muted-foreground"><b class="text-foreground tabular-nums">1.284</b> pessoas já participam</p>
+    </form>
+
+    <!-- ESTADO: sucesso -->
+    <section data-state="success" hidden aria-labelledby="w-success" class="flex flex-col gap-4 p-4">
+      <div role="status" class="flex items-start gap-3 rounded-md border border-success/30 border-l-4 border-l-success bg-success-subtle p-3 text-sm">
+        <i class="fa-solid fa-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+        <div><h2 id="w-success" class="font-sans font-semibold">Você está participando!</h2><p>Você tem <b class="tabular-nums">6 pontos</b>. Ganhe mais abaixo.</p></div>
+      </div>
+      <ul class="flex flex-col gap-2">
+        <li class="flex items-center gap-3 rounded-md bg-success-subtle p-2.5">
+          <span class="grid size-11 shrink-0 place-items-center rounded-md bg-surface text-lg" aria-hidden="true"><i class="fa-brands fa-instagram"></i></span>
+          <p class="min-w-0 flex-1 text-sm font-semibold">Seguir no Instagram</p>
+          <span class="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-success"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Feito</span>
+        </li>
+        <li class="flex items-center gap-3 rounded-md border border-border p-2.5">
+          <span class="grid size-11 shrink-0 place-items-center rounded-md bg-muted text-lg" aria-hidden="true"><i class="fa-brands fa-facebook"></i></span>
+          <p class="min-w-0 flex-1 text-sm font-semibold">Curtir no Facebook</p>
+          <button type="button" class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-bold tabular-nums text-accent-foreground hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label="Curtir no Facebook, mais 3 pontos">+3</button>
+        </li>
+        <li class="flex items-center gap-3 rounded-md border border-border p-2.5">
+          <span class="grid size-11 shrink-0 place-items-center rounded-md bg-muted text-lg" aria-hidden="true"><i class="fa-solid fa-user-plus"></i></span>
+          <p class="min-w-0 flex-1 text-sm font-semibold">Indicar amigos <span class="block font-normal text-muted-foreground">por inscrição</span></p>
+          <button type="button" class="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-bold tabular-nums text-accent-foreground hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label="Copiar link de indicação, mais 10 pontos por amigo">+10</button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Rodapé do widget -->
+    <footer class="flex items-center justify-between gap-2 border-t border-border px-4 py-1 text-xs text-muted-foreground">
+      <label class="sr-only" for="w-lang">Idioma</label>
+      <select id="w-lang" class="min-h-11 cursor-pointer rounded-md bg-transparent px-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+        <option>Português</option><option>English</option><option>Español</option>
+      </select>
+      <a href="#" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-1 px-1 hover:text-foreground focus-ring">Feito com <b class="font-display text-foreground">Viralt</b><span class="sr-only"> (abre em nova aba)</span></a>
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const p = new URLSearchParams(location.search);
+  const board = document.getElementById('board');
+  const widget = document.getElementById('widget');
+
+  if (!p.has('frame')) {
+    board.hidden = false; widget.hidden = true;
+    // O site hospedeiro só escuta o contrato viralt-resize (contracts/widget-embed.md).
+    addEventListener('message', (e) => {
+      if (!e.data || e.data.type !== 'viralt-resize') return;
+      const f = document.getElementById(e.data.fid === 'm' ? 'm-frame' : 'host-frame');
+      if (f) f.style.height = e.data.height + 'px';
+    });
+    return;
+  }
+
+  const s = p.get('state') === 'success' ? 'success' : 'form';
+  document.querySelectorAll('[data-state]').forEach((el) => { el.hidden = el.dataset.state !== s; });
+
+  // Contrato inalterado: { type: 'viralt-resize', slug, height }. "fid" existe só no mockup.
+  const send = () => parent !== window && parent.postMessage({ type: 'viralt-resize', slug: 'cafe-aurora', height: document.documentElement.scrollHeight, fid: p.get('fid') }, '*');
+  new ResizeObserver(send).observe(document.body); send();
+
+  document.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('[data-state]').forEach((el) => { el.hidden = el.dataset.state !== 'success'; });
+  });
+})();
+</script>
+</body>
+</html>

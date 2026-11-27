@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup: Home (landing) | Viralt Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- Mesmo @theme de docs/design/theme.css (copiado pelo build; não editar aqui) -->
+<style type="text/tailwindcss">
+@import "tailwindcss";
+/*
+ * Viralt Design System — direção "Bilhete Premiado"
+ * Tailwind CSS 4 — tokens em CSS (sem tailwind.config.js).
+ *
+ * Destino na implementação: frontend/src/styles/theme.css
+ * Uso em frontend/src/styles/index.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme.css";
+ *
+ * Fontes (Google Fonts), carregadas no <head> do index.html:
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+ *
+ * Todos os pares texto/fundo estão validados em docs/design/tokens.md (WCAG 2.1 AA).
+ */
+
+@theme {
+  /* ------------------------------------------------------------------
+   * Cores. A paleta padrão do Tailwind é desligada para que só os
+   * tokens semânticos existam (SC-008: nada de bg-red-500 avulso).
+   * bg-transparent, bg-current e bg-inherit continuam disponíveis.
+   * ------------------------------------------------------------------ */
+  --color-*: initial;
+
+  /* Base */
+  --color-background: #fff8f1;          /* papel quente: fundo da página */
+  --color-foreground: #1a1423;          /* tinta: texto principal */
+  --color-surface: #ffffff;             /* cards, inputs, modais, tabelas */
+  --color-surface-foreground: #1a1423;
+  --color-muted: #f4ece4;               /* faixas, cabeçalho de tabela, hover neutro */
+  --color-muted-foreground: #5c5266;    /* texto secundário, placeholder, metadados */
+  --color-border: #e7dcd1;              /* divisores decorativos (não delimita controles) */
+  --color-input: #8c8194;               /* borda de controles de formulário (>= 3:1) */
+  --color-overlay: #1a1423;             /* scrim de modal e de hero: usar /60 ou /72 */
+
+  /* Marca */
+  --color-primary: #c2185b;             /* framboesa: CTA, links de ação, seleção */
+  --color-primary-hover: #9e1049;
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: #fce4ee;
+
+  --color-secondary: #2b2250;           /* uva escura: sidebar, botão secundário, página atual */
+  --color-secondary-hover: #3c3270;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-muted-foreground: #cfc7ea; /* texto secundário sobre secondary */
+
+  --color-accent: #ffc738;              /* amarelo bilhete: pontos, destaque, item ativo na sidebar */
+  --color-accent-hover: #f2b517;
+  --color-accent-foreground: #1a1423;
+  --color-accent-subtle: #fff1c7;
+
+  /* Estados */
+  --color-success: #13703a;
+  --color-success-hover: #0e5a2e;
+  --color-success-foreground: #ffffff;
+  --color-success-subtle: #e3f3e8;
+
+  --color-warning: #8f5200;
+  --color-warning-foreground: #ffffff;
+  --color-warning-subtle: #fff0d1;
+
+  --color-danger: #b42318;
+  --color-danger-hover: #8f1b12;
+  --color-danger-foreground: #ffffff;
+  --color-danger-subtle: #fde7e4;
+
+  --color-info: #1f57c3;
+  --color-info-foreground: #ffffff;
+  --color-info-subtle: #e3ecfc;
+
+  /* Foco */
+  --color-ring: #2b5bdb;                /* anel de foco sobre fundos claros */
+  --color-ring-inverse: #ffc738;        /* anel de foco sobre secondary (sidebar) e overlay */
+
+  /* ------------------------------------------------------------------
+   * Tipografia
+   * ------------------------------------------------------------------ */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala única (SC-008). Corpo nunca abaixo de text-base no mobile. */
+  --text-xs: 0.75rem;     --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;    --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;      --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;    --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;     --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;     --text-2xl--line-height: 2rem;       --text-2xl--letter-spacing: -0.01em;
+  --text-3xl: 1.875rem;   --text-3xl--line-height: 2.25rem;    --text-3xl--letter-spacing: -0.015em;
+  --text-4xl: 2.25rem;    --text-4xl--line-height: 2.5rem;     --text-4xl--letter-spacing: -0.02em;
+  --text-5xl: 3rem;       --text-5xl--line-height: 1.05;       --text-5xl--letter-spacing: -0.025em; /* só título do hero (desktop) */
+
+  /* ------------------------------------------------------------------
+   * Raios
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.375rem;  /* 6px: badges retangulares, checkbox */
+  --radius-md: 0.625rem;  /* 10px: botões, inputs, alertas */
+  --radius-lg: 1rem;      /* 16px: cards, modais, tabela */
+  --radius-xl: 1.5rem;    /* 24px: hero, widget */
+  --radius-full: 9999px;  /* pílulas e avatares */
+
+  /* ------------------------------------------------------------------
+   * Sombras. "pop" é a assinatura do lado público (sombra dura, sem blur).
+   * ------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px 0 rgb(26 20 35 / 0.06), 0 1px 1px 0 rgb(26 20 35 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(26 20 35 / 0.10), 0 2px 4px -2px rgb(26 20 35 / 0.06);
+  --shadow-lg: 0 16px 40px -8px rgb(26 20 35 / 0.22), 0 4px 10px -4px rgb(26 20 35 / 0.10);
+  --shadow-pop: 4px 4px 0 0 #1a1423;
+  --shadow-pop-sm: 2px 2px 0 0 #1a1423;
+
+  /* ------------------------------------------------------------------
+   * Movimento. Durações usadas como duration-150 / duration-200 / duration-300
+   * (o Tailwind 4 não tem namespace de duração; estes valores ficam
+   * expostos como variáveis CSS para JS e para var()).
+   * ------------------------------------------------------------------ */
+  --duration-fast: 150ms;   /* hover, cor, foco */
+  --duration-base: 200ms;   /* entrada de modal, toast, abas */
+  --duration-slow: 300ms;   /* skeleton -> conteúdo, sucesso da inscrição */
+
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);  /* entrada */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* saída */
+
+  --animate-fade-in: fade-in 200ms var(--ease-snappy) both;
+  --animate-pop-in: pop-in 200ms var(--ease-snappy) both;
+  --animate-slide-in-left: slide-in-left 200ms var(--ease-snappy) both;
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-pulse: pulse 1.6s ease-in-out infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+}
+
+/* --------------------------------------------------------------------
+ * Utilitários do design system (assinatura "bilhete").
+ * São tokens de forma: usar só nestes componentes (PrizeCard, widget).
+ * -------------------------------------------------------------------- */
+
+/* Recortes semicirculares nas laterais, como um bilhete de rifa. */
+@utility ticket {
+  --ticket-notch: 0.75rem;
+  --ticket-at: 50%;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at 0 var(--ticket-at), #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at 100% var(--ticket-at), #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Linha picotada (divisor do bilhete). */
+@utility perforation {
+  border-top: 2px dashed var(--color-border);
+}
+
+/* Anel de foco padrão (para elementos sem variantes próprias). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* --------------------------------------------------------------------
+ * Base
+ * -------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* Links de texto: sublinhados por padrão (não dependem só da cor). */
+  :where(main, [role="dialog"]) a:not([class]) {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Foco nunca é removido sem substituto. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  button, [role="button"], a, label[for], summary { touch-action: manipulation; }
+
+  /* Rede de segurança para prefers-reduced-motion. Os componentes já usam
+   * motion-safe:, isto cobre animações de terceiros (sonner, Radix). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Modo de alto contraste do Windows: mantém bordas e foco visíveis. */
+  @media (forced-colors: active) {
+    :focus-visible { outline-color: Highlight; }
+  }
+}
+
+</style>
+</head>
+<body class="min-h-dvh">
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-surface focus:px-4 focus:py-3 focus:font-semibold focus:shadow-lg">Pular para o conteúdo</a>
+
+<!-- Header público (§28) -->
+<header class="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+  <div class="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <a href="#" class="flex min-h-11 items-center rounded-md font-display text-xl font-extrabold focus-ring">Viralt<span class="text-primary" aria-hidden="true">.</span></a>
+    <nav aria-label="Principal" class="ml-6 hidden lg:block">
+      <ul class="flex items-center gap-1">
+        <li><a href="#como" class="inline-flex min-h-11 items-center px-3 text-sm font-medium hover:text-primary focus-ring">Como funciona</a></li>
+        <li><a href="#recursos" class="inline-flex min-h-11 items-center px-3 text-sm font-medium hover:text-primary focus-ring">Recursos</a></li>
+        <li><a href="#precos" class="inline-flex min-h-11 items-center px-3 text-sm font-medium hover:text-primary focus-ring">Preços</a></li>
+      </ul>
+    </nav>
+    <div class="ml-auto hidden items-center gap-2 lg:flex">
+      <label for="lang-d" class="sr-only">Idioma</label>
+      <div class="relative">
+        <i class="fa-solid fa-globe pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true"></i>
+        <select id="lang-d" class="min-h-11 cursor-pointer appearance-none rounded-md bg-transparent pl-9 pr-3 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><option>PT</option><option>EN</option><option>ES</option></select>
+      </div>
+      <a href="#" class="inline-flex min-h-11 items-center rounded-md border border-input bg-surface px-4 text-sm font-semibold hover:bg-muted focus-ring">Entrar</a>
+      <a href="admin-form.html" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover focus-ring"><i class="fa-solid fa-plus" aria-hidden="true"></i>Criar campanha</a>
+    </div>
+    <button type="button" id="menu-btn" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menu" class="ml-auto inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:hidden"><i class="fa-solid fa-bars text-lg" aria-hidden="true"></i></button>
+  </div>
+</header>
+
+<!-- Menu móvel (Radix Dialog na implementação) -->
+<div id="mobile-menu" hidden>
+  <div class="fixed inset-0 z-50 bg-overlay/60 motion-safe:animate-fade-in" data-overlay></div>
+  <div role="dialog" aria-modal="true" aria-label="Menu" class="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col bg-surface shadow-lg motion-safe:animate-pop-in">
+    <div class="flex h-16 items-center justify-between border-b border-border px-4">
+      <span class="font-display text-xl font-extrabold">Viralt<span class="text-primary" aria-hidden="true">.</span></span>
+      <button type="button" data-close aria-label="Fechar menu" class="inline-flex size-11 cursor-pointer items-center justify-center rounded-md hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i></button>
+    </div>
+    <nav aria-label="Principal (menu móvel)" class="flex-1 overflow-y-auto">
+      <ul class="divide-y divide-border">
+        <li><a href="#como" data-close class="flex min-h-12 items-center px-4 text-base font-semibold hover:bg-muted focus-ring">Como funciona</a></li>
+        <li><a href="#recursos" data-close class="flex min-h-12 items-center px-4 text-base font-semibold hover:bg-muted focus-ring">Recursos</a></li>
+        <li><a href="#precos" data-close class="flex min-h-12 items-center px-4 text-base font-semibold hover:bg-muted focus-ring">Preços</a></li>
+      </ul>
+    </nav>
+    <div class="flex flex-col gap-3 border-t border-border p-4">
+      <div class="flex flex-col gap-1.5">
+        <label for="lang-m" class="text-sm font-semibold">Idioma</label>
+        <select id="lang-m" class="min-h-11 w-full cursor-pointer rounded-md border border-input bg-surface px-3 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><option>Português</option><option>English</option><option>Español</option></select>
+      </div>
+      <a href="#" class="inline-flex min-h-11 items-center justify-center rounded-md border border-input bg-surface px-4 font-semibold hover:bg-muted focus-ring">Entrar</a>
+      <a href="admin-form.html" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary-hover focus-ring"><i class="fa-solid fa-plus" aria-hidden="true"></i>Criar campanha</a>
+    </div>
+  </div>
+</div>
+
+<main id="main" tabindex="-1" class="focus:outline-none">
+  <!-- HERO -->
+  <section aria-labelledby="hero-title" class="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
+    <div>
+      <p class="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-surface px-3 py-1 text-sm font-semibold shadow-pop-sm"><i class="fa-solid fa-bolt text-primary" aria-hidden="true"></i>Sorteios, concursos e indicações</p>
+      <h1 id="hero-title" class="mt-5 font-display text-4xl font-extrabold lg:text-5xl">Campanhas que as pessoas <span class="rounded-sm bg-accent px-1.5 [box-decoration-break:clone]">querem</span> compartilhar</h1>
+      <p class="mt-5 max-w-prose text-lg text-muted-foreground">Crie um sorteio em minutos, publique numa página própria ou incorpore no seu site, e deixe cada participante trazer mais gente.</p>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <a href="admin-form.html" class="inline-flex min-h-13 items-center justify-center gap-2 rounded-md border-2 border-foreground bg-primary px-6 text-lg font-semibold text-primary-foreground shadow-pop transition-colors duration-150 hover:bg-primary-hover motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:shadow-pop-sm focus-ring">Criar campanha grátis<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <a href="public-campaign.html?frame=1" class="inline-flex min-h-13 items-center justify-center gap-2 rounded-md border border-input bg-surface px-6 text-lg font-semibold hover:bg-muted focus-ring"><i class="fa-solid fa-play" aria-hidden="true"></i>Ver um exemplo</a>
+      </div>
+      <dl class="mt-10 grid max-w-md grid-cols-3 gap-4">
+        <div class="flex flex-col"><dt class="text-sm text-muted-foreground">campanhas</dt><dd class="order-first font-display text-3xl font-extrabold tabular-nums">2.400+</dd></div>
+        <div class="flex flex-col"><dt class="text-sm text-muted-foreground">inscrições</dt><dd class="order-first font-display text-3xl font-extrabold tabular-nums">1,8 mi</dd></div>
+        <div class="flex flex-col"><dt class="text-sm text-muted-foreground">por indicação</dt><dd class="order-first font-display text-3xl font-extrabold tabular-nums">38%</dd></div>
+      </dl>
+    </div>
+
+    <!-- Composição de bilhetes (mini widget real, decorativo) -->
+    <div class="relative mx-auto w-full max-w-sm" aria-hidden="true">
+      <div class="ticket absolute -right-6 -top-10 z-10 w-44 rotate-6 rounded-lg border-2 border-foreground bg-accent p-4 shadow-pop motion-reduce:rotate-0">
+        <p class="text-xs font-semibold uppercase tracking-wide">Bilhete nº</p>
+        <p class="font-display text-3xl font-extrabold tabular-nums">00428</p>
+      </div>
+      <div class="relative rounded-xl border-2 border-foreground bg-surface shadow-pop">
+        <div class="rounded-t-xl bg-secondary p-5 text-secondary-foreground">
+          <p class="text-sm text-secondary-muted-foreground">Café Aurora</p>
+          <p class="mt-1 font-display text-2xl font-extrabold">Ganhe um ano de café</p>
+        </div>
+        <div class="flex flex-col gap-2 p-5">
+          <div class="flex items-center gap-3 rounded-md bg-success-subtle p-2.5"><i class="fa-brands fa-instagram text-lg"></i><span class="flex-1 text-sm font-semibold">Seguir no Instagram</span><span class="text-sm font-semibold text-success"><i class="fa-solid fa-circle-check"></i> Feito</span></div>
+          <div class="flex items-center gap-3 rounded-md border border-border p-2.5"><i class="fa-solid fa-user-plus text-lg"></i><span class="flex-1 text-sm font-semibold">Indicar amigos</span><span class="rounded-full border-2 border-foreground bg-accent px-2.5 py-0.5 font-display text-xs font-bold shadow-pop-sm">+10 pts</span></div>
+          <div class="mt-2 rounded-md border-2 border-foreground bg-primary py-3 text-center font-semibold text-primary-foreground shadow-pop-sm">Participar agora</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO FUNCIONA -->
+  <section id="como" aria-labelledby="como-title" class="border-y border-border bg-surface">
+    <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+      <h2 id="como-title" class="font-display text-3xl font-extrabold lg:text-4xl">Como funciona</h2>
+      <ol class="mt-8 grid gap-6 md:grid-cols-3">
+        <li class="ticket rounded-lg border-2 border-foreground bg-background p-6 shadow-pop"><span class="font-display text-4xl font-extrabold tabular-nums text-primary">1</span><h3 class="mt-2 font-sans text-lg font-bold">Monte a campanha</h3><p class="mt-1 text-muted-foreground">Escolha o tipo, os prêmios e as ações que valem pontos.</p></li>
+        <li class="ticket rounded-lg border-2 border-foreground bg-background p-6 shadow-pop"><span class="font-display text-4xl font-extrabold tabular-nums text-primary">2</span><h3 class="mt-2 font-sans text-lg font-bold">Publique onde quiser</h3><p class="mt-1 text-muted-foreground">Página própria, link nas redes ou widget no seu site.</p></li>
+        <li class="ticket rounded-lg border-2 border-foreground bg-background p-6 shadow-pop"><span class="font-display text-4xl font-extrabold tabular-nums text-primary">3</span><h3 class="mt-2 font-sans text-lg font-bold">Sorteie e avise</h3><p class="mt-1 text-muted-foreground">Sorteio auditável e e-mail automático para os vencedores.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- RECURSOS -->
+  <section id="recursos" aria-labelledby="rec-title" class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+    <h2 id="rec-title" class="font-display text-3xl font-extrabold lg:text-4xl">Tudo o que uma campanha viral precisa</h2>
+    <ul class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <!--FEATURES-->
+    </ul>
+  </section>
+
+  <!-- PREÇOS -->
+  <section id="precos" aria-labelledby="precos-title" class="border-t border-border bg-surface">
+    <div class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+      <h2 id="precos-title" class="font-display text-3xl font-extrabold lg:text-4xl">Preços</h2>
+      <p class="mt-2 text-muted-foreground">Comece grátis e mude de plano quando precisar.</p>
+      <ul class="mt-8 grid items-start gap-6 lg:grid-cols-3">
+        <li class="flex flex-col rounded-lg border border-border bg-surface p-6 shadow-sm">
+          <h3 class="font-sans text-lg font-bold">Grátis</h3>
+          <p class="mt-3"><span class="font-display text-4xl font-extrabold tabular-nums">R$ 0</span> <span class="text-muted-foreground">/mês</span></p>
+          <ul class="mt-5 flex flex-col gap-2 text-sm">
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>1 campanha ativa</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Até 500 participantes</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Página pública</li>
+          </ul>
+          <a href="#" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-md border border-input bg-surface px-4 font-semibold hover:bg-muted focus-ring">Começar grátis</a>
+        </li>
+        <li class="relative flex flex-col rounded-lg border-2 border-foreground bg-surface p-6 shadow-pop">
+          <span class="absolute -top-3.5 left-6 inline-flex items-center gap-1.5 rounded-full border-2 border-foreground bg-accent px-2.5 py-0.5 font-display text-xs font-bold shadow-pop-sm"><i class="fa-solid fa-star" aria-hidden="true"></i>Mais escolhido</span>
+          <h3 class="font-sans text-lg font-bold">Pro</h3>
+          <p class="mt-3"><span class="font-display text-4xl font-extrabold tabular-nums">R$ 79</span> <span class="text-muted-foreground">/mês</span></p>
+          <ul class="mt-5 flex flex-col gap-2 text-sm">
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Campanhas ilimitadas</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Até 20 mil participantes</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Widget e cores da marca</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Pixels de rastreamento</li>
+          </ul>
+          <a href="#" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary-hover focus-ring">Assinar o Pro</a>
+        </li>
+        <li class="flex flex-col rounded-lg border border-border bg-surface p-6 shadow-sm">
+          <h3 class="font-sans text-lg font-bold">Agência</h3>
+          <p class="mt-3"><span class="font-display text-4xl font-extrabold tabular-nums">R$ 249</span> <span class="text-muted-foreground">/mês</span></p>
+          <ul class="mt-5 flex flex-col gap-2 text-sm">
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Várias marcas e equipes</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Participantes ilimitados</li>
+            <li class="flex gap-2"><i class="fa-solid fa-check mt-0.5 text-success" aria-hidden="true"></i>Suporte prioritário</li>
+          </ul>
+          <a href="#" class="mt-6 inline-flex min-h-11 items-center justify-center rounded-md border border-input bg-surface px-4 font-semibold hover:bg-muted focus-ring">Falar com vendas</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- CTA final -->
+  <section aria-labelledby="cta-title" class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="flex flex-col items-start gap-6 rounded-xl bg-secondary p-8 text-secondary-foreground md:flex-row md:items-center md:justify-between lg:p-12">
+      <div>
+        <h2 id="cta-title" class="font-display text-3xl font-extrabold">Seu próximo sorteio começa hoje</h2>
+        <p class="mt-2 text-secondary-muted-foreground">Sem cartão de crédito. Publique em menos de 10 minutos.</p>
+      </div>
+      <a href="admin-form.html" class="inline-flex min-h-13 shrink-0 items-center gap-2 rounded-md border-2 border-foreground bg-accent px-6 text-lg font-semibold text-accent-foreground shadow-pop hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse">Criar campanha grátis<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-border bg-surface">
+  <div class="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4 lg:px-8">
+    <div>
+      <p class="font-display text-xl font-extrabold">Viralt<span class="text-primary" aria-hidden="true">.</span></p>
+      <p class="mt-2 text-sm text-muted-foreground">Campanhas virais para marcas de todos os tamanhos.</p>
+      <ul class="mt-4 flex gap-1" aria-label="Redes sociais">
+        <li><a href="#" aria-label="Instagram" class="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted focus-ring"><i class="fa-brands fa-instagram text-lg" aria-hidden="true"></i></a></li>
+        <li><a href="#" aria-label="LinkedIn" class="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted focus-ring"><i class="fa-brands fa-linkedin text-lg" aria-hidden="true"></i></a></li>
+        <li><a href="#" aria-label="X" class="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted focus-ring"><i class="fa-brands fa-x-twitter text-lg" aria-hidden="true"></i></a></li>
+      </ul>
+    </div>
+    <nav aria-labelledby="f1"><h2 id="f1" class="font-sans text-sm font-semibold">Produto</h2><ul class="mt-2 text-sm text-muted-foreground"><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#recursos">Recursos</a></li><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#precos">Preços</a></li><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="widget.html">Widget</a></li></ul></nav>
+    <nav aria-labelledby="f2"><h2 id="f2" class="font-sans text-sm font-semibold">Empresa</h2><ul class="mt-2 text-sm text-muted-foreground"><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#">Sobre</a></li><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#">Contato</a></li></ul></nav>
+    <nav aria-labelledby="f3"><h2 id="f3" class="font-sans text-sm font-semibold">Legal</h2><ul class="mt-2 text-sm text-muted-foreground"><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#">Termos de uso</a></li><li><a class="inline-flex min-h-11 items-center hover:text-foreground focus-ring" href="#">Privacidade</a></li></ul></nav>
+  </div>
+  <p class="border-t border-border py-4 text-center text-sm text-muted-foreground">© 2026 Viralt</p>
+</footer>
+
+<script>
+(() => {
+  const F = [
+    ['fa-ticket', 'Sorteios', 'Cada ação vale pontos, e cada ponto é uma chance a mais.'],
+    ['fa-camera', 'Concursos com votação', 'Participantes enviam fotos, e o público vota.'],
+    ['fa-hand-pointer', 'Ações de entrada', 'Seguir, curtir, assistir, visitar: você escolhe e define os pontos.'],
+    ['fa-user-plus', 'Indicação de amigos', 'Link único por participante, com bônus por inscrição.'],
+    ['fa-code', 'Widget para qualquer site', 'Uma linha de código e a campanha aparece no seu site.'],
+    ['fa-scale-balanced', 'Sorteio auditável', 'Resultado registrado e vencedores avisados por e-mail.'],
+  ];
+  document.querySelector('#recursos ul').innerHTML = F.map(([i, t, d]) => `<li class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <span class="grid size-12 place-items-center rounded-md border-2 border-foreground bg-accent text-lg text-accent-foreground shadow-pop-sm" aria-hidden="true"><i class="fa-solid ${i}"></i></span>
+    <h3 class="mt-4 font-sans text-lg font-bold">${t}</h3><p class="mt-1 text-muted-foreground">${d}</p></li>`).join('');
+
+  // Menu móvel: focus trap, Esc e devolução de foco
+  const btn = document.getElementById('menu-btn'), m = document.getElementById('mobile-menu');
+  const f = () => [...m.querySelectorAll('a, button, select')];
+  const open = () => { m.hidden = false; btn.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; f()[0].focus(); };
+  const close = (refocus = true) => { m.hidden = true; btn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; if (refocus) btn.focus(); };
+  btn.addEventListener('click', open);
+  m.addEventListener('click', (e) => { const c = e.target.closest('[data-close]'); if (c || e.target.matches('[data-overlay]')) close(!(c && c.tagName === 'A')); });
+  document.addEventListener('keydown', (e) => {
+    if (m.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'Tab') { const l = f(), a = l[0], z = l[l.length - 1];
+      if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+      else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } }
+  });
+})();
+</script>
+</body>
+</html>

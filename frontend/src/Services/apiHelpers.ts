@@ -1,8 +1,12 @@
 const AUTH_STORAGE_KEY = 'login-with-metamask:auth';
+const PARTICIPANT_TOKEN_PREFIX = 'viralt:participant:';
 
-/** Get the API base URL from environment */
+/**
+ * Get the API base URL from environment (no trailing slash).
+ * Empty `VITE_API_URL` = same origin: requests go to `/api/...` and `/graphql` on the current host.
+ */
 export const getApiUrl = (): string => {
-  return process.env.REACT_APP_API_URL || 'https://localhost:44374';
+  return (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 };
 
 /** Get the auth token from localStorage */
@@ -53,4 +57,41 @@ export const loadSession = <T>(): T | null => {
 /** Clear auth session from localStorage */
 export const clearSession = (): void => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
+};
+
+/** Logged-in user id from the stored session, or null. */
+export const getSessionUserId = (): number | null => {
+  const session = loadSession<{ userId?: number }>();
+  return session && typeof session.userId === 'number' ? session.userId : null;
+};
+
+/**
+ * Participant token (returned by POST /api/Public/register), kept per campaign slug so a returning
+ * visitor keeps their entries. Storage errors (private mode, blocked third-party storage in the
+ * widget iframe) are ignored: the token then lives only in memory.
+ */
+export const saveParticipantToken = (slug: string, token: string): void => {
+  try {
+    localStorage.setItem(`${PARTICIPANT_TOKEN_PREFIX}${slug}`, token);
+  } catch {
+    /* storage unavailable */
+  }
+};
+
+/** Stored participant token for a campaign slug, or null. */
+export const loadParticipantToken = (slug: string): string | null => {
+  try {
+    return localStorage.getItem(`${PARTICIPANT_TOKEN_PREFIX}${slug}`);
+  } catch {
+    return null;
+  }
+};
+
+/** Forget the participant token of a campaign slug. */
+export const clearParticipantToken = (slug: string): void => {
+  try {
+    localStorage.removeItem(`${PARTICIPANT_TOKEN_PREFIX}${slug}`);
+  } catch {
+    /* storage unavailable */
+  }
 };

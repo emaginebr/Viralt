@@ -1,34 +1,42 @@
-import { useContext, useEffect, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
+import { useContext, useEffect, useState, type ReactNode } from "react";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowDown, faArrowUp, faCalendar, faCancel, faCheck, faCheckCircle, faClose, faCross, faDollar, faEdit, faEnvelope, faPlus, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Dropdown from 'react-bootstrap/Dropdown';
-import Pagination from 'react-bootstrap/Pagination';
+import {
+    faArrowDown, faArrowUp, faBan, faCheck, faEnvelope, faMagnifyingGlass, faTrash, faXmark,
+    type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 import MessageToast from "../../Components/MessageToast";
 import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
 import NetworkContext from "../../Contexts/Network/NetworkContext";
 import UserContext from "../../Contexts/User/UserContext";
 import { UserRoleEnum } from "../../DTO/Enum/UserRoleEnum";
 import { UserNetworkStatusEnum } from "../../DTO/Enum/UserNetworkStatusEnum";
+import UserNetworkSearchInfo from "../../DTO/Domain/UserNetworkSearchInfo";
+import { Breadcrumb } from "../../Components/Breadcrumb";
+import { usePaginationLabels } from "../../hooks/usePaginationLabels";
+import {
+    Badge, Button, Input, PageContainer, PageHeader, Pagination, Table,
+    type BadgeVariant, type TableColumn,
+} from "../../Components/ui";
 
-export default function UserSearchPage() {
+interface IRowAction {
+    key: string;
+    icon: IconDefinition;
+    iconClass: string;
+    label: string;
+    run: () => Promise<void>;
+}
+
+const UserSearchPage = () => {
 
     const { t } = useTranslation();
-
-    let navigate = useNavigate();
 
     const userContext = useContext(UserContext);
     const networkContext = useContext(NetworkContext);
 
-    let { pageNum } = useParams();
+    const { pageNum } = useParams();
+    const paginationLabels = usePaginationLabels(t('pagination.teamNav'));
 
     const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
     const [showMessage, setShowMessage] = useState<boolean>(false);
@@ -86,6 +94,19 @@ export default function UserSearchPage() {
         return ret;
     };
 
+    const statusVariant = (status: UserNetworkStatusEnum): BadgeVariant => {
+        switch (status) {
+            case UserNetworkStatusEnum.Active:
+                return "success";
+            case UserNetworkStatusEnum.Blocked:
+                return "danger";
+            case UserNetworkStatusEnum.WaitForApproval:
+                return "warning";
+            default:
+                return "neutral";
+        }
+    };
+
     const searchUsers = (pageNum: number) => {
         userContext.search(networkContext.userNetwork.networkId, "", pageNum, null).then((ret) => {
             if (!ret.sucesso) {
@@ -104,6 +125,131 @@ export default function UserSearchPage() {
         }
     }, []);
 
+    /** Runs a row action and, on success, shows the message and reloads the current page. */
+    const runAction = async (action: Promise<{ sucesso: boolean; mensagemErro?: string }>, successMessage: string) => {
+        const ret = await action;
+        if (ret.sucesso) {
+            showSuccessMessage(successMessage);
+            searchUsers(userContext.searchResult?.pageNum);
+        }
+        else {
+            throwError(ret.mensagemErro);
+        }
+    };
+
+    const changeStatus = (user: UserNetworkSearchInfo, status: UserNetworkStatusEnum, successMessage: string) =>
+        runAction(networkContext.changeStatus(networkContext.network?.networkId, user.userId, status), successMessage);
+
+    const rowActions = (user: UserNetworkSearchInfo): IRowAction[] => {
+        const actions: IRowAction[] = [
+            {
+                key: "promote",
+                icon: faArrowUp,
+                iconClass: "text-success",
+                label: t("adminUi.userSearch.promote"),
+                run: () => runAction(networkContext.promote(networkContext.network?.networkId, user.userId), t("adminUi.userSearch.promoted")),
+            },
+            {
+                key: "demote",
+                icon: faArrowDown,
+                iconClass: "text-danger",
+                label: t("adminUi.userSearch.demote"),
+                run: () => runAction(networkContext.demote(networkContext.network?.networkId, user.userId), t("adminUi.userSearch.demoted")),
+            },
+        ];
+        switch (user.status) {
+            case UserNetworkStatusEnum.Active:
+                actions.push({
+                    key: "remove",
+                    icon: faTrash,
+                    iconClass: "text-danger",
+                    label: t("userSearchPage.actions.remove"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Inactive, t("userSearchPage.messages.userAccessRemoved")),
+                });
+                break;
+            case UserNetworkStatusEnum.Inactive:
+                actions.push({
+                    key: "reactivate",
+                    icon: faCheck,
+                    iconClass: "text-success",
+                    label: t("userSearchPage.actions.reactivate"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Active, t("userSearchPage.messages.userReactivated")),
+                });
+                actions.push({
+                    key: "block",
+                    icon: faBan,
+                    iconClass: "text-danger",
+                    label: t("userSearchPage.actions.block"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Blocked, t("userSearchPage.messages.userBlocked")),
+                });
+                break;
+            case UserNetworkStatusEnum.WaitForApproval:
+                actions.push({
+                    key: "approve",
+                    icon: faCheck,
+                    iconClass: "text-success",
+                    label: t("userSearchPage.actions.approve"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Active, t("userSearchPage.messages.userApproved")),
+                });
+                actions.push({
+                    key: "reprove",
+                    icon: faXmark,
+                    iconClass: "text-danger",
+                    label: t("userSearchPage.actions.reprove"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Inactive, t("userSearchPage.messages.userReproved")),
+                });
+                break;
+            case UserNetworkStatusEnum.Blocked:
+                actions.push({
+                    key: "reactivate",
+                    icon: faCheck,
+                    iconClass: "text-success",
+                    label: t("userSearchPage.actions.reactivate"),
+                    run: () => changeStatus(user, UserNetworkStatusEnum.Active, t("userSearchPage.messages.userReactivated")),
+                });
+                break;
+        }
+        return actions;
+    };
+
+    const renderActions = (user: UserNetworkSearchInfo): ReactNode => (
+        <div className="flex flex-wrap justify-end gap-1">
+            {rowActions(user).map((action) => (
+                <Button
+                    key={action.key}
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t("adminUi.actionFor", { action: action.label, name: user.name })}
+                    leftIcon={<FontAwesomeIcon icon={action.icon} fixedWidth aria-hidden="true" className={action.iconClass} />}
+                    onClick={() => { action.run(); }}
+                >
+                    {action.label}
+                </Button>
+            ))}
+        </div>
+    );
+
+    const columns: TableColumn<UserNetworkSearchInfo>[] = [
+        { key: "name", header: t("userSearchPage.tableHeaders.seller"), rowHeader: true },
+        { key: "profile", header: t("userSearchPage.tableHeaders.profile") },
+        { key: "role", header: t("userSearchPage.tableHeaders.role"), accessor: (user) => showRole(user.role) },
+        {
+            key: "commission",
+            header: <>{t("userSearchPage.tableHeaders.commission")} (%)</>,
+            numeric: true,
+            accessor: (user) => <>{user.commission}%</>,
+        },
+        {
+            key: "status",
+            header: t("userSearchPage.tableHeaders.status"),
+            accessor: (user) => <Badge variant={statusVariant(user.status)}>{showStatus(user.status)}</Badge>,
+        },
+        { key: "actions", header: t("userSearchPage.tableHeaders.actions"), actions: true, accessor: renderActions },
+    ];
+
+    const result = userContext.searchResult;
+    const title = t("userSearchPage.breadcrumbs.networkTeam");
+
     return (
         <>
             <MessageToast
@@ -112,254 +258,53 @@ export default function UserSearchPage() {
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
             ></MessageToast>
-            <Container>
-                <Row>
-                    <Col md="6">
-                        <h3>
-                            <nav aria-label="breadcrumb">
-                                <ol className="breadcrumb">
-                                    <li className="breadcrumb-item"><Link to="/admin/dashboard">{t("userSearchPage.breadcrumbs.myNetwork")}</Link></li>
-                                    <li className="breadcrumb-item active" aria-current="page">{t("userSearchPage.breadcrumbs.networkTeam")}</li>
-                                </ol>
-                            </nav>
-                        </h3>
-                    </Col>
-                    <Col md="6" style={{ textAlign: "right" }}>
-                        <InputGroup className="pull-right">
-                            <Form.Control
-                                placeholder={t("userSearchPage.searchPlaceholder")}
-                                aria-label={t("userSearchPage.searchPlaceholder")}
-                            />
-                            <Button variant="outline-secondary"><FontAwesomeIcon icon={faSearch} fixedWidth /></Button>
-                            {/*}
-                            <Dropdown>
-                                <Dropdown.Toggle variant="danger" id="dropdown-basic">
-                                    Filter by: All Profiles
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item href="#/action-1">Action</Dropdown.Item>
-                                    <Dropdown.Item href="#/action-2">Another action</Dropdown.Item>
-                                    <Dropdown.Item href="#/action-3">Something else</Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
-                            */}
-                            <Button variant="primary" disabled><FontAwesomeIcon icon={faEnvelope} fixedWidth /> {t("userSearchPage.inviteButton")}</Button>
-                        </InputGroup>
-                    </Col>
-                </Row>
-                <Row className="py-4">
-                    <Col md="12">
-                        <Table striped bordered hover>
-                            <thead>
-                                <tr>
-                                    <th>{t("userSearchPage.tableHeaders.seller")}</th>
-                                    <th>{t("userSearchPage.tableHeaders.profile")}</th>
-                                    <th>{t("userSearchPage.tableHeaders.role")}</th>
-                                    <th style={{ textAlign: "right" }}>{t("userSearchPage.tableHeaders.commission")} (%)</th>
-                                    <th>{t("userSearchPage.tableHeaders.status")}</th>
-                                    <th>{t("userSearchPage.tableHeaders.actions")}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {
-                                    userContext.loadingSearch &&
-                                    <tr>
-                                        <td colSpan={6}>
-                                            <div className="d-flex justify-content-center">
-                                                <div className="spinner-border" role="status">
-                                                    <span className="visually-hidden">{t("loading")}...</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                                {!userContext.loadingSearch && userContext.searchResult?.users.map((user) => {
-                                    return (
-                                        <tr>
-                                            <td>{user.name}</td>
-                                            <td>{user.profile}</td>
-                                            <td>{showRole(user.role)}</td>
-                                            <td style={{ textAlign: "right" }}>{user.commission}%</td>
-                                            <td>{showStatus(user.status)}</td>
-                                            <td>
-                                                <>
-                                                    <a href="#" className="text-success" onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        let ret = await networkContext.promote(networkContext.network?.networkId, user.userId);
-                                                        if (ret.sucesso) {
-                                                            showSuccessMessage("User promoted");
-                                                            searchUsers(userContext.searchResult?.pageNum);
-                                                        }
-                                                        else {
-                                                            throwError(ret.mensagemErro);
-                                                        }
-                                                    }}>
-                                                        <FontAwesomeIcon icon={faArrowUp} fixedWidth /> Promove
-                                                    </a>
-                                                    <a href="#" className="text-danger" onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        let ret = await networkContext.demote(networkContext.network?.networkId, user.userId);
-                                                        if (ret.sucesso) {
-                                                            showSuccessMessage("User demoted");
-                                                            searchUsers(userContext.searchResult?.pageNum);
-                                                        }
-                                                        else {
-                                                            throwError(ret.mensagemErro);
-                                                        }
-                                                    }}>
-                                                        <FontAwesomeIcon icon={faArrowDown} fixedWidth /> Demote
-                                                    </a>
-                                                </>
-                                                {user.status == UserNetworkStatusEnum.Active &&
-                                                    <>
-                                                        <a href="#" className="text-danger" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Inactive);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userAccessRemoved"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faTrash} fixedWidth /> {t("userSearchPage.actions.remove")}
-                                                        </a>
-                                                    </>
-                                                }
-                                                {user.status == UserNetworkStatusEnum.Inactive &&
-                                                    <>
-                                                        <a href="#" className="text-danger" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Active);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userReactivated"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faCheck} fixedWidth /> {t("userSearchPage.actions.reactivate")}
-                                                        </a>
-                                                        <a href="#" className="text-danger" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Blocked);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userBlocked"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faCancel} fixedWidth /> {t("userSearchPage.actions.block")}
-                                                        </a>
-                                                    </>
-                                                }
-                                                {user.status == UserNetworkStatusEnum.WaitForApproval &&
-                                                    <>
-                                                        <a href="#" className="text-success" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Active);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userApproved"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faCheck} fixedWidth /> {t("userSearchPage.actions.approve")}
-                                                        </a>
-                                                        <a href="#" className="text-danger" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Inactive);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userReproved"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faClose} fixedWidth /> {t("userSearchPage.actions.reprove")}
-                                                        </a>
-                                                    </>
-                                                }
-                                                {user.status == UserNetworkStatusEnum.Blocked &&
-                                                    <>
-                                                        <a href="#" className="text-danger" onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            let ret = await networkContext.changeStatus(networkContext.network?.networkId, user.userId, UserNetworkStatusEnum.Active);
-                                                            if (ret.sucesso) {
-                                                                showSuccessMessage(t("userSearchPage.messages.userReactivated"));
-                                                                searchUsers(userContext.searchResult?.pageNum);
-                                                            }
-                                                            else {
-                                                                throwError(ret.mensagemErro);
-                                                            }
-                                                        }}>
-                                                            <FontAwesomeIcon icon={faCheck} fixedWidth /> {t("userSearchPage.actions.reactivate")}
-                                                        </a>
-                                                    </>
-                                                }
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </Table>
-                    </Col>
-                </Row>
-                {!userContext.loadingSearch && userContext.searchResult &&
-                    <Row>
-                        <Col md={12} className="text-center">
-                            <Pagination className="justify-content-center">
-                                <Pagination.First
-                                    disabled={!(userContext.searchResult?.pageNum > 1)}
-                                    onClick={() => searchUsers(1)} />
-                                <Pagination.Prev
-                                    disabled={!(userContext.searchResult?.pageNum > 1)}
-                                    onClick={() => searchUsers(userContext.searchResult?.pageNum - 1)} />
-                                <Pagination.Ellipsis />
-
-                                {userContext.searchResult?.pageNum - 2 > 1 &&
-                                    <Pagination.Item
-                                        onClick={() => searchUsers(userContext.searchResult?.pageNum - 2)}
-                                    >{userContext.searchResult?.pageNum - 2}</Pagination.Item>
-                                }
-                                {userContext.searchResult?.pageNum - 1 > 1 &&
-                                    <Pagination.Item
-                                        onClick={() => searchUsers(userContext.searchResult?.pageNum - 1)}
-                                    >{userContext.searchResult?.pageNum - 1}</Pagination.Item>
-                                }
-                                <Pagination.Item active>{userContext.searchResult?.pageNum}</Pagination.Item>
-                                {userContext.searchResult?.pageNum + 1 <= userContext.searchResult?.pageCount &&
-                                    <Pagination.Item
-                                        onClick={() => searchUsers(userContext.searchResult?.pageNum + 1)}
-                                    >{userContext.searchResult?.pageNum + 1}</Pagination.Item>
-                                }
-                                {userContext.searchResult?.pageNum + 2 <= userContext.searchResult?.pageCount &&
-                                    <Pagination.Item
-                                        onClick={() => searchUsers(userContext.searchResult?.pageNum + 2)}
-                                    >{userContext.searchResult?.pageNum + 2}</Pagination.Item>
-                                }
-
-                                <Pagination.Ellipsis />
-                                <Pagination.Next
-                                    disabled={!(userContext.searchResult?.pageNum < userContext.searchResult?.pageCount)}
-                                    onClick={() => searchUsers(userContext.searchResult?.pageCount)}
-                                />
-                                <Pagination.Last
-                                    disabled={!(userContext.searchResult?.pageNum < userContext.searchResult?.pageCount)}
-                                    onClick={() => searchUsers(userContext.searchResult?.pageCount)} />
-                            </Pagination>
-                        </Col>
-                    </Row>
+            <PageContainer>
+                <PageHeader
+                    breadcrumb={<Breadcrumb items={[
+                        { label: t("userSearchPage.breadcrumbs.myNetwork"), to: "/admin/dashboard" },
+                        { label: title },
+                    ]} />}
+                    title={title}
+                    actions={
+                        <Button disabled leftIcon={<FontAwesomeIcon icon={faEnvelope} fixedWidth aria-hidden="true" />}>
+                            {t("userSearchPage.inviteButton")}
+                        </Button>
+                    }
+                />
+                <form role="search" aria-label={t("userSearchPage.searchPlaceholder")} className="mb-4" onSubmit={(e) => e.preventDefault()}>
+                    <Input
+                        variant="search"
+                        label={t("userSearchPage.searchPlaceholder")}
+                        placeholder={t("userSearchPage.searchPlaceholder")}
+                        rightAddon={
+                            <Button type="submit" variant="outline" size="icon" aria-label={t("adminUi.search")}>
+                                <FontAwesomeIcon icon={faMagnifyingGlass} fixedWidth aria-hidden="true" />
+                            </Button>
+                        }
+                    />
+                </form>
+                <Table
+                    columns={columns}
+                    rows={result?.users ?? []}
+                    rowKey={(user, index) => user.userId ?? index}
+                    caption={result?.pageCount > 0
+                        ? t("adminUi.tableCaptionPaged", { title, page: result.pageNum, total: result.pageCount })
+                        : title}
+                    loading={userContext.loadingSearch}
+                    empty={t("adminUi.noRecords")}
+                />
+                {!userContext.loadingSearch && result && result.pageCount > 0 &&
+                    <Pagination
+                        className="mt-4"
+                        page={result.pageNum}
+                        totalPages={result.pageCount}
+                        onChange={(page: number) => searchUsers(page)}
+                        labels={paginationLabels}
+                    />
                 }
-            </Container>
+            </PageContainer>
         </>
     );
-}
+};
+
+export default UserSearchPage;

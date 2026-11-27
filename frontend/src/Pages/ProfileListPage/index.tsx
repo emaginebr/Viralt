@@ -1,27 +1,23 @@
 import { useContext, useEffect, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendar, faDollar, faEdit, faPlus, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link, useNavigate } from "react-router-dom";
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Dropdown from 'react-bootstrap/Dropdown';
+import { faPenToSquare, faTrash } from '@fortawesome/free-solid-svg-icons';
 import ProfileContext from "../../Contexts/Profile/ProfileContext";
 import NetworkContext from "../../Contexts/Network/NetworkContext";
 import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
+import UserProfileInfo from "../../DTO/Domain/UserProfileInfo";
 import MessageToast from "../../Components/MessageToast";
-import ProductContext from "../../Contexts/Product/ProductContext";
+import { Breadcrumb } from "../../Components/Breadcrumb";
+import { textLinkClasses } from "../../Components/ui/cn";
+import {
+    Button, PageContainer, PageHeader, Table, buttonClasses, useConfirm, type TableColumn,
+} from "../../Components/ui";
 
-export default function ProfileListPage() {
+const ProfileListPage = () => {
 
     const { t } = useTranslation();
-
-    let navigate = useNavigate();
+    const confirm = useConfirm();
 
     const networkContext = useContext(NetworkContext);
     const profileContext = useContext(ProfileContext);
@@ -40,11 +36,6 @@ export default function ProfileListPage() {
         setMessageText(message);
         setShowMessage(true);
     };
-    const showDeleteMessage = (message: string) => {
-        setDialog(MessageToastEnum.Confirmation);
-        setMessageText(message);
-        setShowMessage(true);
-    };
 
     useEffect(() => {
         if (networkContext.userNetwork) {
@@ -56,6 +47,80 @@ export default function ProfileListPage() {
         }
     }, []);
 
+    /** Replaces the old "Confirmation" toast (Yes/No) with the ConfirmModal. */
+    const handleDelete = async (profile: UserProfileInfo) => {
+        const confirmed = await confirm({
+            title: t("adminUi.profileList.deleteTitle", { name: profile.name }),
+            description: t("adminUi.profileList.deleteDescription"),
+            confirmLabel: t("adminUi.profileList.deleteConfirm"),
+            cancelLabel: t("shared.cancel"),
+            tone: "danger",
+        });
+        if (!confirmed) {
+            return;
+        }
+        const ret = await profileContext.delete(profile.profileId);
+        if (ret.sucesso) {
+            showSuccessMessage(t("profileListPage.profileSuccessfullyDeleted"));
+            const retList = await profileContext.listByNetwork(networkContext.userNetwork.networkId);
+            if (!retList.sucesso) {
+                throwError(retList.mensagemErro);
+            }
+        }
+        else {
+            throwError(ret.mensagemErro);
+        }
+    };
+
+    const iconLinkClasses = buttonClasses({ variant: "ghost", size: "icon" });
+
+    const columns: TableColumn<UserProfileInfo>[] = [
+        {
+            key: "name",
+            header: t("profileListPage.profileName"),
+            rowHeader: true,
+            accessor: (profile) => (
+                <Link to={"/admin/team-structure/" + profile.profileId} className={textLinkClasses}>{profile.name}</Link>
+            ),
+        },
+        { key: "level", header: t("profileListPage.level"), numeric: true },
+        {
+            key: "commission",
+            header: <>{t("profileListPage.commission")} (%)</>,
+            numeric: true,
+            accessor: (profile) => <>{profile.commission}%</>,
+        },
+        { key: "members", header: t("profileListPage.members"), numeric: true },
+        {
+            key: "actions",
+            header: t("profileListPage.actions"),
+            actions: true,
+            accessor: (profile) => (
+                <div className="flex justify-end gap-2">
+                    <Link
+                        to={"/admin/team-structure/" + profile.profileId}
+                        className={iconLinkClasses}
+                        aria-label={t("adminUi.editItem", { name: profile.name })}
+                        title={t("adminUi.editItem", { name: profile.name })}
+                    >
+                        <FontAwesomeIcon icon={faPenToSquare} fixedWidth aria-hidden="true" />
+                    </Link>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("adminUi.deleteItem", { name: profile.name })}
+                        title={t("adminUi.deleteItem", { name: profile.name })}
+                        onClick={() => { handleDelete(profile); }}
+                    >
+                        <FontAwesomeIcon icon={faTrash} fixedWidth aria-hidden="true" className="text-danger" />
+                    </Button>
+                </div>
+            ),
+        },
+    ];
+
+    const title = t("profileListPage.networkTeamStructure");
+
     return (
         <>
             <MessageToast
@@ -63,107 +128,26 @@ export default function ProfileListPage() {
                 showMessage={showMessage}
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
-                onYes={async () => {
-                    if (profileContext.profile) {
-                        let ret = await profileContext.delete(profileContext.profile.profileId);
-                        if (ret.sucesso) {
-                            showSuccessMessage(t("profileListPage.profileSuccessfullyDeleted"));
-                            let retList = await profileContext.listByNetwork(networkContext.userNetwork.networkId);
-                            if (!retList.sucesso) {
-                                throwError(ret.mensagemErro);
-                            }
-                        }
-                        else {
-                            throwError(ret.mensagemErro);
-                        }
-                    }
-                    setShowMessage(false);
-                }}
-                onNo={() => setShowMessage(false)}
             ></MessageToast>
-            <Container>
-                <Row>
-                    <Col md="8">
-                        <h3>
-                            <nav aria-label="breadcrumb">
-                                <ol className="breadcrumb">
-                                    <li className="breadcrumb-item"><Link to="/admin/dashboard">{t("profileListPage.myNetwork")}</Link></li>
-                                    <li className="breadcrumb-item active" aria-current="page">{t("profileListPage.networkTeamStructure")}</li>
-                                </ol>
-                            </nav>
-                        </h3>
-                    </Col>
-                    <Col md="4" style={{ textAlign: "right" }}>
-                        {/*
-                        <InputGroup className="pull-right">
-                            <Dropdown>
-                                <Dropdown.Toggle variant="danger" id="dropdown-basic">
-                                    Filter by: All Status
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu>
-                                    <Dropdown.Item href="#/action-1">Action</Dropdown.Item>
-                                    <Dropdown.Item href="#/action-2">Another action</Dropdown.Item>
-                                    <Dropdown.Item href="#/action-3">Something else</Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
-                            <Button variant="primary" onClick={(e) => {
-                                e.preventDefault();
-                                navigate("/admin/team-structure/new");
-                            }}><FontAwesomeIcon icon={faPlus} fixedWidth /> New</Button>
-                        </InputGroup>
-                        */}
-                    </Col>
-                </Row>
-                <Row className="py-4">
-                    <Col md="12">
-                        <Table striped bordered hover>
-                            <thead>
-                                <tr>
-                                    <th>{t("profileListPage.profileName")}</th>
-                                    <th style={{ textAlign: "right" }}>{t("profileListPage.level")}</th>
-                                    <th style={{ textAlign: "right" }}>{t("profileListPage.commission")} (%)</th>
-                                    <th style={{ textAlign: "right" }}>{t("profileListPage.members")}</th>
-                                    <th>{t("profileListPage.actions")}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {
-                                    profileContext.loading &&
-                                    <tr>
-                                        <td colSpan={5}>
-                                            <div className="d-flex justify-content-center">
-                                                <div className="spinner-border" role="status">
-                                                    <span className="visually-hidden">{t("loading")}...</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                                {!profileContext.loading && profileContext.profiles.map((profile) => {
-                                    return (
-                                        <tr>
-                                            <td><Link to={"/admin/team-structure/" + profile.profileId}>{profile.name}</Link></td>
-                                            <td style={{ textAlign: "right" }}>{profile.level}</td>
-                                            <td style={{ textAlign: "right" }}>{profile.commission}%</td>
-                                            <td style={{ textAlign: "right" }}>{profile.members}</td>
-                                            <td>
-                                                <Link to={"/admin/team-structure/" + profile.profileId}>
-                                                    <FontAwesomeIcon icon={faEdit} fixedWidth />
-                                                </Link>
-                                                <a href="#" onClick={(e) => {
-                                                    e.preventDefault();
-                                                    showDeleteMessage(t("areYouSure"));
-                                                }}><FontAwesomeIcon icon={faTrash} fixedWidth /></a>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </Table>
-                    </Col>
-                </Row>
-            </Container>
+            <PageContainer>
+                <PageHeader
+                    breadcrumb={<Breadcrumb items={[
+                        { label: t("profileListPage.myNetwork"), to: "/admin/dashboard" },
+                        { label: title },
+                    ]} />}
+                    title={title}
+                />
+                <Table
+                    columns={columns}
+                    rows={profileContext.profiles ?? []}
+                    rowKey={(profile, index) => profile.profileId ?? index}
+                    caption={title}
+                    loading={profileContext.loading}
+                    empty={t("adminUi.noRecords")}
+                />
+            </PageContainer>
         </>
     );
-}
+};
+
+export default ProfileListPage;

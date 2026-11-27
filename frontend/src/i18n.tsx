@@ -33,7 +33,7 @@ i18n
   .init({
     supportedLngs: ['en', 'pt', 'es', 'fr'],
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development', // Enable debug output in development
+    debug: import.meta.env.DEV, // Enable debug output in development
     detection: {
       order: ['querystring', 'cookie', 'localStorage', 'sessionStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage', 'cookie'],
@@ -45,5 +45,16 @@ i18n
       escapeValue: false, // React already safes from xss
     },
   });
+
+// Keeps <html lang> in sync with the active language (WCAG 3.1.1), on startup and on every change.
+const syncHtmlLang = (lng?: string) => {
+  if (typeof document === 'undefined') return;
+  const code = (lng || i18n.resolvedLanguage || i18n.language || 'en').split('-')[0];
+  document.documentElement.lang = code === 'pt' ? 'pt-BR' : code;
+};
+
+i18n.on('languageChanged', syncHtmlLang);
+i18n.on('initialized', () => syncHtmlLang());
+syncHtmlLang(i18n.language);
 
 export default i18n;

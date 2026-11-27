@@ -15,9 +15,9 @@ primeiro.
 **Organization**: tarefas agrupadas por user story. Cada tarefa indica o **agente responsável**
 (constituição, Princípio VIII):
 
-- `[backend]` → `dotnet-senior-developer`
+- `[backend]` → `dotnet-developer`
 - `[qa]` → `qa-developer`
-- `[frontend]` → `frontend-react-developer`
+- `[frontend]` → `react-developer`
 - `[main]` → sessão principal, só para artefatos em `specs/`, `.specify/`, `CLAUDE.md`, `.claude/` e verificações
 
 **Ordem das fases**: US1 (P1) → US3 (P3) → US2 (P1). A US2, "sobe sem o zTools", só pode ser
@@ -246,14 +246,14 @@ T007 MailerSendAppServiceTests.cs
 T008 WinnerServiceTests.cs
 
 # Em paralelo, duas trilhas:
-backend  (dotnet-senior-developer): T009 → T010 → T011 → T012 → T013
-frontend (frontend-react-developer): T014 → T015 → T016 → T017
+backend  (dotnet-developer): T009 → T010 → T011 → T012 → T013
+frontend (react-developer): T014 → T015 → T016 → T017
 ```
 
 ## Parallel Example: US1 × US3
 
 ```text
-dotnet-senior-developer: T010 (MailerSend)  ...  depois T019 (S3)
+dotnet-developer: T010 (MailerSend)  ...  depois T019 (S3)
 qa-developer:            T007, T008          e    T018
 ```
 

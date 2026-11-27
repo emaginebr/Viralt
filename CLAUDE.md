@@ -2,9 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Viralt é uma plataforma de campanhas virais (sorteios, concursos, widgets embarcáveis) com API .NET e frontend React.
+
+## Constitution
+
+A constitution do projeto está em [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
+e é **inegociável**: leia-a antes de planejar ou implementar qualquer mudança e siga suas regras de
+stack, convenções, estrutura de pastas e responsabilidades dos agentes.
+
+- Componentes: backend (`backend/`) + frontend (`frontend/`); deploy no cluster Kubernetes (`deploy/k8s/`).
+- Agentes: `dotnet-developer` → `backend/`; `react-developer` → `frontend/`; `qa-developer` → testes em `backend/`; `ux-designer` → design; `devops-engineer` → infra/deploy; `analyst` → `docs/`.
+- Alterações na constitution só via `/speckit.constitution` (ou `/generate-constitution`).
+- Commits com prefixo `fix:` por padrão (GitVersion); outro prefixo (`feat:`, `major:`...) só quando o
+  usuário pedir.
+- A v4 adota padrões que o código ainda não segue (JWT via `dotnet-auth`, Kubernetes). O que está descrito abaixo é o **estado atual** do código; veja a seção "Transição" da constitution. O frontend já está em Vite + Tailwind (feature 003).
+
 ## Important Constraints
 
-- **Docker is NOT accessible** from the local machine shell. Never attempt to run `docker`, `docker.exe`, or `docker compose` commands.
+- **Docker** runs only inside WSL2 (skill `wsl-docker`); there is no `docker` binary on Windows — never run it directly from PowerShell/Git Bash.
 - When database operations are needed, use `dotnet ef` commands directly against a running PostgreSQL instance configured in appsettings.
 
 ## Build & Run Commands
@@ -12,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Repository layout
 
 - `backend/` — .NET solution (`Viralt.sln`, all `Viralt.*` projects, `Dockerfile`, `.dockerignore`)
-- `frontend/` — React app (CRA), with its own `Dockerfile` and `nginx.conf`
+- `frontend/` — React app (Vite 6 + Tailwind CSS 4), with its own `Dockerfile` and `nginx.conf`
 - Root — `docker-compose.yml`, `docker-compose-prod.yml` (build contexts `./backend` and `./frontend`), `nginx/`, `SQL/`, `docs/`, `specs/`, `.env*`
 
 ### Backend (.NET 8)
@@ -38,17 +53,18 @@ dotnet test Viralt.Tests
 dotnet ef migrations script --project Viralt.Infra --startup-project Viralt.API --idempotent
 ```
 
-### Frontend (CRA + TypeScript)
+### Frontend (Vite + TypeScript + Tailwind)
 
 ```bash
 cd frontend
-npm install --legacy-peer-deps   # required due to react-native-svg peer conflict
-npm start                         # dev server
-npm run build                     # production build
-npm test                          # jest tests
+npm install          # Node >= 20; no --legacy-peer-deps
+npm run dev          # dev server on http://localhost:3000 (npm start is an alias)
+npm run build        # tsc --noEmit && vite build -> build/
+npm run preview      # serve build/ locally
+npm test             # vitest run (src/test/)
 ```
 
-**Note:** Uses `REACT_APP_*` env vars (CRA pattern, not Vite). Entry point is `src/index.tsx`.
+**Note:** Uses `VITE_*` env vars via `import.meta.env` (never `process.env` / `REACT_APP_*`). `index.html` lives in `frontend/` root; entry point is `src/index.tsx`.
 
 ## Architecture
 
@@ -95,6 +111,9 @@ frontend/src/
 │   └── apiHelpers.ts             → getHeaders(auth), saveSession, loadSession, clearSession
 ├── Pages/           → Route page components
 ├── Components/      → Shared UI components
+│   └── ui/          → Design system base components (Button, Input, Modal, Alert, Table, Tabs, DropdownMenu…)
+├── styles/          → index.css (Tailwind) + theme.css (design tokens, copy of docs/design/theme.css)
+├── test/            → Vitest setup and tests
 ├── Business/        → Business logic layer (legacy pattern)
 ├── DTO/             → Frontend data types (legacy pattern)
 ├── Infra/           → Axios HttpClient (legacy pattern)
@@ -112,6 +131,8 @@ frontend/src/
 - Contexts in `src/Contexts/` — combined Context+Provider, `useCallback` on all methods
 - Hooks in `src/hooks/` — thin wrappers with null-check
 
+**Styling:** Tailwind CSS 4 with the "Bilhete Premiado" design system (`docs/design/`). The default Tailwind palette is disabled — only theme tokens exist (`bg-primary`, `text-foreground`, `border-input`…). Build screens from `Components/ui/`; no Bootstrap, MUI or ad-hoc colors. Modals/menus/tabs use Radix, toasts use sonner, icons use FontAwesome, fonts are self-hosted (`@fontsource-variable`).
+
 **Case sensitivity:** Directory casing matters for Docker/Linux builds. Actual casing on disk: `Contexts/` (uppercase C), `Services/` (uppercase S), `hooks/` (lowercase), `types/` (lowercase). All imports must match.
 
 ## Environment Variables
@@ -125,9 +146,10 @@ frontend/src/
 
 No intermediary service is used (constitution v3.0.0, Principle X): e-mail and storage go through `IMailerSendAppService` / `IImageAppService` in `Viralt.Infra/AppServices`. Missing MailerSend/S3 config fails on first use, not at startup.
 
-### Frontend (.env)
-- `REACT_APP_API_URL` — Backend API base URL (e.g., `http://localhost:5000`)
-- `REACT_APP_SITE_BASENAME` — Router base path
+### Frontend (.env, build-time)
+- `VITE_API_URL` — Backend API base URL (e.g., `http://localhost:5000`); empty = same origin
+- `VITE_SITE_BASENAME` — Vite `base` and router basename (default `/`)
+- `VITE_PROJECT_NAME`, `VITE_WEBSITE_NAME` — display name / `<title>`
 
 ## Custom Skills
 

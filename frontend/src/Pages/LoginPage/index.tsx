@@ -1,140 +1,142 @@
-import { useContext, useState } from "react";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
-import AuthContext from "../../Contexts/Auth/AuthContext";
-import Button from "react-bootstrap/esm/Button";
-import Card from 'react-bootstrap/Card';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBitcoinSign, faClose, faEnvelope, faLock, faMailBulk, faSave, faSign, faSignIn, faSignInAlt, faTrash, faUser, faUserAlt } from '@fortawesome/free-solid-svg-icons';
-import Table from "react-bootstrap/esm/Table";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import UserContext from "../../Contexts/User/UserContext";
-import MessageToast from "../../Components/MessageToast";
-import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
-import { useLocation } from 'react-router-dom';
-import NetworkContext from "../../Contexts/Network/NetworkContext";
+import { useContext, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope, faLock, faSignInAlt, faUser, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import AuthContext from "../../Contexts/Auth/AuthContext";
+import NetworkContext from "../../Contexts/Network/NetworkContext";
+import { Alert, Button, Card, CardContent, Checkbox, Input, PageContainer } from "../../Components/ui";
 
-export default function LoginPage() {
+interface LoginErrors {
+    email?: string;
+    password?: string;
+}
+
+const LoginPage = () => {
 
     const { t } = useTranslation();
 
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [fieldErrors, setFieldErrors] = useState<LoginErrors>({});
+    const [serverError, setServerError] = useState<string | null>(null);
 
-    const [showMessage, setShowMessage] = useState<boolean>(false);
-    const [messageText, setMessageText] = useState<string>("");
-  
-    const throwError = (message: string) => {
-      setMessageText(message);
-      setShowMessage(true);
-    };
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
 
     const authContext = useContext(AuthContext);
     const networkContext = useContext(NetworkContext);
 
-    let navigate = useNavigate();
+    const navigate = useNavigate();
     const [queryParams] = useSearchParams();
 
     const getReturnUrl = () => {
-        //const location = useLocation();
-        console.log(JSON.stringify(queryParams));
         if (queryParams.has("returnUrl")) {
             return queryParams.get("returnUrl");
         }
         return "/";
     };
 
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setServerError(null);
+        if (!email) {
+            setFieldErrors({ email: t('login_error_email_empty') });
+            emailRef.current?.focus();
+            return;
+        }
+        if (!password) {
+            setFieldErrors({ password: t('login_error_password_empty') });
+            passwordRef.current?.focus();
+            return;
+        }
+        setFieldErrors({});
+        const ret = await authContext.loginWithEmail(email, password);
+        if (ret.sucesso) {
+            const netRet = await networkContext.listByUser();
+            if (netRet.sucesso) {
+                navigate(getReturnUrl());
+            }
+            else {
+                setServerError(ret.mensagemErro);
+            }
+        }
+        else {
+            setServerError(ret.mensagemErro);
+        }
+    };
+
     return (
-        <>
-              <MessageToast
-                    dialog={MessageToastEnum.Error}
-                    showMessage={showMessage}
-                    messageText={messageText}
-                    onClose={() => setShowMessage(false)}
-                ></MessageToast>
-        <Container>
-            <Row>
-                <Col md="8" className='offset-md-2'>
-                    <Card>
-                        <Card.Header>
-                            <h3 className="text-center">{t('login_title')}</h3>
-                        </Card.Header>
-                        <Card.Body>
-                            <Form>
-                                <div className="text-center mb-3">
-                                    {t('login_instruction')}
-                                </div>
-                                <Form.Group as={Row} className="mb-3">
-                                    <Form.Label column sm="3">{t('login_email_label')}:</Form.Label>
-                                    <Col sm="9">
-                                        <InputGroup>
-                                            <InputGroup.Text><FontAwesomeIcon icon={faUser} fixedWidth /></InputGroup.Text>
-                                            <Form.Control type="email" size="lg" placeholder={t('login_email_placeholder')} value={email} onChange={(e) => {
-                                                setEmail(e.target.value);
-                                            }} />
-                                        </InputGroup>
-                                    </Col>
-                                </Form.Group>
-                                <Form.Group as={Row} className="mb-3">
-                                    <Form.Label column sm="3">{t('login_password_label')}:</Form.Label>
-                                    <Col sm="9">
-                                        <InputGroup>
-                                            <InputGroup.Text><FontAwesomeIcon icon={faLock} fixedWidth /></InputGroup.Text>
-                                            <Form.Control type="password" size="lg" placeholder={t('login_password_placeholder')} value={password} onChange={(e) => {
-                                                setPassword(e.target.value);
-                                            }} />
-                                        </InputGroup>
-                                    </Col>
-                                </Form.Group>
-                                <Form.Group as={Row} className="mb-3">
-                                    <Col sm="9" className="offset-sm-3">
-                                        <Form.Check type="checkbox" label={t('login_remember_password_label')} />
-                                    </Col>
-                                </Form.Group>
-                                <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-                                    <Button variant="secondary" size="lg" onClick={() => {
-                                        navigate("/account/recovery-password");
-                                    }}><FontAwesomeIcon icon={faEnvelope} fixedWidth /> Recovery Password?</Button>
-                                    <Button variant="danger" size="lg" onClick={() => { {/* TODO: Translate "Recovery Password?" */}
-                                        navigate("/account/new-account");
-                                    }}><FontAwesomeIcon icon={faUserAlt} fixedWidth /> {t('login_create_account_button')}</Button>
-                                    <Button variant="success" size="lg" disabled={authContext.loading} onClick={async (e) => {
-                                        e.preventDefault();
-                                        if (!email) {
-                                            throwError(t('login_error_email_empty'));
-                                            return;
-                                        }
-                                        if (!password) {
-                                            throwError(t('login_error_password_empty'));
-                                            return;
-                                        }
-                                        let ret = await authContext.loginWithEmail(email, password);  
-                                        if (ret.sucesso) {
-                                            let netRet = await networkContext.listByUser();
-                                            if (netRet.sucesso) {
-                                                navigate(getReturnUrl());
-                                            }
-                                            else {
-                                                throwError(ret.mensagemErro);
-                                            }
-                                        }  
-                                        else {
-                                            throwError(ret.mensagemErro);
-                                        }
-                                    }}>
-                                        <FontAwesomeIcon icon={faSignInAlt} fixedWidth /> {authContext.loading ? t('loading') : t('login_button')}
-                                    </Button>
-                                </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
-        </>
+        <PageContainer variant="narrow">
+            <Card as="section" aria-labelledby="login-title">
+                <CardContent className="flex flex-col gap-6">
+                    <div className="text-center">
+                        <h1 id="login-title" tabIndex={-1} className="font-display text-2xl font-bold focus:outline-none">{t('login_title')}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('login_instruction')}</p>
+                    </div>
+
+                    <form noValidate onSubmit={handleSubmit} aria-labelledby="login-title" className="flex flex-col gap-4">
+                        {serverError && (
+                            <Alert
+                                variant="danger"
+                                dismissible
+                                dismissLabel={t('shared.dismissAlert')}
+                                onDismiss={() => setServerError(null)}
+                            >
+                                {serverError}
+                            </Alert>
+                        )}
+                        <Input
+                            ref={emailRef}
+                            id="login-email"
+                            type="email"
+                            autoComplete="email"
+                            inputMode="email"
+                            label={t('login_email_label')}
+                            leftIcon={<FontAwesomeIcon icon={faUser} />}
+                            placeholder={t('login_email_placeholder')}
+                            value={email}
+                            error={fieldErrors.email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <Input
+                            ref={passwordRef}
+                            id="login-password"
+                            type="password"
+                            autoComplete="current-password"
+                            label={t('login_password_label')}
+                            leftIcon={<FontAwesomeIcon icon={faLock} />}
+                            placeholder={t('login_password_placeholder')}
+                            value={password}
+                            error={fieldErrors.password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <Checkbox id="login-remember" label={t('login_remember_password_label')} />
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            loading={authContext.loading}
+                            loadingText={t('loading')}
+                            leftIcon={<FontAwesomeIcon icon={faSignInAlt} />}
+                        >
+                            {t('login_button')}
+                        </Button>
+                    </form>
+
+                    <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:justify-between">
+                        <Button asChild variant="ghost" leftIcon={<FontAwesomeIcon icon={faEnvelope} aria-hidden="true" />}>
+                            <Link to="/account/recovery-password">{t('login_recovery_password_button')}</Link>
+                        </Button>
+                        <Button asChild variant="outline" leftIcon={<FontAwesomeIcon icon={faUserPlus} aria-hidden="true" />}>
+                            <Link to="/account/new-account">{t('login_create_account_button')}</Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </PageContainer>
     );
-}
+};
+
+export default LoginPage;

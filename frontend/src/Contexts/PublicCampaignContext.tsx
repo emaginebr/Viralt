@@ -1,7 +1,9 @@
 import { createContext, useState, useCallback, PropsWithChildren } from 'react';
-import { publicService } from '../Services/publicService';
+import { publicService, toLocalClientEntry } from '../Services/publicService';
+import { loadParticipantToken, saveParticipantToken } from '../Services/apiHelpers';
 import type { CampaignInfo } from '../types/campaign';
-import type { ClientInfo } from '../types/client';
+import type { EntryMethodData } from '../types/campaignEntry';
+import type { PrizeInfo } from '../types/prize';
 import type {
   LeaderboardEntry, ClientEntry, RegisterData, CompleteEntryData,
   RegisterResult, CompleteEntryResult,
@@ -10,6 +12,10 @@ import type {
 interface PublicCampaignContextType {
   // State
   campaign: CampaignInfo | null;
+  /** Campaign prizes, sorted by sortOrder */
+  prizes: PrizeInfo[];
+  /** Campaign entry actions, sorted by sortOrder */
+  entryMethods: EntryMethodData[];
   entries: ClientEntry[];
   leaderboard: LeaderboardEntry[];
   myToken: string | null;
@@ -20,6 +26,7 @@ interface PublicCampaignContextType {
   // Methods
   loadCampaign: (slug: string) => Promise<void>;
   register: (data: RegisterData) => Promise<RegisterResult>;
+  /** entryMethodId = CampaignEntry.entryId */
   completeEntry: (entryMethodId: number, value: string | null) => Promise<CompleteEntryResult>;
   loadLeaderboard: (slug: string, top?: number) => Promise<void>;
   loadMyEntries: (token: string) => Promise<void>;
@@ -30,6 +37,8 @@ const PublicCampaignContext = createContext<PublicCampaignContextType | undefine
 
 export const PublicCampaignProvider = ({ children }: PropsWithChildren) => {
   const [campaign, setCampaign] = useState<CampaignInfo | null>(null);
+  const [prizes, setPrizes] = useState<PrizeInfo[]>([]);
+  const [entryMethods, setEntryMethods] = useState<EntryMethodData[]>([]);
   const [entries, setEntries] = useState<ClientEntry[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [myToken, setMyToken] = useState<string | null>(null);
@@ -48,8 +57,12 @@ export const PublicCampaignProvider = ({ children }: PropsWithChildren) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await publicService.getCampaign(slug);
-      setCampaign(result);
+      const result = await publicService.getCampaignDetails(slug);
+      setCampaign(result ? result.campaign : null);
+      setPrizes(result ? result.prizes : []);
+      setEntryMethods(result ? result.entryMethods : []);
+      // Returning participant: reuse the token saved at registration
+      setMyToken(result ? loadParticipantToken(slug) : null);
     } catch (err) {
       handleError(err);
     } finally {
@@ -62,9 +75,10 @@ export const PublicCampaignProvider = ({ children }: PropsWithChildren) => {
       setError(null);
       setLoading(true);
       const result = await publicService.register(data);
-      if (result.sucesso && result.client) {
-        setMyToken(result.client.token);
-        setTotalEntries(result.client.totalEntries);
+      if (result.sucesso && result.token) {
+        saveParticipantToken(data.campaignSlug, result.token);
+        setMyToken(result.token);
+        setTotalEntries(result.totalEntries ?? 0);
       }
       return result;
     } catch (err) {
@@ -79,13 +93,14 @@ export const PublicCampaignProvider = ({ children }: PropsWithChildren) => {
       setError(null);
       if (!myToken) throw new Error('Not registered');
       const result = await publicService.completeEntry({
-        clientToken: myToken,
-        entryMethodId,
-        value,
+        token: myToken,
+        entryId: entryMethodId,
+        entryValue: value,
       });
-      if (result.sucesso && result.clientEntry) {
-        setMyEntries((prev) => [...prev, result.clientEntry as ClientEntry]);
-        setTotalEntries((prev) => prev + (result.clientEntry?.points || 0));
+      if (result.sucesso) {
+        const earned = result.entriesEarned ?? 0;
+        setMyEntries((prev) => [...prev, toLocalClientEntry(entryMethodId, earned)]);
+        setTotalEntries((prev) => (typeof result.totalEntries === 'number' ? result.totalEntries : prev + earned));
       }
       return result;
     } catch (err) {
@@ -118,7 +133,7 @@ export const PublicCampaignProvider = ({ children }: PropsWithChildren) => {
   const clearError = useCallback(() => { setError(null); }, []);
 
   const value: PublicCampaignContextType = {
-    campaign, entries, leaderboard, myToken, myEntries, totalEntries, loading, error,
+    campaign, prizes, entryMethods, entries, leaderboard, myToken, myEntries, totalEntries, loading, error,
     loadCampaign, register, completeEntry, loadLeaderboard, loadMyEntries, clearError,
   };
 

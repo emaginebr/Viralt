@@ -1,99 +1,121 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Col from "react-bootstrap/esm/Col";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import { faFacebook, faInstagram, faTwitter } from '@fortawesome/free-brands-svg-icons';
-import { Link, useNavigate, useParams } from "react-router-dom";
 import { useContext } from "react";
-import AuthContext from "../Contexts/Auth/AuthContext";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { faFacebook, faInstagram, faLinkedin, faXTwitter, type IconDefinition } from "@fortawesome/free-brands-svg-icons";
+import AuthContext from "../Contexts/Auth/AuthContext";
+import { cn } from "./ui/cn";
 
-export default function Footer() {
+interface SocialLink {
+  label: string;
+  icon: IconDefinition;
+  url: string;
+}
 
+/**
+ * Social profiles. Only entries with a URL are rendered (the old template had placeholder
+ * `href=""` links, which were removed).
+ */
+const SOCIAL_LINKS: SocialLink[] = [
+  { label: 'X', icon: faXTwitter, url: '' },
+  { label: 'Facebook', icon: faFacebook, url: '' },
+  { label: 'Instagram', icon: faInstagram, url: '' },
+  { label: 'LinkedIn', icon: faLinkedin, url: '' },
+];
+
+const linkClasses = cn(
+  'inline-flex min-h-11 items-center rounded-sm text-sm text-secondary-muted-foreground',
+  'hover:text-secondary-foreground hover:underline underline-offset-4',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse',
+);
+
+/** Public footer (Home and pages without the sidebar), on the dark "uva" surface. */
+const Footer = () => {
   const { t } = useTranslation();
-
   const authContext = useContext(AuthContext);
+  const projectName = import.meta.env.VITE_PROJECT_NAME || 'Viralt';
+  const year = new Date().getFullYear();
+  const socialLinks = SOCIAL_LINKS.filter((link) => link.url);
 
   return (
-    <>
-      <footer id="footer" className="footer">
-
-        <div className="container footer-top">
-          <div className="row gy-4">
-            <div className="col-lg-4 col-md-6 footer-about">
-              <a href="index.html" className="logo d-flex align-items-center">
-                <span className="sitename">iLanding</span>
-              </a>
-              <div className="footer-contact pt-3">
-                <p>A108 Adam Street</p>
-                <p>New York, NY 535022</p>
-                <p className="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-                <p><strong>Email:</strong> <span>info@example.com</span></p>
-              </div>
-              <div className="social-links d-flex mt-4">
-                <a href=""><i className="bi bi-twitter-x"></i></a>
-                <a href=""><i className="bi bi-facebook"></i></a>
-                <a href=""><i className="bi bi-instagram"></i></a>
-                <a href=""><i className="bi bi-linkedin"></i></a>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-md-3 footer-links">
-              <h4>Useful Links</h4>
-              <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About us</a></li>
-                <li><a href="#">Services</a></li>
-                <li><a href="#">Terms of service</a></li>
-                <li><a href="#">Privacy policy</a></li>
-              </ul>
-            </div>
-
-            <div className="col-lg-2 col-md-3 footer-links">
-              <h4>Our Services</h4>
-              <ul>
-                <li><a href="#">Web Design</a></li>
-                <li><a href="#">Web Development</a></li>
-                <li><a href="#">Product Management</a></li>
-                <li><a href="#">Marketing</a></li>
-                <li><a href="#">Graphic Design</a></li>
-              </ul>
-            </div>
-
-            <div className="col-lg-2 col-md-3 footer-links">
-              <h4>Hic solutasetp</h4>
-              <ul>
-                <li><a href="#">Molestiae accusamus iure</a></li>
-                <li><a href="#">Excepturi dignissimos</a></li>
-                <li><a href="#">Suscipit distinctio</a></li>
-                <li><a href="#">Dilecta</a></li>
-                <li><a href="#">Sit quas consectetur</a></li>
-              </ul>
-            </div>
-
-            <div className="col-lg-2 col-md-3 footer-links">
-              <h4>Nobis illum</h4>
-              <ul>
-                <li><a href="#">Ipsam</a></li>
-                <li><a href="#">Laudantium dolorum</a></li>
-                <li><a href="#">Dinera</a></li>
-                <li><a href="#">Trodelas</a></li>
-                <li><a href="#">Flexo</a></li>
-              </ul>
-            </div>
-
-          </div>
+    <footer className="bg-secondary text-secondary-foreground">
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr] lg:px-8">
+        <div className="flex flex-col gap-3">
+          <Link
+            to="/"
+            className="inline-flex min-h-11 w-fit items-center rounded-md font-display text-2xl font-extrabold text-secondary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse"
+          >
+            {projectName}<span className="text-accent" aria-hidden="true">.</span>
+          </Link>
+          <p className="max-w-sm text-sm text-secondary-muted-foreground">{t('footer.tagline')}</p>
+          {socialLinks.length > 0 && (
+            <ul className="mt-2 flex gap-1" aria-label={t('footer.social')}>
+              {socialLinks.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t('footer.socialLink', { network: link.label })}
+                    className="inline-flex size-11 items-center justify-center rounded-md text-secondary-foreground hover:bg-secondary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse"
+                  >
+                    <FontAwesomeIcon icon={link.icon} aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        <div className="container copyright text-center mt-4">
-          <p>© <span>Copyright</span> <strong className="px-1 sitename">iLanding</strong> <span>All Rights Reserved</span></p>
-          <div className="credits">
-            Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-          </div>
-        </div>
+        <nav aria-labelledby="footer-product">
+          <h2 id="footer-product" className="font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground">
+            {t('footer.product')}
+          </h2>
+          <ul className="mt-2 flex flex-col">
+            <li><Link to="/" className={linkClasses}>{t('layout.nav.home')}</Link></li>
+            <li><Link to="/campaigns" className={linkClasses}>{t('layout.nav.myCampaigns')}</Link></li>
+            <li><Link to="/campaigns/new" className={linkClasses}>{t('layout.nav.newCampaign')}</Link></li>
+          </ul>
+        </nav>
 
-      </footer>
-      <a href="#" id="scroll-top" className="scroll-top d-flex align-items-center justify-content-center"><i className="bi bi-arrow-up-short"></i></a>
-    </>
+        <nav aria-labelledby="footer-account">
+          <h2 id="footer-account" className="font-sans text-xs font-semibold uppercase tracking-wide text-secondary-muted-foreground">
+            {t('footer.account')}
+          </h2>
+          <ul className="mt-2 flex flex-col">
+            {authContext.sessionInfo ? (
+              <>
+                <li><Link to="/account/edit-account" className={linkClasses}>{t('edit_account')}</Link></li>
+                <li><Link to="/account/change-password" className={linkClasses}>{t('change_password')}</Link></li>
+              </>
+            ) : (
+              <>
+                <li><Link to="/account/login" className={linkClasses}>{t('layout.signIn')}</Link></li>
+                <li><Link to="/account/new-account" className={linkClasses}>{t('footer.createAccount')}</Link></li>
+              </>
+            )}
+          </ul>
+        </nav>
+      </div>
+
+      <div className="border-t border-secondary-hover">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-sm text-secondary-muted-foreground sm:flex-row sm:px-6 lg:px-8">
+          <p>{t('footer.copyright', { year, name: projectName })}</p>
+          <a
+            href="#main"
+            className={cn(
+              'inline-flex min-h-11 items-center gap-2 rounded-md px-3 font-semibold text-secondary-foreground hover:bg-secondary-hover',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-inverse',
+            )}
+          >
+            <FontAwesomeIcon icon={faArrowUp} aria-hidden="true" />
+            {t('footer.backToTop')}
+          </a>
+        </div>
+      </div>
+    </footer>
   );
-}
+};
+
+export default Footer;

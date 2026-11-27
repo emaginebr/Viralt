@@ -11,7 +11,7 @@ interface PrizeServiceConfig {
   onUnauthorized?: () => void;
 }
 
-/** Prize fields fragment for GraphQL queries */
+/** Prize fields fragment for GraphQL queries (PrizeType ignores `couponCode` in the whole schema). */
 const PRIZE_FIELDS = `
   prizeId
   campaignId
@@ -20,10 +20,44 @@ const PRIZE_FIELDS = `
   image
   quantity
   prizeType
-  couponCode
   sortOrder
   minEntriesRequired
 `;
+
+/** `Prize` as returned by GraphQL (no `couponCode`). */
+interface PrizeNode extends Omit<PrizeInfo, 'couponCode'> {}
+
+/** Prize DTO as returned by REST (Viralt.DTO.Campaign.PrizeInfo): `prizeType` is a string. */
+interface PrizeDto extends Omit<PrizeInfo, 'prizeType'> {
+  prizeType: string | number | null;
+}
+
+/** REST body (PrizeInsertInfo/PrizeUpdateInfo DTO): `prizeType` string, `minEntriesRequired` non-null int. */
+interface PrizeRequestBody extends Omit<PrizeInsertInfo, 'prizeType' | 'minEntriesRequired'> {
+  prizeId?: number;
+  prizeType: string;
+  minEntriesRequired: number;
+}
+
+/** `{ sucesso: false, mensagem }` returned instead of a DTO (e.g. empty body). */
+interface FailureBody {
+  sucesso?: boolean;
+  mensagem?: string | null;
+  erros?: string[] | null;
+}
+
+const fromNode = (node: PrizeNode): PrizeInfo => ({ ...node, couponCode: null });
+
+const fromDto = (dto: PrizeDto): PrizeInfo => {
+  const prizeType = Number(dto.prizeType);
+  return { ...dto, prizeType: Number.isFinite(prizeType) ? prizeType : 0 };
+};
+
+const toRequestBody = (data: PrizeInsertInfo | PrizeUpdateInfo): PrizeRequestBody => ({
+  ...data,
+  prizeType: String(data.prizeType ?? 0),
+  minEntriesRequired: data.minEntriesRequired ?? 0,
+});
 
 /** Prize Service — Manages all API operations related to prizes */
 class PrizeService {
@@ -45,7 +79,16 @@ class PrizeService {
     return response.json();
   }
 
-  /** List prizes by campaign (GraphQL) */
+  /** Insert/update return the PrizeInfo DTO itself, or a StatusResult on failure. */
+  private toGetResult(body: PrizeDto | FailureBody | null): PrizeGetResult {
+    const failure = body as FailureBody | null;
+    if (!body || failure.sucesso === false || !('prizeId' in body)) {
+      return { sucesso: false, mensagem: failure?.mensagem ?? 'Request failed', erros: failure?.erros ?? null, prize: null };
+    }
+    return { sucesso: true, mensagem: '', erros: null, prize: fromDto(body as PrizeDto) };
+  }
+
+  /** List prizes by campaign (GraphQL `prizesByCampaign`, already ordered by sortOrder) */
   async listByCampaign(campaignId: number): Promise<PrizeListResult> {
     const query = `
       query ListPrizesByCampaign($campaignId: Long!) {
@@ -54,29 +97,29 @@ class PrizeService {
         }
       }
     `;
-    const data = await graphqlQuery<{ prizesByCampaign: PrizeInfo[] }>(
+    const data = await graphqlQuery<{ prizesByCampaign: PrizeNode[] | null }>(
       GRAPHQL_ADMIN, query, { campaignId }, true
     );
-    return { sucesso: true, mensagem: '', erros: null, prizes: data.prizesByCampaign };
+    return { sucesso: true, mensagem: '', erros: null, prizes: (data?.prizesByCampaign ?? []).map(fromNode) };
   }
 
-  /** Create a new prize (REST) */
+  /** Create a new prize (REST POST /api/Prize/insert) */
   async insert(data: PrizeInsertInfo): Promise<PrizeGetResult> {
     const response = await fetch(`${API_BASE}/insert`, {
-      method: 'POST', headers: getHeaders(true), body: JSON.stringify(data),
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(toRequestBody(data)),
     });
-    return this.handleResponse<PrizeGetResult>(response);
+    return this.toGetResult(await this.handleResponse<PrizeDto | FailureBody>(response));
   }
 
-  /** Update an existing prize (REST) */
+  /** Update an existing prize (REST POST /api/Prize/update) */
   async update(data: PrizeUpdateInfo): Promise<PrizeGetResult> {
     const response = await fetch(`${API_BASE}/update`, {
-      method: 'POST', headers: getHeaders(true), body: JSON.stringify(data),
+      method: 'POST', headers: getHeaders(true), body: JSON.stringify(toRequestBody(data)),
     });
-    return this.handleResponse<PrizeGetResult>(response);
+    return this.toGetResult(await this.handleResponse<PrizeDto | FailureBody>(response));
   }
 
-  /** Delete a prize by ID (REST) */
+  /** Delete a prize by ID (REST DELETE /api/Prize/delete/{id}) */
   async delete(id: number): Promise<PrizeStatusResult> {
     const response = await fetch(`${API_BASE}/delete/${id}`, {
       method: 'DELETE', headers: getHeaders(true),

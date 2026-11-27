@@ -1,85 +1,85 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link, useNavigate } from "react-router-dom";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Col from "react-bootstrap/esm/Col";
-import Card from "react-bootstrap/esm/Card";
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
-import { useContext, useEffect } from "react";
-import NetworkContext from "../../Contexts/Network/NetworkContext";
-import Skeleton from "react-loading-skeleton";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import NetworkInfo from "../../DTO/Domain/NetworkInfo";
+import { Card, Skeleton, SkeletonGroup, SkeletonText, cn, focusRing } from "../../Components/ui";
 
 interface INetworkParam {
     loading: boolean,
     networks: NetworkInfo[]
 }
 
-export default function NetworkPart(param: INetworkParam) {
+const SKELETON_ITEMS = [1, 2, 3, 4];
+
+const NetworkPart = (param: INetworkParam) => {
 
     const { t } = useTranslation();
 
+    const hasNetworks = Boolean(param.networks?.length);
+    // Without data the section would be an empty title: render only while loading or with items.
+    if (!param.loading && !hasNetworks) {
+        return null;
+    }
+
     return (
-        <>
-            <section className="py-4 py-lg-6 bg-light">
-                <Container>
-                    <Row className="mb-4">
-                        <Col md={12} className="text-center">
-                            <h4 className="display-2 mb-0">{t('home_networkpart_title')}</h4>
-                        </Col>
-                    </Row>
-                    {param.loading &&
-                        <Row>
-                        {[1,2,3,4].map((index) => {
-                            return (
-                                <Col lg={3}>
-                                    <Card className="shadow-lg p-3">
-                                        <Skeleton style={{width: "100%", height: "7rem"}} />
-                                        <Card.Body>
-                                            <div className="lc-block text-center mb-3">
-                                                <div>
-                                                    <h3><Skeleton /></h3>
-                                                </div>
-                                            </div>
-                                            <div className="lc-block text-center">
-                                                <Skeleton count={2} />
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            );
-                        })}
-                        </Row>
-                    }
-                    <Row className="mb-5">
-                        {!param.loading && param.networks?.map((network) => {
-                            return (
-                                <Col lg={3}>
-                                    <Card className="shadow-lg p-3">
-                                        {network.imageUrl &&
-                                            <Link to={"/" + network.slug}>
-                                            <Card.Img src={network.imageUrl} style={{ width: "100%", height: "7rem", objectFit: "cover" }} />
+        <section aria-labelledby="home-networks-title" className="border-t border-border bg-muted">
+            <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+                <h2 id="home-networks-title" className="font-display text-3xl font-extrabold lg:text-4xl">
+                    {t('home_networkpart_title')}
+                </h2>
+                {param.loading ?
+                    <SkeletonGroup label={t('home_networkpart_loading')} className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        {SKELETON_ITEMS.map((index) => (
+                            <Card key={index} className="overflow-hidden">
+                                <Skeleton className="h-28 rounded-none" />
+                                <div className="flex flex-col gap-3 p-5">
+                                    <Skeleton className="h-6 w-2/3" />
+                                    <SkeletonText lines={2} />
+                                </div>
+                            </Card>
+                        ))}
+                    </SkeletonGroup>
+                    :
+                    <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        {param.networks?.map((network) => (
+                            <li key={network.networkId ?? network.slug}>
+                                <Card variant="interactive" as="article" className="h-full overflow-hidden">
+                                    {network.imageUrl ?
+                                        <img
+                                            src={network.imageUrl}
+                                            alt=""
+                                            width={320}
+                                            height={112}
+                                            loading="lazy"
+                                            className="h-28 w-full object-cover"
+                                        />
+                                        :
+                                        <div aria-hidden="true" className="h-28 bg-secondary" />
+                                    }
+                                    <div className="flex flex-col gap-2 p-5">
+                                        <h3 className="font-sans text-lg font-bold">
+                                            <Link
+                                                to={"/" + network.slug}
+                                                className={cn(
+                                                    "rounded-sm underline-offset-2 hover:underline after:absolute after:inset-0",
+                                                    focusRing,
+                                                )}
+                                            >
+                                                {network.name}
                                             </Link>
-                                        }
-                                        <Card.Body>
-                                            <div className="lc-block text-center mb-3">
-                                                <div>
-                                                    <h3><Link to={"/" + network.slug}>{network.name}</Link></h3>
-                                                </div>
-                                            </div>
-                                            <div className="lc-block text-center">
-                                                {t('home_networkpart_affiliate_sellers', { count: network.qtdyUsers })}&nbsp;
-                                                {t('home_networkpart_open_positions', { count: (network.maxUsers - network.qtdyUsers) })}
-                                            </div>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            );
-                        })}
-                    </Row>
-                </Container>
-            </section>
-        </>
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {t('home_networkpart_affiliate_sellers', { count: network.qtdyUsers })}{" "}
+                                            {t('home_networkpart_open_positions', { count: (network.maxUsers - network.qtdyUsers) })}
+                                        </p>
+                                    </div>
+                                </Card>
+                            </li>
+                        ))}
+                    </ul>
+                }
+            </div>
+        </section>
     );
-}
+};
+
+export default NetworkPart;

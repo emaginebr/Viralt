@@ -1,47 +1,81 @@
-import { useContext, useEffect, useState } from "react";
-import AuthContext from "../../Contexts/Auth/AuthContext";
-import Container from "react-bootstrap/esm/Container";
-import Row from "react-bootstrap/esm/Row";
-import Col from "react-bootstrap/esm/Col";
-import Card from "react-bootstrap/esm/Card";
-import Alert from 'react-bootstrap/Alert';
-import Spinner from 'react-bootstrap/Spinner';
+import { useContext, useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWarning, faPlus, faBurn, faFire, faSearch, faDollar, faClock, faBoltLightning, faLock, faFileUpload, faCalendar, faCalendarAlt, faFileWord, faBoxOpen, faSign, faLockOpen, faUserDoctor, faChartLine, faChartPie, faCoins, faArrowRight, faUserGroup, faBox, faCog, faCogs, faUserCog, faList, faUser, faBullhorn, faUsers, faTicket } from '@fortawesome/free-solid-svg-icons';
+import {
+    faArrowRight, faBox, faBullhorn, faChartLine, faChevronRight, faCog, faDollar, faList,
+    faTicket, faUserCog, faUserGroup, faUsers, type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
+import AuthContext from "../../Contexts/Auth/AuthContext";
+import NetworkContext from "../../Contexts/Network/NetworkContext";
+import InvoiceContext from "../../Contexts/Invoice/InvoiceContext";
 import { analyticsService } from "../../Services/analyticsService";
 import type { DashboardAnalytics } from "../../types/analytics";
-import Button from "react-bootstrap/esm/Button";
-import { useNavigate } from "react-router-dom";
-import { faBitcoin, faOpencart } from "@fortawesome/free-brands-svg-icons";
-import CardHeader from "react-bootstrap/esm/CardHeader";
-import CardTitle from "react-bootstrap/esm/CardTitle";
-import CardBody from "react-bootstrap/esm/CardBody";
-import CardText from "react-bootstrap/esm/CardText";
-import Table from "react-bootstrap/esm/Table";
-import ListGroup from 'react-bootstrap/ListGroup';
-import Badge from 'react-bootstrap/Badge';
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
-import NetworkContext from "../../Contexts/Network/NetworkContext";
 import { UserRoleEnum } from "../../DTO/Enum/UserRoleEnum";
-import CountPart from "./CountPart";
-import InvoiceContext from "../../Contexts/Invoice/InvoiceContext";
-import MessageToast from "../../Components/MessageToast";
 import { MessageToastEnum } from "../../DTO/Enum/MessageToastEnum";
-import Skeleton from "react-loading-skeleton";
-import StatementPart from "./StatementPart";
 import StatementSearchParam from "../../DTO/Domain/StatementSearchParam";
-import { useTranslation } from "react-i18next";
+import MessageToast from "../../Components/MessageToast";
+import {
+    Alert, Button, Card, CardContent, CardHeader, CardTitle, PageContainer, PageHeader, Skeleton,
+    Spinner, Tabs, cn, focusRing,
+} from "../../Components/ui";
+import CountPart from "./CountPart";
+import StatementPart from "./StatementPart";
 
-export default function DashboardPage() {
+interface IStatCard {
+    icon: IconDefinition;
+    iconClass: string;
+    value: number;
+    label: string;
+}
+
+interface IShortcut {
+    to: string;
+    icon: IconDefinition;
+    label: string;
+}
+
+interface IShortcutGroupProps {
+    id: string;
+    icon: IconDefinition;
+    title: string;
+    items: IShortcut[];
+}
+
+const ShortcutGroup = ({ id, icon, title, items }: IShortcutGroupProps) => (
+    <section aria-labelledby={id}>
+        <h3 id={id} className="flex items-center gap-2 bg-primary-subtle px-5 py-3 font-sans text-sm font-semibold text-primary">
+            <FontAwesomeIcon icon={icon} fixedWidth aria-hidden="true" />
+            {title}
+        </h3>
+        <ul className="divide-y divide-border">
+            {items.map((item) => (
+                <li key={item.to}>
+                    <Link
+                        to={item.to}
+                        className={cn(
+                            'flex min-h-14 items-center gap-3 px-5 py-3 text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted',
+                            focusRing,
+                            'focus-visible:-outline-offset-2',
+                        )}
+                    >
+                        <FontAwesomeIcon icon={item.icon} fixedWidth aria-hidden="true" className="text-muted-foreground" />
+                        <span className="flex-1">{item.label}</span>
+                        <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" className="text-xs text-muted-foreground" />
+                    </Link>
+                </li>
+            ))}
+        </ul>
+    </section>
+);
+
+const DashboardPage = () => {
 
     const authContext = useContext(AuthContext);
     const networkContext = useContext(NetworkContext);
     const invoiceContext = useContext(InvoiceContext);
 
     const { t } = useTranslation();
-
-    let navigate = useNavigate();
 
     const [dialog, setDialog] = useState<MessageToastEnum>(MessageToastEnum.Error);
     const [showMessage, setShowMessage] = useState<boolean>(false);
@@ -53,11 +87,6 @@ export default function DashboardPage() {
 
     const throwError = (message: string) => {
         setDialog(MessageToastEnum.Error);
-        setMessageText(message);
-        setShowMessage(true);
-    };
-    const showSuccessMessage = (message: string) => {
-        setDialog(MessageToastEnum.Success);
         setMessageText(message);
         setShowMessage(true);
     };
@@ -81,7 +110,7 @@ export default function DashboardPage() {
                 break;
         }
         if (networkContext.currentRole != UserRoleEnum.User) {
-            var ret = await invoiceContext.searchStatement(param);
+            const ret = await invoiceContext.searchStatement(param);
             if (!ret.sucesso) {
                 throwError(ret.mensagemErro);
             }
@@ -119,6 +148,54 @@ export default function DashboardPage() {
         }
     }, []);
 
+    const isNotUser = networkContext.currentRole != UserRoleEnum.User;
+
+    const statCards: IStatCard[] = dashboardAnalytics ? [
+        { icon: faBullhorn, iconClass: "bg-primary-subtle text-primary", value: dashboardAnalytics.activeCampaigns, label: t('adminUi.dashboard.activeCampaigns') },
+        { icon: faUsers, iconClass: "bg-success-subtle text-success", value: dashboardAnalytics.totalParticipantsAll, label: t('adminUi.dashboard.totalParticipants') },
+        { icon: faTicket, iconClass: "bg-warning-subtle text-warning", value: dashboardAnalytics.totalEntriesAll, label: t('adminUi.dashboard.totalEntries') },
+    ] : [];
+
+    let analyticsContent: ReactNode;
+    if (analyticsLoading) {
+        analyticsContent = (
+            <div className="flex justify-center py-6">
+                <Spinner label={t('loading')} showLabel />
+            </div>
+        );
+    }
+    else if (dashboardAnalytics) {
+        analyticsContent = (
+            <dl className="grid gap-4 md:grid-cols-3">
+                {statCards.map((stat) => (
+                    <Card key={stat.label} className="flex items-center gap-4 p-5">
+                        <span aria-hidden="true" className={cn("inline-flex size-12 shrink-0 items-center justify-center rounded-md text-xl", stat.iconClass)}>
+                            <FontAwesomeIcon icon={stat.icon} fixedWidth />
+                        </span>
+                        <div className="flex flex-col">
+                            <dt className="text-sm text-muted-foreground">{stat.label}</dt>
+                            <dd className="order-first font-display text-3xl font-extrabold tabular-nums">{stat.value}</dd>
+                        </div>
+                    </Card>
+                ))}
+            </dl>
+        );
+    }
+    else {
+        analyticsContent = <Alert variant="info">{t('adminUi.dashboard.noAnalytics')}</Alert>;
+    }
+
+    const networkShortcuts: IShortcut[] = [
+        { to: "/admin/network", icon: faCog, label: t('preferences') },
+        { to: "/admin/team-structure", icon: faUserCog, label: t('team_structure') },
+        { to: "/admin/teams", icon: faUserGroup, label: t('teams') },
+    ];
+    const financeShortcuts: IShortcut[] = [
+        { to: "/admin/orders", icon: faList, label: t('orders') },
+        { to: "/admin/invoices", icon: faDollar, label: t('invoices') },
+        { to: "/admin/products", icon: faBox, label: t('products') },
+    ];
+
     return (
         <>
             <MessageToast
@@ -127,190 +204,117 @@ export default function DashboardPage() {
                 messageText={messageText}
                 onClose={() => setShowMessage(false)}
             ></MessageToast>
-            {/* Campaign Analytics Overview */}
-            <Container className="mb-4">
-                <Row>
-                    <Col>
-                        <h5 className="mb-3"><FontAwesomeIcon icon={faChartLine} fixedWidth /> Campaign Analytics</h5>
-                    </Col>
-                </Row>
-                {analyticsLoading ? (
-                    <Row className="py-3">
-                        <Col className="text-center">
-                            <Spinner animation="border" size="sm" />
-                        </Col>
-                    </Row>
-                ) : dashboardAnalytics ? (
-                    <Row>
-                        <Col md={4}>
-                            <Card className="text-center mb-3">
-                                <Card.Body>
-                                    <FontAwesomeIcon icon={faBullhorn} size="2x" className="text-primary mb-2" />
-                                    <h3>{dashboardAnalytics.activeCampaigns}</h3>
-                                    <Card.Text className="text-muted">Active Campaigns</Card.Text>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                        <Col md={4}>
-                            <Card className="text-center mb-3">
-                                <Card.Body>
-                                    <FontAwesomeIcon icon={faUsers} size="2x" className="text-success mb-2" />
-                                    <h3>{dashboardAnalytics.totalParticipantsAll}</h3>
-                                    <Card.Text className="text-muted">Total Participants</Card.Text>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                        <Col md={4}>
-                            <Card className="text-center mb-3">
-                                <Card.Body>
-                                    <FontAwesomeIcon icon={faTicket} size="2x" className="text-warning mb-2" />
-                                    <h3>{dashboardAnalytics.totalEntriesAll}</h3>
-                                    <Card.Text className="text-muted">Total Entries</Card.Text>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
-                ) : (
-                    <Row>
-                        <Col>
-                            <Alert variant="info">No analytics data available yet.</Alert>
-                        </Col>
-                    </Row>
-                )}
-            </Container>
+            <PageContainer className="flex flex-col gap-8">
+                <PageHeader title={t('adminUi.dashboard.title')} className="-mb-6" />
 
-            <Container>
-                {networkContext.currentRole != UserRoleEnum.User &&
-                    <Row>
-                        <Col md={8}>
+                {/* Campaign Analytics Overview */}
+                <section aria-labelledby="dashboard-analytics-title" aria-busy={analyticsLoading || undefined} className="flex flex-col gap-4">
+                    <h2 id="dashboard-analytics-title" className="flex items-center gap-2 font-display text-xl font-bold">
+                        <FontAwesomeIcon icon={faChartLine} fixedWidth aria-hidden="true" className="text-primary" />
+                        {t('adminUi.dashboard.analyticsTitle')}
+                    </h2>
+                    {analyticsContent}
+                </section>
+
+                {isNotUser &&
+                    <div className="grid gap-6 lg:grid-cols-3">
+                        <div className="lg:col-span-2">
                             <CountPart />
-                        </Col>
-                        <Col md={4}>
-                            <Card bg="danger" text="light">
-                                <Card.Header>{t('dashboard_current_balance')}</Card.Header>
-                                <Card.Body style={{ textAlign: "center" }}>
-                                    <Card.Text>
-                                        <p className="fw-bold display-5 text-right">
-                                            {invoiceContext.loadingBalance ?
-                                                <Skeleton />
-                                                :
-                                                <>
-                                                    <small>R$</small>{invoiceContext.balance}
-                                                </>
-                                            }
-                                        </p>
-                                        {networkContext.currentRole == UserRoleEnum.Seller &&
-                                            <>
-                                                {invoiceContext.loadingAvailableBalance ?
-                                                    <Skeleton />
-                                                    :
-                                                    <span>{t('dashboard_amount_released_for_withdrawal')} <small>R$</small>{invoiceContext.availableBalance}</span>
-                                                }
-                                            </>
+                        </div>
+                        <Card variant="inverted" as="section" aria-labelledby="dashboard-balance-title" className="flex flex-col">
+                            <CardHeader>
+                                <CardTitle id="dashboard-balance-title" className="text-secondary-foreground">
+                                    {t('dashboard_current_balance')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex flex-1 flex-col gap-4">
+                                <p className="font-display text-4xl font-extrabold tabular-nums" aria-busy={invoiceContext.loadingBalance || undefined}>
+                                    {invoiceContext.loadingBalance ?
+                                        <Skeleton className="h-10 w-2/3" />
+                                        :
+                                        <>
+                                            <small className="text-lg font-semibold">R$</small>{invoiceContext.balance}
+                                        </>
+                                    }
+                                </p>
+                                {networkContext.currentRole == UserRoleEnum.Seller &&
+                                    <>
+                                        {invoiceContext.loadingAvailableBalance ?
+                                            <Skeleton className="h-4 w-full" />
+                                            :
+                                            <p className="text-sm text-secondary-muted-foreground">
+                                                {t('dashboard_amount_released_for_withdrawal')} <small>R$</small>{invoiceContext.availableBalance}
+                                            </p>
                                         }
-                                    </Card.Text>
-                                    <Button variant="danger" disabled>{t('dashboard_withdrawal')} <FontAwesomeIcon icon={faArrowRight} fixedWidth /></Button>
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
+                                    </>
+                                }
+                                <Button
+                                    variant="accent"
+                                    disabled
+                                    className="mt-auto self-start"
+                                    rightIcon={<FontAwesomeIcon icon={faArrowRight} fixedWidth aria-hidden="true" />}
+                                >
+                                    {t('dashboard_withdrawal')}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
                 }
-            </Container>
-            <Container>
-                <Row>
-                    <Col md={networkContext.currentRole != UserRoleEnum.User ? 8 : 12}>
-                        <Tabs
-                            defaultActiveKey="balance"
-                            id="uncontrolled-tab-example"
-                            className="mb-3"
-                        >
-                            <Tab eventKey="balance" title={
-                                <>
-                                    <FontAwesomeIcon icon={faDollar} fixedWidth />&nbsp;{t('dashboard_statement')}
-                                </>
-                            }>
-                                <StatementPart
-                                    loading={invoiceContext.loadingSearch}
-                                    StatementResult={invoiceContext.statementResult}
-                                    onChangePage={(pagenum: number) => {
-                                        searchStatements(pagenum);
-                                    }} />
-                            </Tab>
-                            <Tab eventKey="order" title={t('dashboard_orders_tab')} disabled>
-                                Tab content for Profile
-                            </Tab>
-                        </Tabs>
 
-                    </Col>
-                    {networkContext.currentRole != UserRoleEnum.User &&
-                        <Col md={4} className="py-4">
-                            <ListGroup>
-                                {networkContext.currentRole >= UserRoleEnum.NetworkManager &&
-                                    <>
-                                        <ListGroup.Item variant="primary">
-                                            <FontAwesomeIcon icon={faUserGroup} fixedWidth /> {t('dashboard_networks_title')}
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/network");
-                                        }}>
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faCog} fixedWidth /> {t('preferences')}
-                                            </div>
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/team-structure");
-                                        }}>
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faUserCog} fixedWidth /> {t('team_structure')}
-                                            </div>
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/teams");
-                                        }}>
-                                            {/*<Badge bg="primary" pill style={{ float: "right" }}>7</Badge>*/}
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faUserGroup} fixedWidth /> {t('teams')}
-                                            </div>
-                                        </ListGroup.Item>
-                                    </>
-                                }
-                                {networkContext.currentRole >= UserRoleEnum.Seller &&
-                                    <>
-                                        <ListGroup.Item variant="primary">
-                                            <FontAwesomeIcon icon={faBox} fixedWidth /> {t('finances')}
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/orders");
-                                        }}>
-                                            {/*<Badge bg="primary" pill style={{ float: "right" }}>7</Badge>*/}
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faList} fixedWidth /> {t('orders')}
-                                            </div>
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/invoices");
-                                        }}>
-                                            {/*<Badge bg="primary" pill style={{ float: "right" }}>7</Badge>*/}
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faDollar} fixedWidth /> {t('invoices')}
-                                            </div>
-                                        </ListGroup.Item>
-                                        <ListGroup.Item action onClick={() => {
-                                            navigate("/admin/products");
-                                        }}>
-                                            {/*<Badge bg="primary" pill style={{ float: "right" }}>7</Badge>*/}
-                                            <div className="ms-2 me-auto">
-                                                <FontAwesomeIcon icon={faBox} fixedWidth /> {t('products')}
-                                            </div>
-                                        </ListGroup.Item>
-                                    </>
-                                }
-                            </ListGroup>
-                        </Col>
+                <div className={cn("grid gap-6", isNotUser && "lg:grid-cols-3")}>
+                    <div className={cn("min-w-0", isNotUser && "lg:col-span-2")}>
+                        <Tabs
+                            label={t('adminUi.dashboard.tabsLabel')}
+                            defaultValue="balance"
+                            items={[
+                                {
+                                    id: "balance",
+                                    icon: <FontAwesomeIcon icon={faDollar} fixedWidth />,
+                                    label: t('dashboard_statement'),
+                                    content: (
+                                        <StatementPart
+                                            loading={invoiceContext.loadingSearch}
+                                            StatementResult={invoiceContext.statementResult}
+                                            onChangePage={(pagenum: number) => {
+                                                searchStatements(pagenum);
+                                            }} />
+                                    ),
+                                },
+                                {
+                                    id: "order",
+                                    label: t('dashboard_orders_tab'),
+                                    disabled: true,
+                                    content: null,
+                                },
+                            ]}
+                        />
+                    </div>
+                    {isNotUser &&
+                        <Card className="self-start overflow-hidden">
+                          <nav aria-label={t('adminUi.dashboard.shortcuts')}>
+                            {networkContext.currentRole >= UserRoleEnum.NetworkManager &&
+                                <ShortcutGroup
+                                    id="dashboard-shortcuts-network"
+                                    icon={faUserGroup}
+                                    title={t('dashboard_networks_title')}
+                                    items={networkShortcuts}
+                                />
+                            }
+                            {networkContext.currentRole >= UserRoleEnum.Seller &&
+                                <ShortcutGroup
+                                    id="dashboard-shortcuts-finances"
+                                    icon={faBox}
+                                    title={t('finances')}
+                                    items={financeShortcuts}
+                                />
+                            }
+                          </nav>
+                        </Card>
                     }
-                </Row>
-            </Container>
+                </div>
+            </PageContainer>
         </>
     );
+};
 
-}
+export default DashboardPage;

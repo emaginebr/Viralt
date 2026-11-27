@@ -1,0 +1,227 @@
+/*
+ * Viralt Design System — direção "Bilhete Premiado"
+ * Tailwind CSS 4 — tokens em CSS (sem tailwind.config.js).
+ *
+ * Destino na implementação: frontend/src/styles/theme.css
+ * Uso em frontend/src/styles/index.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme.css";
+ *
+ * Fontes (Google Fonts), carregadas no <head> do index.html:
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+ *
+ * Todos os pares texto/fundo estão validados em docs/design/tokens.md (WCAG 2.1 AA).
+ */
+
+@theme {
+  /* ------------------------------------------------------------------
+   * Cores. A paleta padrão do Tailwind é desligada para que só os
+   * tokens semânticos existam (SC-008: nada de bg-red-500 avulso).
+   * bg-transparent, bg-current e bg-inherit continuam disponíveis.
+   * ------------------------------------------------------------------ */
+  --color-*: initial;
+
+  /* Base */
+  --color-background: #fff8f1;          /* papel quente: fundo da página */
+  --color-foreground: #1a1423;          /* tinta: texto principal */
+  --color-surface: #ffffff;             /* cards, inputs, modais, tabelas */
+  --color-surface-foreground: #1a1423;
+  --color-muted: #f4ece4;               /* faixas, cabeçalho de tabela, hover neutro */
+  --color-muted-foreground: #5c5266;    /* texto secundário, placeholder, metadados */
+  --color-border: #e7dcd1;              /* divisores decorativos (não delimita controles) */
+  --color-input: #8c8194;               /* borda de controles de formulário (>= 3:1) */
+  --color-overlay: #1a1423;             /* scrim de modal e de hero: usar /60 ou /72 */
+
+  /* Marca */
+  --color-primary: #c2185b;             /* framboesa: CTA, links de ação, seleção */
+  --color-primary-hover: #9e1049;
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: #fce4ee;
+
+  --color-secondary: #2b2250;           /* uva escura: sidebar, botão secundário, página atual */
+  --color-secondary-hover: #3c3270;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-muted-foreground: #cfc7ea; /* texto secundário sobre secondary */
+
+  --color-accent: #ffc738;              /* amarelo bilhete: pontos, destaque, item ativo na sidebar */
+  --color-accent-hover: #f2b517;
+  --color-accent-foreground: #1a1423;
+  --color-accent-subtle: #fff1c7;
+
+  /* Estados */
+  --color-success: #13703a;
+  --color-success-hover: #0e5a2e;
+  --color-success-foreground: #ffffff;
+  --color-success-subtle: #e3f3e8;
+
+  --color-warning: #8f5200;
+  --color-warning-foreground: #ffffff;
+  --color-warning-subtle: #fff0d1;
+
+  --color-danger: #b42318;
+  --color-danger-hover: #8f1b12;
+  --color-danger-foreground: #ffffff;
+  --color-danger-subtle: #fde7e4;
+
+  --color-info: #1f57c3;
+  --color-info-foreground: #ffffff;
+  --color-info-subtle: #e3ecfc;
+
+  /* Foco */
+  --color-ring: #2b5bdb;                /* anel de foco sobre fundos claros */
+  --color-ring-inverse: #ffc738;        /* anel de foco sobre secondary (sidebar) e overlay */
+
+  /* ------------------------------------------------------------------
+   * Tipografia
+   * ------------------------------------------------------------------ */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala única (SC-008). Corpo nunca abaixo de text-base no mobile. */
+  --text-xs: 0.75rem;     --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;    --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;      --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;    --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;     --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;     --text-2xl--line-height: 2rem;       --text-2xl--letter-spacing: -0.01em;
+  --text-3xl: 1.875rem;   --text-3xl--line-height: 2.25rem;    --text-3xl--letter-spacing: -0.015em;
+  --text-4xl: 2.25rem;    --text-4xl--line-height: 2.5rem;     --text-4xl--letter-spacing: -0.02em;
+  --text-5xl: 3rem;       --text-5xl--line-height: 1.05;       --text-5xl--letter-spacing: -0.025em; /* só título do hero (desktop) */
+
+  /* ------------------------------------------------------------------
+   * Raios
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.375rem;  /* 6px: badges retangulares, checkbox */
+  --radius-md: 0.625rem;  /* 10px: botões, inputs, alertas */
+  --radius-lg: 1rem;      /* 16px: cards, modais, tabela */
+  --radius-xl: 1.5rem;    /* 24px: hero, widget */
+  --radius-full: 9999px;  /* pílulas e avatares */
+
+  /* ------------------------------------------------------------------
+   * Sombras. "pop" é a assinatura do lado público (sombra dura, sem blur).
+   * ------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px 0 rgb(26 20 35 / 0.06), 0 1px 1px 0 rgb(26 20 35 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(26 20 35 / 0.10), 0 2px 4px -2px rgb(26 20 35 / 0.06);
+  --shadow-lg: 0 16px 40px -8px rgb(26 20 35 / 0.22), 0 4px 10px -4px rgb(26 20 35 / 0.10);
+  --shadow-pop: 4px 4px 0 0 #1a1423;
+  --shadow-pop-sm: 2px 2px 0 0 #1a1423;
+
+  /* ------------------------------------------------------------------
+   * Movimento. Durações usadas como duration-150 / duration-200 / duration-300
+   * (o Tailwind 4 não tem namespace de duração; estes valores ficam
+   * expostos como variáveis CSS para JS e para var()).
+   * ------------------------------------------------------------------ */
+  --duration-fast: 150ms;   /* hover, cor, foco */
+  --duration-base: 200ms;   /* entrada de modal, toast, abas */
+  --duration-slow: 300ms;   /* skeleton -> conteúdo, sucesso da inscrição */
+
+  --ease-snappy: cubic-bezier(0.2, 0.8, 0.2, 1);  /* entrada */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);        /* saída */
+
+  --animate-fade-in: fade-in 200ms var(--ease-snappy) both;
+  --animate-pop-in: pop-in 200ms var(--ease-snappy) both;
+  --animate-slide-in-left: slide-in-left 200ms var(--ease-snappy) both;
+  --animate-spin: spin 0.8s linear infinite;
+  --animate-pulse: pulse 1.6s ease-in-out infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes slide-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+}
+
+/* --------------------------------------------------------------------
+ * Utilitários do design system (assinatura "bilhete").
+ * São tokens de forma: usar só nestes componentes (PrizeCard, widget).
+ * -------------------------------------------------------------------- */
+
+/* Recortes semicirculares nas laterais, como um bilhete de rifa. */
+@utility ticket {
+  --ticket-notch: 0.75rem;
+  --ticket-at: 50%;
+  mask:
+    radial-gradient(circle var(--ticket-notch) at 0 var(--ticket-at), #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--ticket-notch) at 100% var(--ticket-at), #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Linha picotada (divisor do bilhete). */
+@utility perforation {
+  border-top: 2px dashed var(--color-border);
+}
+
+/* Anel de foco padrão (para elementos sem variantes próprias). */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* --------------------------------------------------------------------
+ * Base
+ * -------------------------------------------------------------------- */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* Links de texto: sublinhados por padrão (não dependem só da cor). */
+  :where(main, [role="dialog"]) a:not([class]) {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Foco nunca é removido sem substituto. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+
+  button, [role="button"], a, label[for], summary { touch-action: manipulation; }
+
+  /* Rede de segurança para prefers-reduced-motion. Os componentes já usam
+   * motion-safe:, isto cobre animações de terceiros (sonner, Radix). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Modo de alto contraste do Windows: mantém bordas e foco visíveis. */
+  @media (forced-colors: active) {
+    :focus-visible { outline-color: Highlight; }
+  }
+}

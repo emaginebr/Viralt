@@ -1,120 +1,144 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 3.0.0 → 3.0.1 (anteriores: 2.1.0 → 3.0.0, 2.0.0 → 2.1.0, 1.1.0 → 2.0.0)
-Bump rationale 3.0.1: PATCH — a tabela "Variáveis de Ambiente" passa a listar duas variáveis
-opcionais definidas no plano da feature 002-remove-ztools: `MailerSend__ApiUrl` e
-`S3__PublicBaseUrl`. Nenhuma regra mudou.
+Version change: 4.0.0 → 4.0.1
+Bump rationale 4.0.1: PATCH — atualização da seção "Transição", sem mudança de regra.
+  - TODO(FRONTEND-VITE) resolvido pela feature 003-frontend-vite-tailwind (Vite 6 + Tailwind 4 +
+    `VITE_*`, Bootstrap/MUI removidos, design system "Bilhete Premiado" em `docs/design/`).
+  - TODO(GITVERSION) resolvido (`GitVersion.yml` criado).
+  - TODO(A11Y) restrito às telas administrativas.
+Templates: ✅ sem impacto. ✅ CLAUDE.md e README.md atualizados para a nova stack do frontend.
 
-Bump rationale 3.0.0: MAJOR — o Princípio X foi redefinido de forma incompatível: o zTools
-deixa de ser obrigatório e passa a ser proibido como dependência. E-mail (MailerSend) e
-storage (S3) passam a ser integrações diretas, isoladas em AppServices da Infra. Código que
-seguia a regra anterior (usar zTools) agora viola a constituição. Feature relacionada:
-specs/002-remove-ztools.
+Histórico 3.0.1 → 4.0.0
+Bump rationale: MAJOR — constitution remontada com a skill `generate-constitution` (templates
+base/structure/agents/backend/frontend + módulo k8s-deploy). Redefinições incompatíveis:
+  - Frontend: CRA + Bootstrap + `REACT_APP_` → Vite 6 + Tailwind CSS 4 + `VITE_`.
+  - Autenticação: NAuth (Basic token) → JWT Bearer próprio via skill `dotnet-auth`; NAuth proibido.
+  - Deploy: servidor via SSH + docker compose → cluster Kubernetes emagine (`k8s-deploy`).
+  - Docker: "inacessível localmente" → roda no WSL2 (skill `wsl-docker`).
+  - Agentes: novo `devops-engineer` (infra, ambientes, deploy); `analyst` e `qa-developer`
+    passam a ter responsabilidade explícita.
+  - Commits: prefixo `fix:` por padrão (GitVersion).
 
-Princípios modificados (3.0.0):
-  - II. Stack Tecnológica Fixa — linha do zTools trocada por MailerSend e AWS SDK para S3.
-  - X. Bibliotecas Externas → X. Bibliotecas e Integrações Externas — NAuth mantido; zTools
-    removido; novas regras para integrações diretas (MailerSend e S3, bucket `emagine`, pasta
-    `viralt/`).
+Princípios (antigos → novos):
+  - I. Skills de Arquitetura Obrigatórias → I. Skills Obrigatórias (+ dotnet-auth, k8s-deploy).
+  - II. Stack Tecnológica Fixa → dividido em V (Backend) e VI (Frontend).
+  - III. Case Sensitivity → VI. Frontend / Case Sensitivity de Diretórios.
+  - IV. Convenções de Código → V e VI (por componente).
+  - V. Banco de Dados → V. Backend / Banco de Dados.
+  - VI. Autenticação e Segurança → V e VI (JWT via dotnet-auth).
+  - VII. Tratamento de Erros → V. Backend / Tratamento de Erros.
+  - VIII. Agentes Especializados → IV. Responsabilidades dos Agentes (+ II. Regras Gerais para a
+    regra da sessão principal).
+  - IX. Acessibilidade → VI. Frontend / Acessibilidade (regras mantidas).
+  - X. Bibliotecas e Integrações Externas → V. Backend / Integrações Externas (NAuth removido;
+    MailerSend/S3 e proibição do zTools mantidos).
 
-Seções modificadas (3.0.0):
-  - Variáveis de Ambiente — `zTools__ApiURL` removida; `MailerSend__*` e `S3__*` adicionadas.
-  - Checklist — "Storage, e-mail e IA usam zTools" substituído pela regra de integrações diretas.
-
-Templates e artefatos (3.0.0):
-  - ✅ .specify/templates/plan-template.md, spec-template.md, tasks-template.md — genéricos,
-    sem menção ao zTools; nada a alterar.
-  - ✅ README.md — sem menção ao zTools.
-  - ✅ CLAUDE.md — sem menção ao zTools ("AppServices (S3, MailerSend)" continua correto).
-  - ⚠ backend (código, appsettings), docker-compose*.yml, .env.example, .env.prod.example —
-    ainda referenciam o zTools; a remoção é o escopo da feature 002-remove-ztools.
-  - ⚠ .claude/skills/ztools-guide — skill obsoleta para o Viralt; remover ou ignorar.
-
-Bump rationale 2.1.0: MINOR — nova seção "Estrutura do Repositório": backend .NET movido para
-`backend/` e frontend React (antes `viralt-app/`) para `frontend/`; caminhos dos Princípios VI,
-VIII e do checklist atualizados.
-
-Bump rationale 2.0.0: MAJOR — a constituição foi reescrita a partir da estrutura da constituição do
-projeto Pontua (v1.2.0), adaptada à realidade do Viralt. O Princípio II foi redefinido de forma
-incompatível com a versão anterior: o bundler oficial passa a ser o CRA (`react-scripts`) e o
-prefixo de variáveis do frontend passa a ser `REACT_APP_`, que é o que o código e o CLAUDE.md já
-usam (a v1.1.0 exigia Vite e `VITE_`, o que nunca correspondeu ao código).
-
-Princípios modificados:
-  - I. Skills Obrigatorias → I. Skills de Arquitetura Obrigatórias (formato em tabela).
-  - II. Stack Tecnologica → II. Stack Tecnológica Fixa — Vite/`VITE_` → CRA/`REACT_APP_`;
-    Bootstrap 5 + React-Bootstrap como único framework de estilização.
-  - VI. Autenticação e Segurança — tabela de padrões, regra de descarte do token em 401.
-  - VIII. Tratamento de Erros → VII. Tratamento de Erros no Backend.
-  - IX. Bibliotecas Externas → X. Bibliotecas Externas (conteúdo mantido).
-
-Princípios adicionados:
-  - VIII. Agentes Especializados Obrigatórios (vindo do Pontua).
-  - IX. Acessibilidade (WCAG 2.1 AA) (vindo do Pontua).
-
-Seções adicionadas:
-  - "Ambientes" (Development, Docker, Production via docker compose por SSH).
-
-Seções movidas:
-  - VII. Variaveis de Ambiente → seção "Variáveis de Ambiente" (fora dos Core Principles).
-
-Seções removidas: nenhuma.
-
-Itens do Pontua NÃO adotados (não se aplicam ao Viralt):
-  - JWT Bearer próprio, `Jwt__Secret`, login Google, `PasswordHasher` — o Viralt usa NAuth.
-  - Vite, Tailwind CSS, prefixo `VITE_`.
-  - Docker via WSL2 — o CLAUDE.md do Viralt mantém Docker inacessível localmente.
-  - Produção em Kubernetes — o Viralt publica via `docker-compose-prod.yml` por SSH.
+Seções adicionadas: II. Regras Gerais; VII. Infraestrutura e Deploy; Transição.
+Seções removidas: Ambientes (substituída por VII e pela skill `dotnet-env`); checklist geral
+(substituído pelos checklists por componente).
 
 Templates e artefatos:
-  - ✅ .specify/templates/plan-template.md — "Constitution Check" genérico; compatível.
-  - ✅ .specify/templates/spec-template.md e tasks-template.md — compatíveis.
-  - ✅ CLAUDE.md — já descreve CRA e `REACT_APP_*`; compatível.
+  - ✅ .specify/templates/plan-template.md, spec-template.md, tasks-template.md,
+    checklist-template.md — genéricos; sem referências a NAuth/CRA/Vite. Nada a alterar.
+  - ✅ CLAUDE.md — seção "Constitution" adicionada; restrição de Docker atualizada para WSL2.
+  - ⚠ README.md — descreve o estado atual (CRA + Bootstrap, NAuth); atualizar após as migrações.
+  - ⚠ frontend/, backend/ (NAuth), docker-compose-prod.yml, .env.prod.example,
+    .github/workflows/deploy-prod.yml — legado tolerado, ver seção Transição.
+  - ⚠ specs/002-remove-ztools/plan.md — Constitution Check referencia a v3.0.0 (histórico).
 
-Follow-up TODOs:
-  - TODO(I18N-LANG): definir como o atributo `lang` do documento acompanha o idioma ativo do
-    i18next (pt, en, es).
-  - TODO(A11Y): as telas existentes ainda não foram auditadas contra o Princípio IX.
-  - TODO(NAUTH-REACT): `nauth-react` ainda não está no `frontend/package.json`; o login atual
-    usa serviços próprios com a chave `login-with-metamask:auth`.
+Follow-up TODOs: FRONTEND-VITE, AUTH-JWT, DEPLOY-K8S, GITVERSION, A11Y (seção Transição).
 -->
 
 # Viralt Constitution
 
-Padrões obrigatórios de stack tecnológica, convenções de código e arquitetura que devem ser
-seguidos por todos os contribuidores do projeto Viralt.
+Padrões obrigatórios de stack tecnológica, convenções de código, arquitetura, estrutura de pastas e
+responsabilidades dos agentes que devem ser seguidos por todos os contribuidores (pessoas e agentes)
+do projeto Viralt.
 
 ## Core Principles
 
-### I. Skills de Arquitetura Obrigatórias
+### I. Skills Obrigatórias
 
-Para implementação de novas entidades e funcionalidades, as seguintes skills **DEVEM** ser
-utilizadas:
+Para implementação de novas entidades e funcionalidades, as seguintes skills **DEVEM** ser utilizadas:
 
 | Skill | Quando usar | Invocação |
 |---|---|---|
 | **dotnet-architecture** | Criar/modificar entidades, services, repositories, DTOs, migrations, DI no backend | `/dotnet-architecture` |
+| **dotnet-auth** | Criar/alterar autenticação de usuários (JWT Bearer, cadastro, login, `me`, hash de senha, roles) no backend | `/dotnet-auth` |
 | **react-architecture** | Criar Types, Service, Context, Hook e registrar Provider no frontend | `/react-architecture` |
+| **k8s-deploy** | Configurar e operar o deploy no cluster Kubernetes | `/k8s-deploy` |
 
-Estas skills cobrem em detalhe:
+**NÃO** reimplemente esses padrões manualmente — siga as skills.
 
-- Estrutura de projetos e fluxo de dependência (Clean Architecture backend).
-- Regras de repositórios genéricos, mapeamento manual, DI centralizado.
-- Configuração de DbContext, Fluent API e migrações via `dotnet ef`.
-- Padrões de arquivos frontend (Types, Services, Contexts, Hooks).
-- Provider chain e registro de novos providers.
-- Tratamento de erros no frontend (`handleError`, `clearError`, loading state).
-- Nomeação de DTOs (`Info`, `InsertInfo`, `Result`) e chaves em português
-  (`sucesso`, `mensagem`, `erros`).
+### II. Regras Gerais
 
-Esses padrões **NÃO DEVEM** ser reimplementados manualmente — siga as skills.
+- **Docker** roda apenas dentro do WSL2 (skill `wsl-docker`) — **NÃO** existe `docker` no Windows;
+  não tente executá-lo diretamente no PowerShell/Git Bash.
+- **Secrets** (connection strings, tokens, chaves) **NUNCA** entram no Git, em logs ou no código
+  cliente (frontend).
+- **Versionamento** com GitVersion (`GitVersion.yml` + workflows `version-tag.yml` e
+  `create-release.yml`, gerados pela skill `gitversion`).
+- **Commits** usam o prefixo **`fix:`** (patch) por padrão. Outro prefixo — `feat:` (minor),
+  `major:`/`breaking:`/`!` (major) — **somente** quando o usuário pedir explicitamente. Escopo
+  opcional: `fix(api): ...`. Só commitar/push quando solicitado.
+- **Documentação** em `docs/` (pt-BR por padrão, sufixo `.pt-BR.md` em documentos novos), mantida
+  pelo agente `analyst`.
+- Cada agente só altera as pastas sob sua responsabilidade (seção **Responsabilidades dos Agentes**).
+- A sessão principal (orquestradora) **NÃO** edita código em `backend/`, `frontend/` nem arquivos de
+  infraestrutura: delega ao agente responsável. Ela pode ler código, planejar, revisar e editar
+  artefatos de especificação (`specs/`, `.specify/`, `CLAUDE.md`).
 
-**Racional**: garante uniformidade estrutural entre entidades e evita divergência de padrões.
+### III. Estrutura do Repositório
 
-### II. Stack Tecnológica Fixa
+O projeto é dividido em componentes, **cada um na sua pasta**. Nenhum código de um componente pode
+ficar fora da sua pasta, e a raiz contém só arquivos de repositório, documentação e infraestrutura.
 
-**Backend**
+```text
+/
+├── backend/              # API .NET — Viralt.sln, projetos Viralt.*, Viralt.Tests (dotnet-developer)
+├── frontend/             # aplicação web React (react-developer)
+├── docs/                 # documentação (analyst)
+├── specs/                # especificações do Spec Kit
+├── deploy/k8s/           # manifestos Kubernetes (devops-engineer)
+└── .github/workflows/    # pipelines (devops-engineer)
+```
+
+- Os contratos entre componentes (DTOs ↔ types TypeScript) DEVEM usar os mesmos nomes de
+  propriedades em camelCase no JSON.
+- Cada componente tem build, testes e Dockerfile próprios dentro da sua pasta.
+- `docker-compose.yml` na raiz continua sendo o ambiente local "Docker" (banco, API e frontend).
+
+### IV. Responsabilidades dos Agentes
+
+Toda tarefa DEVE ser executada pelo agente responsável. Um agente que receber uma tarefa fora do seu
+escopo DEVE declarar que ela está fora do escopo, indicar o agente responsável e parar.
+
+| Agente | Responsabilidade | Pastas |
+|---|---|---|
+| `analyst` | Documentação, README, diagramas Mermaid; especificações e análise de requisitos | `docs/`, `README.md` |
+| `ux-designer` | Direção visual, design tokens, mockups HTML/CSS, specs de componentes, ícones/banners — **nunca** código `.tsx` | `docs/design/` |
+| `dotnet-developer` | API .NET: Clean Architecture, EF Core, migrations, validação, autenticação JWT (`dotnet-auth`), integrações externas (MailerSend, S3), classes `IOptions` | `backend/` |
+| `react-developer` | Frontend React + TypeScript: types, services, contexts, hooks, páginas, i18n, implementação dos designs do `ux-designer` | `frontend/` |
+| `qa-developer` | Testes unitários (`Viralt.Tests`) e testes de API (`Viralt.ApiTests`) — só testes | projetos de teste em `backend/` |
+| `devops-engineer` | Infraestrutura: Dockerfiles, ambientes .NET (`dotnet-env`: `appsettings.{Ambiente}.json`, `docker-compose`, `.env`), deploy no cluster Kubernetes (`k8s-deploy`), operação do cluster, DNS/Cloudflare | `deploy/`, `.github/workflows/`, `Dockerfile`s, `docker-compose*.yml`, `appsettings.*.json`, `.env.example`, `.env.prod.example` |
+
+#### Regras de colaboração
+
+- **Fluxo de uma funcionalidade**: `analyst` (especificação) → `ux-designer` (design, se houver UI)
+  → desenvolvedor(es) do componente → `qa-developer` (testes) → `devops-engineer` (deploy).
+- Mudança que atravessa componentes (ex.: novo endpoint + tela) é dividida por agente; nenhum agente
+  implementa a parte do outro, e o contrato da API é definido antes.
+- Ajustes de aplicação exigidos pelo deploy (endpoint `/health`, forwarded headers, variáveis de
+  ambiente) são feitos pelo desenvolvedor do componente, a pedido do `devops-engineer`.
+- O `ux-designer` entrega especificações; quem converte em código é o `react-developer`.
+- Os agentes DEVEM seguir as Skills Obrigatórias; a escolha do agente não dispensa as skills.
+
+### V. Backend (`backend/`)
+
+Responsável: `dotnet-developer` (testes: `qa-developer`).
+
+#### Stack Tecnológica
 
 | Tecnologia | Versão | Finalidade |
 |---|---|---|
@@ -122,56 +146,16 @@ Esses padrões **NÃO DEVEM** ser reimplementados manualmente — siga as skills
 | Entity Framework Core | 9.x | ORM e migrações |
 | PostgreSQL | Latest | Banco de dados relacional |
 | Swashbuckle | 8.x | Swagger / OpenAPI |
-| NAuth | NuGet | Autenticação (Basic token) e usuários |
 | MailerSend (API REST direta) | v1 | Envio de e-mails transacionais |
 | AWS SDK for .NET (`AWSSDK.S3`) | 3.x | Armazenamento de arquivos no S3 |
 
-**Frontend**
+- **NÃO** introduzir ORMs alternativos (Dapper, etc.) — EF Core é o único ORM permitido.
+- Skills de apoio: `dotnet-env` (ambientes Development/Docker/Production — arquivos de ambiente
+  pelo `devops-engineer`, classes `IOptions` pelo `dotnet-developer`),
+  `dotnet-fluent-validation` (validação),
+  `dotnet-test` / `dotnet-test-api` (testes, via `qa-developer`).
 
-| Tecnologia | Versão | Finalidade |
-|---|---|---|
-| React | 18.x | Framework UI |
-| TypeScript | 5.x | Tipagem estática |
-| React Router | 6.x | Roteamento SPA |
-| Create React App (`react-scripts`) | 5.x | Build toolchain |
-| Bootstrap + React-Bootstrap | 5.x / 2.x | Estilização e componentes |
-| i18next + react-i18next | 25.x / 15.x | Internacionalização (pt, en, es) |
-| Axios | 1.x | HTTP client (legado) |
-| Fetch API | Nativo | HTTP client (novos serviços) |
-
-**Regras de Stack**
-
-- CRA (`react-scripts`) é o bundler do projeto — **NÃO** introduzir Vite, Webpack manual ou
-  outros bundlers sem emenda desta constituição.
-- Bootstrap 5 / React-Bootstrap é o framework de estilização — **NÃO** adicionar Tailwind,
-  Material UI ou outros frameworks CSS de componentes.
-- EF Core é o único ORM permitido — **NÃO** introduzir ORMs alternativos (Dapper, etc.).
-- Context API é o padrão de estado — **NÃO** adicionar Redux, Zustand, MobX ou similares.
-- **NÃO** executar comandos `docker` ou `docker compose` no ambiente local — Docker não está
-  acessível a partir do shell local (ver CLAUDE.md).
-- Dependências npm **DEVEM** ser instaladas com `npm install --legacy-peer-deps` (conflito de
-  peer do `react-native-svg`).
-- Novos serviços HTTP no frontend **DEVEM** usar Fetch API; Axios é restrito a código legado.
-
-**Racional**: uma stack fechada reduz custo de manutenção e mantém as skills aplicáveis.
-
-### III. Case Sensitivity de Diretórios (Inviolável)
-
-| Diretório | Casing | Motivo |
-|---|---|---|
-| `Contexts/` | Uppercase C | Compatibilidade Docker/Linux |
-| `Services/` | Uppercase S | Compatibilidade Docker/Linux |
-| `hooks/` | Lowercase h | Convenção React |
-| `types/` | Lowercase t | Convenção TypeScript |
-
-Todos os imports **DEVEM** corresponder exatamente ao casing no disco.
-
-**Racional**: builds em Linux/containers falham com imports de casing divergente, mesmo que
-funcionem no Windows.
-
-### IV. Convenções de Código
-
-**Backend (.NET)**
+#### Convenções de Código (.NET)
 
 | Elemento | Convenção | Exemplo |
 |---|---|---|
@@ -182,7 +166,147 @@ funcionem no Windows.
 | Campos privados | _camelCase | `_repository`, `_context` |
 | Constantes | UPPER_CASE | `BUCKET_NAME` |
 
-**Frontend (TypeScript/React)**
+- `[JsonPropertyName("camelCase")]` em todas as propriedades de DTOs.
+- DTOs seguem `Info`, `InsertInfo`, `Result` e as chaves `sucesso`, `mensagem`, `erros`
+  (detalhes na skill `dotnet-architecture`).
+
+#### Banco de Dados (PostgreSQL)
+
+| Elemento | Convenção | Exemplo |
+|---|---|---|
+| Tabelas | snake_case plural | `campaigns`, `campaign_entries` |
+| Colunas | snake_case | `campaign_id`, `created_at` |
+| Primary Keys | `{entidade}_id`, bigint identity | `campaign_id bigint PK` |
+| Constraint PK | `{tabela}_pkey` | `campaigns_pkey` |
+| Foreign Keys | `fk_{pai}_{filho}` | `fk_campaign_entry` |
+| Delete behavior | `ClientSetNull` | Nunca Cascade |
+| Timestamps | `timestamp without time zone` | Sem timezone |
+| Strings | `varchar` com MaxLength | `varchar(260)` |
+| Booleans | `boolean` com default | `DEFAULT true` |
+| Status/Enums | `integer` | `DEFAULT 1` |
+
+> Configuração via Fluent API (sem Data Annotations para schema). DbContext, Fluent API e migrações
+> (`dotnet ef`) são detalhados na skill `dotnet-architecture`.
+
+#### Autenticação e Segurança
+
+Autenticação de usuários **sempre** pela skill `dotnet-auth` — **NÃO** criar esquemas próprios e
+**NÃO** usar NAuth (legado).
+
+| Aspecto | Padrão |
+|---|---|
+| Esquema | JWT Bearer (`JwtBearerDefaults.AuthenticationScheme`), HS256 |
+| Header | `Authorization: Bearer {token}` |
+| Expiração | **90 dias** por padrão (`Jwt:ExpirationDays`), configurável por ambiente |
+| Secret | `Jwt:Secret` com ≥ 32 bytes; a API não sobe sem ele |
+| Claims | `sub` (userId), `email`, `name`, `jti`, `role` |
+| Senha | `PasswordHasher` do ASP.NET Core Identity (PBKDF2 com salt) |
+| Endpoints | `POST api/auth/register`, `POST api/auth/login`, `GET api/auth/me` |
+| Usuário logado | `User.GetUserId()` (claim `sub`) — nunca do body/query |
+| Proteção de rotas | `[Authorize]` na classe do controller, `[AllowAnonymous]` explícito nos públicos |
+
+- **NUNCA** logar senha, hash ou token, nem expor connection strings ou secrets em respostas da API.
+- Login inválido devolve sempre a mesma mensagem genérica (não revelar se o email existe).
+- Controllers com dados sensíveis DEVEM ter `[Authorize]`; apenas os endpoints públicos de campanha
+  (página pública, widget, inscrição de participante) são anônimos.
+- CORS `AllowAnyOrigin` apenas em Development.
+- A API confia em forwarded headers (`X-Forwarded-For`/`X-Forwarded-Proto`) e expõe `/health`.
+
+#### Integrações Externas (e-mail e armazenamento)
+
+O Viralt fala diretamente com os provedores, sem serviço intermediário. O **zTools NÃO DEVE** ser
+usado (nem o pacote NuGet, nem a API, nem a configuração).
+
+| Capacidade | Provedor | Contrato (Infra.Interfaces) | Implementação (Infra) |
+|---|---|---|---|
+| E-mail transacional | MailerSend (API REST) | `IMailerSendAppService` | `MailerSendAppService` |
+| Armazenamento de arquivos | S3 (`AWSSDK.S3`) | `IImageAppService` | `ImageAppService` |
+
+- Cada integração externa DEVE ficar atrás de um contrato em `Viralt.Infra.Interfaces`, com a
+  implementação em `Viralt.Infra/AppServices`. Domain e API **NÃO** chamam o provedor diretamente
+  nem conhecem os tipos do SDK.
+- Credenciais, endpoints, remetente, bucket e pasta DEVEM vir da configuração (`Secao__Chave`),
+  nunca do código. Credenciais **NUNCA** chegam ao frontend.
+- Arquivos DEVEM ser gravados no bucket compartilhado `emagine`, sempre sob o prefixo `viralt/`,
+  com nome único por envio. As URLs são públicas e permanentes.
+- Falhas do provedor DEVEM virar exceções com mensagem clara (ex.: credencial inválida, remetente
+  não verificado); nunca ignoradas em silêncio.
+- Novas integrações (ex.: IA) seguem o mesmo padrão: contrato em Infra.Interfaces, implementação em
+  Infra e configuração por ambiente.
+
+#### Variáveis de Ambiente
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `ConnectionStrings__ViraltContext` | Sim | Connection string PostgreSQL do Viralt |
+| `ASPNETCORE_ENVIRONMENT` | Sim | Development, Docker, Production |
+| `Jwt__Secret` | Sim | Secret de assinatura do JWT (≥ 32 bytes; só em secrets, nunca no Git) |
+| `Jwt__Issuer` / `Jwt__Audience` | Não | Padrão: `viralt` |
+| `Jwt__ExpirationDays` | Não | Expiração do token em dias (padrão `90`) |
+| `MailerSend__ApiToken` | Sim | Token da API do MailerSend; nunca versionado |
+| `MailerSend__FromEmail` | Não | Remetente padrão (padrão `noreply@viralt.com`) |
+| `MailerSend__FromName` | Não | Nome do remetente (padrão `Viralt`) |
+| `MailerSend__ApiUrl` | Não | Base da API (padrão `https://api.mailersend.com/v1/`) |
+| `S3__BucketName` | Sim | Bucket compartilhado (padrão `emagine`) |
+| `S3__Prefix` | Não | Pasta do Viralt no bucket (padrão `viralt/`) |
+| `S3__Region` | Sim | Região do bucket |
+| `S3__ServiceUrl` | Não | Endpoint S3-compatível, quando não for AWS |
+| `S3__PublicBaseUrl` | Não | Base pública das URLs (CDN); vazio = URL padrão da AWS |
+| `S3__AccessKey` / `S3__SecretKey` | Sim | Credenciais do S3; nunca versionadas |
+
+- Configuração por variáveis de ambiente usa a convenção `Secao__Chave`; **NÃO** usar
+  `AddEnvironmentVariables("PREFIXO")`.
+
+#### Tratamento de Erros
+
+```csharp
+try { /* lógica */ }
+catch (Exception ex) { return StatusCode(500, ex.Message); }
+```
+
+#### Checklist do Backend
+
+- [ ] Utilizou a skill `dotnet-architecture` para novas entidades
+- [ ] Tabelas e colunas seguem snake_case no PostgreSQL
+- [ ] Autenticação feita com a skill `dotnet-auth` (sem NAuth)
+- [ ] Controllers com dados sensíveis possuem `[Authorize]`
+- [ ] Nenhuma referência ao zTools; e-mail e storage passam pelos AppServices da Infra
+- [ ] Testes criados/atualizados pelo `qa-developer`
+
+### VI. Frontend (`frontend/`)
+
+Responsável: `react-developer` (design: `ux-designer`).
+
+#### Stack Tecnológica
+
+| Tecnologia | Versão | Finalidade |
+|---|---|---|
+| React | 18.x | Framework UI |
+| TypeScript | 5.x | Tipagem estática |
+| React Router | 6.x | Roteamento SPA |
+| Vite | 6.x | Build toolchain |
+| Tailwind CSS | 4.x | Estilização utility-first (layout, grid e componentes) |
+| i18next | 25.x | Internacionalização (pt, en, es) |
+| Fetch API | Nativo | HTTP client (novos serviços; Axios 1.x só em código legado) |
+
+- **Vite é o bundler obrigatório** — NÃO usar CRA, Webpack manual ou outros bundlers.
+- **Tailwind CSS é obrigatório** — NÃO usar Bootstrap, React-Bootstrap, Material UI ou outros
+  frameworks CSS de componentes.
+- **NÃO** adicionar state management (Redux, Zustand, MobX) — Context API é o padrão.
+- Skills de apoio: `add-react-i18n` (i18n), `react-modal`, `react-alert`, `frontend-design`.
+
+#### Case Sensitivity de Diretórios (Inviolável)
+
+| Diretório | Casing | Motivo |
+|---|---|---|
+| `Contexts/` | Uppercase C | Compatibilidade Docker/Linux |
+| `Services/` | Uppercase S | Compatibilidade Docker/Linux |
+| `hooks/` | Lowercase h | Convenção React |
+| `types/` | Lowercase t | Convenção TypeScript |
+
+**Todos os imports DEVEM corresponder exatamente ao casing no disco.**
+
+#### Convenções de Código (TypeScript/React)
 
 | Elemento | Convenção | Exemplo |
 |---|---|---|
@@ -194,261 +318,86 @@ funcionem no Windows.
 | Funções | Arrow functions | `const fn = () => {}` |
 | Variáveis | `const` por padrão | `const campaigns = []` |
 
-**JSON Property Names**
+#### Autenticação e Segurança
 
-- Backend: `[JsonPropertyName("camelCase")]` **DEVE** estar em todas as propriedades de DTOs.
-- Frontend: acesso direto via camelCase nos tipos TypeScript.
+- Header `Authorization: Bearer {token}` em toda chamada autenticada (JWT do backend, skill `dotnet-auth`).
+- Guardar o `expiresAt` do login; ao receber **401**, limpar a sessão e redirecionar para o login.
+- **NUNCA** armazenar tokens em cookies — usar localStorage.
+- **NUNCA** expor connection strings ou secrets no frontend.
 
-### V. Convenções de Banco de Dados (PostgreSQL)
+#### Acessibilidade (WCAG 2.1 AA)
 
-| Elemento | Convenção | Exemplo |
-|---|---|---|
-| Tabelas | snake_case plural | `campaigns`, `client_entries` |
-| Colunas | snake_case | `campaign_id`, `created_at` |
-| Primary Keys | `{entidade}_id`, bigint identity | `campaign_id bigint PK` |
-| Constraint PK | `{tabela}_pkey` | `campaigns_pkey` |
-| Foreign Keys | `fk_{pai}_{filho}` | `fk_campaign_entry` |
-| Delete behavior | `ClientSetNull` | Nunca Cascade |
-| Timestamps | `timestamp without time zone` | Sem timezone |
-| Strings | `varchar` com MaxLength | `varchar(260)` |
-| Booleans | `boolean` com default | `DEFAULT true` |
-| Status/Enums | `integer` | `DEFAULT 1` |
+Toda interface DEVE atender ao nível AA das WCAG 2.1 — as páginas públicas de campanha e o widget
+embarcável são abertos pelo público em geral:
 
-Configuração via Fluent API é obrigatória (não usar Data Annotations para schema). Detalhes de
-DbContext e comandos de migração estão na skill `dotnet-architecture`.
-
-**Racional**: `ClientSetNull` evita exclusões em cascata acidentais; snake_case é idiomático
-no PostgreSQL.
-
-### VI. Autenticação e Segurança
-
-| Aspecto | Padrão |
-|---|---|
-| Esquema | Basic token via NAuth |
-| Header | `Authorization: Basic {token}` |
-| Emissão | API do NAuth (`NAuth__ApiURL`); integrações novas no frontend usam `nauth-react` |
-| Handler | `NAuthHandler` registrado no DI |
-| Storage (frontend) | localStorage key `"login-with-metamask:auth"` (`AUTH_STORAGE_KEY` em `frontend/src/Services/apiHelpers.ts`) |
-| Proteção de rotas | Atributo `[Authorize]` nos controllers; rotas administrativas do frontend protegidas |
-
-- Tokens **NUNCA** são armazenados em cookies — usar localStorage com a chave
-  `login-with-metamask:auth`.
-- O segredo do NAuth (`NAuth__JwtSecret`) **DEVE** vir de variável de ambiente e nunca ser
-  versionado.
-- Autenticação, registro, login e senhas **DEVEM** passar pelo NAuth (Princípio X); o Viralt
-  **NÃO** guarda senhas nem hashes próprios.
-- O frontend **DEVE** descartar o token expirado ou rejeitado (401) e voltar para a tela de
-  login.
-- Connection strings e secrets **NUNCA** são expostos no frontend.
-- Controllers com dados sensíveis **DEVEM** ter `[Authorize]`; apenas endpoints públicos de
-  campanha (página pública, widget, inscrição de participante) são anônimos.
-- CORS `AllowAnyOrigin` é permitido **apenas** em Development.
-
-**Racional**: centralizar a autenticação no NAuth evita duplicar lógica de usuário entre
-projetos; a página pública e o widget precisam ser anônimos para o participante se inscrever.
-
-### VII. Tratamento de Erros no Backend
-
-Controllers **DEVEM** capturar exceções e retornar status 500 com a mensagem:
-
-```csharp
-try { /* lógica */ }
-catch (Exception ex) { return StatusCode(500, ex.Message); }
-```
-
-Tratamento de erros no frontend (`handleError`, `clearError`, loading state) é coberto pela
-skill `react-architecture`.
-
-### VIII. Agentes Especializados Obrigatórios
-
-O desenvolvimento **DEVE** ser executado pelos agentes especializados da área correspondente
-(definidos em `.claude/agents/`):
-
-| Agente | Papel | Responsável por |
-|---|---|---|
-| **frontend-react-developer** | Desenvolvedor frontend | Todo código React/TypeScript em `frontend/`: tipos, services, contexts, hooks, páginas, componentes, i18n, testes de frontend |
-| **dotnet-senior-developer** | Desenvolvedor backend | Todo código .NET nos projetos em `backend/`: entidades, services, repositórios, migrations, controllers, DI, testes de backend |
-| **ux-designer** | Designer de layout | Layout e aparência do frontend: direção visual, design tokens (cores, tipografia, espaçamento), mockups, especificação de componentes, logotipos e ícones |
-
-- A sessão principal (agente orquestrador) **NÃO DEVE** editar arquivos em `backend/` ou
-  `frontend/` nem produzir layout/aparência diretamente: toda alteração **DEVE** ser delegada
-  ao agente da área (`dotnet-senior-developer` para o backend, `frontend-react-developer` para
-  o frontend, `ux-designer` para layout e aparência). A sessão principal pode ler código,
-  planejar, revisar e editar artefatos de especificação (`specs/`, `.specify/`, `CLAUDE.md`).
-- Cada tarefa de implementação **DEVE** ser atribuída a exatamente um desses agentes, conforme
-  a área do código ou artefato que ela produz.
-- Funcionalidades com interface nova **DEVEM** passar primeiro pelo `ux-designer` (tokens,
-  layout e especificação de componentes) antes da implementação pelo
-  `frontend-react-developer`.
-- O `ux-designer` **NÃO** escreve código `.tsx`; o `frontend-react-developer` **NÃO** altera
-  código .NET; o `dotnet-senior-developer` **NÃO** altera código de frontend.
-- Mudanças que atravessam frontend e backend (ex.: novo endpoint consumido por uma tela)
-  **DEVEM** ser divididas em tarefas separadas, uma por agente, com o contrato da API
-  definido antes.
-- Os agentes **DEVEM** seguir as skills do Princípio I; a escolha do agente não dispensa as
-  skills de arquitetura.
-
-**Racional**: cada agente carrega as convenções e skills da sua área; separar
-responsabilidades evita que padrões de uma camada vazem para outra e mantém o design
-consistente entre telas.
-
-### IX. Acessibilidade (WCAG 2.1 AA)
-
-Toda interface **DEVE** atender ao nível AA das WCAG 2.1. Em especial:
-
-- **Contraste**: texto normal com no mínimo 4,5:1 e texto grande/ícones com no mínimo 3:1 sobre o
-  fundo; os design tokens **DEVEM** ser validados contra essas razões.
+- **Contraste**: texto normal ≥ 4,5:1; texto grande/ícones ≥ 3:1; design tokens validados contra
+  essas razões.
 - **Alvos de toque**: no mínimo 44×44 px para todo elemento clicável.
-- **Rótulos**: todo campo de formulário **DEVE** ter `<label>` associado; botões só com ícone
-  **DEVEM** ter `aria-label`; imagens informativas **DEVEM** ter `alt`.
-- **Teclado**: toda ação **DEVE** ser executável pelo teclado, com foco sempre visível e ordem
-  de foco lógica; modais e folhas **DEVEM** prender o foco e fechar com `Esc`.
-- **Semântica**: usar elementos nativos (`button`, `a`, `nav`, `main`, `h1`…`h3`) antes de
-  ARIA; o documento **DEVE** declarar o atributo `lang` do idioma ativo (`pt-BR`, `en` ou `es`).
-- **Cor**: informação **NÃO DEVE** depender só da cor (ex.: status de campanha leva texto ou
-  ícone, além da cor).
-- **Movimento**: animações **DEVEM** respeitar `prefers-reduced-motion`.
-- **Feedback**: mensagens de sucesso e erro **DEVEM** ser anunciadas a leitores de tela
-  (`aria-live`) e erros de campo **DEVEM** ficar ligados ao campo (`aria-describedby`).
-- **Zoom**: o layout **DEVE** continuar usável com texto ampliado a 200% e **NÃO DEVE**
-  bloquear o zoom do navegador.
+- **Rótulos**: todo campo com `<label>` associado; botões só com ícone com `aria-label`; imagens
+  informativas com `alt`.
+- **Teclado**: toda ação executável pelo teclado, foco visível e ordem lógica; modais prendem o foco
+  e fecham com `Esc`.
+- **Semântica**: elementos nativos (`button`, `a`, `nav`, `main`, `h1`…`h3`) antes de ARIA; o
+  documento declara o `lang` do idioma ativo (`pt-BR`, `en` ou `es`).
+- **Cor**: informação NÃO depende só da cor.
+- **Movimento**: animações respeitam `prefers-reduced-motion`.
+- **Feedback**: mensagens de sucesso/erro anunciadas com `aria-live`; erros de campo ligados ao
+  campo (`aria-describedby`).
+- **Zoom**: layout usável com texto a 200%, sem bloquear o zoom do navegador.
 
-**Racional**: as páginas públicas de campanha e o widget embarcável são abertos pelo público
-em geral, incluindo pessoas com deficiência; uma inscrição inacessível exclui participantes e
-pode violar regras de sorteios. Acessibilidade tratada desde o design custa menos que corrigir
-depois.
-
-### X. Bibliotecas e Integrações Externas
-
-**NAuth — Autenticação e gerenciamento de usuários**
-
-O NAuth é uma biblioteca proprietária compartilhada entre os projetos da equipe. **NÃO**
-substituir por alternativas sem decisão explícita da equipe.
-
-- Backend: pacote NuGet `NAuth`. Para referência do código-fonte, consultar
-  `C:\repos\NAuth\NAuth`.
-- Frontend: pacote npm `nauth-react`. Para referência do código-fonte, consultar
-  `C:\repos\NAuth\nauth-react`.
-- **DEVE** ser usado para toda lógica de autenticação, registro, login, gerenciamento de tokens
-  e operações de usuário.
-- **NÃO** implementar autenticação customizada — usar NAuth (skill `nauth-guide`).
-
-**Integrações diretas — e-mail e armazenamento**
-
-O Viralt fala diretamente com os provedores de e-mail e de armazenamento, sem serviço
-intermediário. O zTools **NÃO DEVE** ser usado: nem o pacote NuGet, nem a API, nem a
-configuração.
-
-| Capacidade | Provedor | Contrato (Infra.Interfaces) | Implementação (Infra) |
-|---|---|---|---|
-| E-mail transacional | MailerSend (API REST) | `IMailerSendAppService` | `MailerSendAppService` |
-| Armazenamento de arquivos | S3 (`AWSSDK.S3`) | `IImageAppService` | `ImageAppService` |
-
-- Cada integração externa **DEVE** ficar atrás de um contrato em `Viralt.Infra.Interfaces`, com a
-  implementação em `Viralt.Infra/AppServices`. Domain e API **NÃO** chamam o provedor
-  diretamente, nem conhecem os tipos do SDK.
-- Credenciais, endpoints, remetente, bucket e pasta **DEVEM** vir da configuração
-  (`Secao__Chave`), nunca do código. Credenciais **NUNCA** chegam ao frontend.
-- Arquivos **DEVEM** ser gravados no bucket compartilhado `emagine`, sempre sob o prefixo
-  `viralt/`, com nome único por envio. As URLs são públicas e permanentes.
-- Falhas do provedor **DEVEM** virar exceções com mensagem clara, que indique o problema (ex.:
-  credencial inválida, remetente não verificado). Nunca devem ser ignoradas em silêncio.
-- Novas integrações externas (ex.: IA) **DEVEM** seguir o mesmo padrão: contrato em
-  Infra.Interfaces, implementação em Infra e configuração por ambiente. Antes de adicionar uma
-  dependência, verificar se uma das integrações existentes já atende.
-
-**Racional**: o NAuth continua centralizado porque a identidade de usuário é compartilhada
-entre projetos. E-mail e storage, ao contrário, são integrações simples. Fazê-las direto tira do
-caminho um serviço intermediário, que precisava estar no ar para o Viralt funcionar. O contrato
-em Infra.Interfaces mantém o provedor trocável e testável.
-
-## Variáveis de Ambiente
-
-**Backend**
+#### Variáveis de Ambiente
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
-| `ConnectionStrings__ViraltContext` | Sim | Connection string PostgreSQL |
-| `ASPNETCORE_ENVIRONMENT` | Sim | Development, Docker, Production |
-| `NAuth__ApiURL` | Sim | URL da API do NAuth |
-| `NAuth__BucketName` | Sim | Bucket de usuários do NAuth (padrão `viralt`) |
-| `NAuth__JwtSecret` | Sim | Segredo do NAuth; nunca versionado |
-| `MailerSend__ApiToken` | Sim | Token da API do MailerSend; nunca versionado |
-| `MailerSend__FromEmail` | Não | Remetente padrão (padrão `noreply@viralt.com`) |
-| `MailerSend__FromName` | Não | Nome do remetente (padrão `Viralt`) |
-| `MailerSend__ApiUrl` | Não | Base da API (padrão `https://api.mailersend.com/v1/`) |
-| `S3__BucketName` | Sim | Bucket compartilhado (padrão `emagine`) |
-| `S3__Prefix` | Não | Pasta do Viralt no bucket (padrão `viralt/`) |
-| `S3__Region` | Sim | Região do bucket |
-| `S3__ServiceUrl` | Não | Endpoint S3-compatível, quando não for AWS |
-| `S3__PublicBaseUrl` | Não | Base pública das URLs (CDN ou provedor S3-compatível); vazio = URL padrão da AWS |
-| `S3__AccessKey` / `S3__SecretKey` | Sim | Credenciais do S3; nunca versionadas |
+| `VITE_API_URL` | Sim | URL base da API (vazio = mesma origem, atrás do mesmo Ingress) |
+| `VITE_SITE_BASENAME` | Não | Base path do React Router |
 
-**Frontend**
+**Prefixo obrigatório `VITE_`** — acessar via `import.meta.env.VITE_*`. **NÃO** usar `REACT_APP_`.
 
-| Variável | Obrigatória | Descrição |
-|---|---|---|
-| `REACT_APP_API_URL` | Sim | URL base da API backend |
-| `REACT_APP_SITE_BASENAME` | Não | Base path do React Router |
+#### Checklist do Frontend
 
-Variáveis de frontend **DEVEM** usar o prefixo `REACT_APP_` (padrão CRA) e ser acessadas via
-`process.env.REACT_APP_*`. **NÃO** usar `VITE_` nem `import.meta.env`.
+- [ ] Utilizou a skill `react-architecture` para novas entidades
+- [ ] Imports respeitam o casing exato dos diretórios
+- [ ] Variáveis de ambiente usam prefixo `VITE_`
+- [ ] Telas novas seguem a especificação do `ux-designer` e a seção de Acessibilidade
 
-## Estrutura do Repositório
+### VII. Infraestrutura e Deploy
 
-| Pasta | Conteúdo |
-|---|---|
-| `backend/` | Solução .NET (`Viralt.sln`), todos os projetos `Viralt.*`, `Dockerfile` e `.dockerignore` da API |
-| `frontend/` | Aplicação React (CRA), com `Dockerfile` e `nginx.conf` próprios |
-| raiz | `docker-compose.yml`, `docker-compose-prod.yml`, `nginx/`, `SQL/`, `docs/`, `specs/`, `.env*` |
+Responsável: `devops-engineer` (skill `k8s-deploy`).
 
-- Código .NET **DEVE** ficar em `backend/` e código React em `frontend/`; **NÃO** criar projetos
-  na raiz.
+- Produção roda no cluster Kubernetes compartilhado da emagine (`do-nyc2-emagine-k8s`), atrás do
+  Cloudflare Tunnel `emagine-k8s` e do `ingress-nginx`. Namespace do projeto: `viralt`.
+- Manifestos em `deploy/k8s/` (Kustomize), gerados a partir dos templates da skill `k8s-deploy`;
+  pipeline em `.github/workflows/deploy-prod.yml` (imagens no GHCR + `kubectl apply -k`).
+- Imagens: `viralt-api` (backend) e `viralt-web` (frontend).
+- Secrets exclusivos do projeto no GitHub com prefixo `VIRALT` (ex.: `VIRALT_CONNECTION_STRING` →
+  `ConnectionStrings__ViraltContext`, `VIRALT_JWT_SECRET` → `Jwt__Secret`,
+  `VIRALT_MAILERSEND_API_TOKEN`, `VIRALT_S3_ACCESS_KEY`, `VIRALT_S3_SECRET_KEY`); a pipeline usa só o
+  kubeconfig da ServiceAccount do projeto, **nunca** o kubeconfig de admin.
+- Sem TLS no Ingress (HTTPS termina na Cloudflare); a aplicação confia em forwarded headers.
+- Toda alteração no cluster ou nos secrets exige confirmação explícita do usuário.
 
-## Ambientes
+## Transição (código legado a migrar)
 
-| Ambiente | `ASPNETCORE_ENVIRONMENT` | Onde roda | Configuração e segredos |
-|---|---|---|---|
-| Dev | `Development` | Máquina local (`dotnet run`, `npm start`), contra um PostgreSQL acessível | `appsettings.Development.json` (valores locais, nunca de produção) |
-| Docker | `Docker` | `docker-compose.yml` (banco, API e frontend) | `.env` (não versionado) + `.env.example` |
-| Prod | `Production` | Servidor via SSH: `docker compose -f docker-compose-prod.yml up -d --build` (workflow `.github/workflows/deploy-prod.yml`) | `appsettings.Production.json` sem segredos; `.env.prod` no servidor + `.env.prod.example` |
+Esta versão adota padrões que o código atual ainda não segue. Até cada migração ser entregue (como
+feature própria via Spec Kit), o código legado é tolerado, mas **todo código novo segue a
+constitution** e nenhuma mudança pode ampliar o legado:
 
-- Arquivos `.env`, `.env.prod` e certificados **NUNCA** são versionados.
-- Configuração por variáveis de ambiente usa a convenção `Secao__Chave`; **NÃO** usar
-  `AddEnvironmentVariables("PREFIXO")`.
-
-## Fluxo de Desenvolvimento e Checklist de Contribuição
-
-Antes de submeter qualquer código, verifique:
-
-- [ ] Utilizou a skill `dotnet-architecture` para novas entidades backend.
-- [ ] Utilizou a skill `react-architecture` para novas entidades frontend.
-- [ ] Tabelas e colunas seguem snake_case no PostgreSQL.
-- [ ] Imports respeitam o casing exato dos diretórios.
-- [ ] Variáveis de ambiente frontend usam prefixo `REACT_APP_`.
-- [ ] Controllers com dados sensíveis possuem `[Authorize]`.
-- [ ] Autenticação usa NAuth (NuGet no backend, `nauth-react` no frontend).
-- [ ] Nenhuma referência ao zTools. E-mail e storage passam pelos AppServices da Infra
-      (Princípio X).
-- [ ] Nenhuma alteração em `backend/` ou `frontend/` foi feita fora dos agentes
-      especializados.
-- [ ] Cada tarefa foi executada pelo agente da sua área (`frontend-react-developer`,
-      `dotnet-senior-developer` ou `ux-designer`), conforme o Princípio VIII.
-- [ ] Telas novas atendem ao Princípio IX (contraste, rótulos, teclado, alvos de 44 px).
-- [ ] Token salvo apenas em localStorage, na chave `login-with-metamask:auth`.
+- TODO(AUTH-JWT): substituir o NAuth (Basic token, `NAuth__*`, chave `login-with-metamask:auth`) por
+  JWT Bearer próprio via `dotnet-auth`, incluindo a migração de usuários.
+- TODO(DEPLOY-K8S): substituir o deploy via SSH (`docker-compose-prod.yml`, `.env.prod.example`,
+  `deploy-prod.yml` atual) pelo deploy no cluster Kubernetes.
+- TODO(A11Y): as telas reescritas na feature 003 seguem a seção de Acessibilidade. As telas
+  públicas passam por auditoria automática (axe), mas o painel ainda não foi auditado.
 
 ## Governance
 
-- Esta constituição prevalece sobre quaisquer outras práticas do projeto. Em conflito com uma
-  skill, prevalece a constituição e a skill deve ser corrigida.
-- Emendas exigem: alteração documentada neste arquivo, atualização do Sync Impact Report e
-  propagação para os templates em `.specify/templates/`.
-- Versionamento semântico:
-  - **MAJOR**: remoção ou redefinição incompatível de princípios.
-  - **MINOR**: novo princípio/seção ou expansão material de regras.
-  - **PATCH**: esclarecimentos, redação e correções sem efeito semântico.
-- Todo plano (`/speckit.plan`) **DEVE** passar pelo "Constitution Check"; violações exigem
-  justificativa explícita na seção "Complexity Tracking".
-- Revisões de código **DEVEM** verificar o checklist de contribuição acima.
+- Esta constitution prevalece sobre qualquer outra prática ou preferência individual. Em conflito com
+  uma skill, prevalece a constitution e a skill deve ser corrigida.
+- Emendas só via `/speckit.constitution` (ou `/generate-constitution`), com incremento de versão
+  semântico: MAJOR (remoção/redefinição de princípio), MINOR (princípio ou seção nova), PATCH
+  (clarificação/redação).
+- Todo plano (`/speckit.plan`) e toda revisão de código DEVEM verificar conformidade com estes
+  princípios; desvios precisam de justificativa explícita no plano ("Complexity Tracking").
 
-**Version**: 3.0.1 | **Ratified**: 2026-04-02 | **Last Amended**: 2026-11-27
+**Version**: 4.0.1 | **Ratified**: 2026-04-02 | **Last Amended**: 2026-11-27

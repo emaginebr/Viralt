@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+/*
+ * Base global complementar à de theme.css (que já define body, :focus-visible e
+ * prefers-reduced-motion). O html também recebe o fundo do design system: o widget
+ * roda em iframe e não pode depender de transparência (contracts/widget-embed.md).
+ */
+@layer base {
+  html,
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Botões nativos com cursor de clique (o preflight do Tailwind 4 usa default). */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}

@@ -1,30 +1,13 @@
-import { Routes, Route, Outlet, Link } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
 import ContextBuilder from './Contexts/Utils/ContextBuilder';
 import AuthProvider from './Contexts/Auth/AuthProvider';
-import UserPage from './Pages/UserPage';
-import PasswordPage from './Pages/PasswordPage';
-import LoginPage from './Pages/LoginPage';
-import RecoveryPage from './Pages/RecoveryPage';
 import UserProvider from './Contexts/User/UserProvider';
-import HomePage from './Pages/HomePage';
-import DashboardPage from './Pages/DashboardPage';
-import NetworkEditPage from './Pages/NetworkEditPage';
-import NetworkListPage from './Pages/NetworkListPage';
-import ProductEditPage from './Pages/ProductEditPage';
-import NetworkInsertPage from './Pages/NetworkInsertPage';
 import NetworkProvider from './Contexts/Network/NetworkProvider';
 import ProfileProvider from './Contexts/Profile/ProfileProvider';
-import ProfileListPage from './Pages/ProfileListPage';
-import ProfileEditPage from './Pages/ProfileEditPage';
-import UserSearchPage from './Pages/UserSearchPage';
 import ProductProvider from './Contexts/Product/ProductProvider';
-import ProductSearchPage from './Pages/ProductSearchPage';
-import RequestAccessPage from './Pages/RequestAccessPage';
 import OrderProvider from './Contexts/Order/OrderProvider';
-import Error404Page from './Pages/Error404Page';
-import OrderSearchPage from './Pages/OrderSearchPage';
 import InvoiceProvider from './Contexts/Invoice/InvoiceProvider';
-import InvoiceSearchPage from './Pages/InvoiceSearchPage';
 import ImageProvider from './Contexts/Image/ImageProvider';
 import TemplateProvider from './Contexts/Template/TemplateProvider';
 import { AuthProvider as NewAuthProvider } from './Contexts/AuthContext';
@@ -33,27 +16,38 @@ import { ClientProvider } from './Contexts/ClientContext';
 import { PrizeProvider } from './Contexts/PrizeContext';
 import { WinnerProvider } from './Contexts/WinnerContext';
 import { PublicCampaignProvider } from './Contexts/PublicCampaignContext';
-import CampaignSearchPage from './Pages/CampaignSearchPage';
-import CampaignBuilderPage from './Pages/CampaignBuilderPage';
-import CampaignDetailPage from './Pages/CampaignDetailPage';
-import ParticipantListPage from './Pages/ParticipantListPage';
-import SubmissionModerationPage from './Pages/SubmissionModerationPage';
-import WinnerSelectionPage from './Pages/WinnerSelectionPage';
-import WidgetPage from './Pages/WidgetPage';
-import PublicCampaignPage from './Pages/PublicCampaignPage';
-import ScriptLoader from './Components/ScriptLoader';
-import Header from './Components/Header';
-import 'aos/dist/aos.css';
+import RouteFallback from './Components/RouteFallback';
+import { ConfirmProvider } from './Components/ui/ConfirmModal';
+import { Toaster } from './Components/ui/Toaster';
 
-function Layout() {
-  return (
-    <>
-      <Header />
-      <main className="main"></main>
-      <Outlet />
-    </>
-  );
-}
+// T046 (SC-005): every route is code-split, so /c/:slug and /widget/:slug do not download the
+// panel shell (Header -> ImageModal -> react-image-crop), react-quill, moment or the HomePage.
+const Layout = lazy(() => import('./Components/Layout'));
+const HomePage = lazy(() => import('./Pages/HomePage'));
+const UserPage = lazy(() => import('./Pages/UserPage'));
+const PasswordPage = lazy(() => import('./Pages/PasswordPage'));
+const LoginPage = lazy(() => import('./Pages/LoginPage'));
+const RecoveryPage = lazy(() => import('./Pages/RecoveryPage'));
+const DashboardPage = lazy(() => import('./Pages/DashboardPage'));
+const NetworkEditPage = lazy(() => import('./Pages/NetworkEditPage'));
+const NetworkListPage = lazy(() => import('./Pages/NetworkListPage'));
+const NetworkInsertPage = lazy(() => import('./Pages/NetworkInsertPage'));
+const ProductEditPage = lazy(() => import('./Pages/ProductEditPage'));
+const ProductSearchPage = lazy(() => import('./Pages/ProductSearchPage'));
+const ProfileListPage = lazy(() => import('./Pages/ProfileListPage'));
+const ProfileEditPage = lazy(() => import('./Pages/ProfileEditPage'));
+const UserSearchPage = lazy(() => import('./Pages/UserSearchPage'));
+const OrderSearchPage = lazy(() => import('./Pages/OrderSearchPage'));
+const InvoiceSearchPage = lazy(() => import('./Pages/InvoiceSearchPage'));
+const Error404Page = lazy(() => import('./Pages/Error404Page'));
+const CampaignSearchPage = lazy(() => import('./Pages/CampaignSearchPage'));
+const CampaignBuilderPage = lazy(() => import('./Pages/CampaignBuilderPage'));
+const CampaignDetailPage = lazy(() => import('./Pages/CampaignDetailPage'));
+const ParticipantListPage = lazy(() => import('./Pages/ParticipantListPage'));
+const SubmissionModerationPage = lazy(() => import('./Pages/SubmissionModerationPage'));
+const WinnerSelectionPage = lazy(() => import('./Pages/WinnerSelectionPage'));
+const WidgetPage = lazy(() => import('./Pages/WidgetPage'));
+const PublicCampaignPage = lazy(() => import('./Pages/PublicCampaignPage'));
 
 function App() {
   const ContextContainer = ContextBuilder([
@@ -64,6 +58,8 @@ function App() {
 
   return (
     <ContextContainer>
+      <ConfirmProvider>
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -71,6 +67,7 @@ function App() {
             <Route index element={<CampaignSearchPage />} />
             <Route path="new" element={<CampaignBuilderPage />} />
             <Route path=":campaignId" element={<CampaignDetailPage />} />
+            <Route path=":campaignId/edit" element={<CampaignBuilderPage />} />
             <Route path=":campaignId/participants" element={<ParticipantListPage />} />
             <Route path=":campaignId/submissions" element={<SubmissionModerationPage />} />
             <Route path=":campaignId/winners" element={<WinnerSelectionPage />} />
@@ -114,7 +111,9 @@ function App() {
         <Route path="widget/:slug" element={<WidgetPage />} />
         <Route path="*" element={<Error404Page />} />
       </Routes>
-      <ScriptLoader />
+      </Suspense>
+      </ConfirmProvider>
+      <Toaster />
     </ContextContainer>
   );
 }

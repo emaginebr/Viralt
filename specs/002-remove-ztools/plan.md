@@ -52,7 +52,7 @@ Constituição v3.0.0.
 | V. Banco de Dados | Sem mudança de schema | ✅ N/A |
 | VI. Autenticação e Segurança | Endpoints de notificação continuam `[Authorize]`; tokens e chaves só em configuração; nada exposto ao frontend | ✅ |
 | VII. Tratamento de Erros | Controllers mantêm `try/catch → 500`; falha parcial do "notificar todos" volta 200 com resumo (decisão R4) | ✅ |
-| VIII. Agentes Especializados | Backend → `dotnet-senior-developer`; testes → `qa-developer`; frontend → `frontend-react-developer`. O resumo reutiliza o alerta Bootstrap da tela, sem passar pelo `ux-designer` (R10) | ✅ |
+| VIII. Agentes Especializados | Backend → `dotnet-developer`; testes → `qa-developer`; frontend → `react-developer`. O resumo reutiliza o alerta Bootstrap da tela, sem passar pelo `ux-designer` (R10) | ✅ |
 | IX. Acessibilidade | Resumo com `role="status"` / `aria-live="polite"`, falhas em lista semântica, sem depender só de cor | ✅ |
 | X. Integrações Externas | E-mail e S3 diretos, atrás de `IMailerSendAppService` / `IImageAppService`; bucket `emagine`, prefixo `viralt/`; zTools removido | ✅ |
 | Variáveis de Ambiente | `MailerSend__ApiUrl` e `S3__PublicBaseUrl` (opcionais) não estão na tabela | ⚠ → emenda PATCH 3.0.1 (tarefa de documentação) |
@@ -129,11 +129,11 @@ no DI para uso futuro (US3).
 
 ## Ordem de execução sugerida (por agente)
 
-1. **dotnet-senior-developer**: DTOs e settings → `MailerSendAppService` → `WinnerService` e
+1. **dotnet-developer**: DTOs e settings → `MailerSendAppService` → `WinnerService` e
    `IWinnerService` → `WinnerController` → `ImageAppService` → `Startup` e `csproj` →
    appsettings, compose e `.env*.example`. Build verde.
 2. **qa-developer**: cria `Viralt.Tests` e os testes de R9. `dotnet test` verde.
-3. **frontend-react-developer**: tipo, service, context e página. Depende do contrato
+3. **react-developer**: tipo, service, context e página. Depende do contrato
    `api-winner-notify.md`, não do backend pronto.
 4. **Sessão principal**: emenda PATCH 3.0.1 da constituição, `CLAUDE.md` (Testing e Env Vars),
    remoção de `.claude/skills/ztools-guide` e verificação do `git grep -i ztools` (SC-003).
