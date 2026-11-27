@@ -28,6 +28,20 @@
 
 ---
 
+## 📁 Project Structure
+
+```
+backend/     → .NET 8 solution (Viralt.sln, Viralt.API, Viralt.Domain, Viralt.Infra, ...) + Dockerfile
+frontend/    → React + TypeScript app (CRA) + Dockerfile
+nginx/       → Reverse proxy config used in production
+SQL/         → Database backups
+docs/        → Project documentation
+specs/       → Feature specifications (Spec Kit)
+iLanding/    → Static landing page template
+```
+
+---
+
 ## 🛠️ Running Locally
 
 ### Requirements

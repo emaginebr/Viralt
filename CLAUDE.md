@@ -1,4 +1,4 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -9,7 +9,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Run Commands
 
+### Repository layout
+
+- `backend/` — .NET solution (`Viralt.sln`, all `Viralt.*` projects, `Dockerfile`, `.dockerignore`)
+- `frontend/` — React app (CRA), with its own `Dockerfile` and `nginx.conf`
+- Root — `docker-compose.yml`, `docker-compose-prod.yml` (build contexts `./backend` and `./frontend`), `nginx/`, `SQL/`, `docs/`, `specs/`, `.env*`
+
 ### Backend (.NET 8)
+
+Run these from `backend/` (`cd backend`):
 
 ```bash
 # Build entire solution
@@ -24,13 +32,16 @@ dotnet run --project Viralt.API
 # EF Core migrations (project: Viralt.Infra, startup: Viralt.API)
 dotnet ef migrations add <Name> --project Viralt.Infra --startup-project Viralt.API --output-dir Migrations
 dotnet ef database update --project Viralt.Infra --startup-project Viralt.API
+
+# Unit tests (xUnit + Moq); the S3Integration test is skipped unless S3__AccessKey is set
+dotnet test Viralt.Tests
 dotnet ef migrations script --project Viralt.Infra --startup-project Viralt.API --idempotent
 ```
 
 ### Frontend (CRA + TypeScript)
 
 ```bash
-cd viralt-app
+cd frontend
 npm install --legacy-peer-deps   # required due to react-native-svg peer conflict
 npm start                         # dev server
 npm run build                     # production build
@@ -43,6 +54,8 @@ npm test                          # jest tests
 
 ### Backend — Clean Architecture (.NET 8 / EF Core 9 / PostgreSQL)
 
+All projects live under `backend/`:
+
 ```
 Viralt.API              → Controllers, Startup (CORS, Swagger, Auth middleware)
 Viralt.Application      → Centralized DI via Startup.cs extension method
@@ -51,6 +64,8 @@ Viralt.DTO              → Data Transfer Objects, zero dependencies
 Viralt.Infra            → DbContext, Repository implementations, AppServices (S3, MailerSend)
 Viralt.Infra.Interfaces → Generic repository interfaces (<TModel>), AppService contracts
 Viralt.BackgroundService → Worker service
+Viralt.GraphQL          → HotChocolate GraphQL schemas (Admin, Public)
+Viralt.Tests            → xUnit unit tests (Domain/, Infra/ mirror the source folders)
 ```
 
 **Dependency flow:** API → Application → Domain + Infra. Domain depends only on Infra.Interfaces + DTO. Infra.Interfaces has no domain dependencies (uses generics).
@@ -61,7 +76,7 @@ Viralt.BackgroundService → Worker service
 - Services contain manual `MapToDto()` / `MapToModel()` methods
 - Connection string key: `ConnectionStrings:ViraltContext`
 - Auth: Basic token scheme (`Authorization: Basic {token}`)
-- Design-time factory: `Viralt.Infra/Context/ViraltContextFactory.cs`
+- Design-time factory: `backend/Viralt.Infra/Context/ViraltContextFactory.cs`
 
 **Database conventions (PostgreSQL):**
 - Table names: `snake_case` plural (`users`, `campaigns`, `client_entries`)
@@ -73,7 +88,7 @@ Viralt.BackgroundService → Worker service
 ### Frontend — React 18 + TypeScript + Context API
 
 ```
-src/
+frontend/src/
 ├── Contexts/        → Auth, User, Network, Profile, Product, Order, Invoice, Image, Template
 │   └── Utils/ContextBuilder.tsx  → HOC that composes providers from array
 ├── Services/        → API services (Axios-based legacy + fetch-based new)
@@ -104,6 +119,11 @@ src/
 ### Backend (appsettings / docker-compose)
 - `ConnectionStrings__ViraltContext` — PostgreSQL connection string
 - `ASPNETCORE_ENVIRONMENT` — Development | Docker | Production
+- `NAuth__ApiURL`, `NAuth__BucketName`, `NAuth__JwtSecret` — NAuth authentication
+- `MailerSend__ApiToken` (secret), `MailerSend__FromEmail`, `MailerSend__FromName`, `MailerSend__ApiUrl` — direct MailerSend e-mail (winner notifications)
+- `S3__BucketName` (`emagine`), `S3__Prefix` (`viralt/`), `S3__Region`, `S3__ServiceUrl`, `S3__PublicBaseUrl`, `S3__AccessKey` / `S3__SecretKey` (secrets) — direct S3 storage
+
+No intermediary service is used (constitution v3.0.0, Principle X): e-mail and storage go through `IMailerSendAppService` / `IImageAppService` in `Viralt.Infra/AppServices`. Missing MailerSend/S3 config fails on first use, not at startup.
 
 ### Frontend (.env)
 - `REACT_APP_API_URL` — Backend API base URL (e.g., `http://localhost:5000`)
@@ -111,7 +131,7 @@ src/
 
 ## Custom Skills
 
-This repo has 12 Claude skills in `.claude/skills/`. The two most critical:
+This repo has 38 Claude skills in `.claude/skills/` (plus agents in `.claude/agents/`). The two most critical:
 - **dotnet-architecture** — Full clean architecture guide for backend entities (11-step process)
 - **react-arch** — Frontend entity scaffolding guide (Types → Service → Context → Hook → Provider)
 
